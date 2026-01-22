@@ -1,0 +1,209 @@
+import SwiftUI
+import SwiftData
+
+struct AchievementsView: View {
+    @Bindable var stats: UserStats
+    @ObservedObject var gameificationService: GameificationService
+    @State private var selectedAchievement: Achievement?
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    progressHeader
+                    achievementsGrid
+                }
+                .padding()
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Achievements")
+            .sheet(item: $selectedAchievement) { achievement in
+                AchievementDetailSheet(
+                    achievement: achievement,
+                    isUnlocked: stats.hasUnlockedAchievement(achievement.id),
+                    progress: getProgress(for: achievement)
+                )
+                .presentationDetents([.medium])
+            }
+        }
+    }
+
+    private var progressHeader: some View {
+        VStack(spacing: 16) {
+            let unlockedCount = stats.unlockedAchievements.count
+            let totalCount = Achievement.allAchievements.count
+            let progress = Double(unlockedCount) / Double(totalCount)
+
+            ZStack {
+                Circle()
+                    .stroke(Color(.systemGray4), lineWidth: 12)
+                    .frame(width: 120, height: 120)
+
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(.blue, style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                    .frame(width: 120, height: 120)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.spring(), value: progress)
+
+                VStack(spacing: 2) {
+                    Text("\(unlockedCount)")
+                        .font(.title)
+                        .fontWeight(.bold)
+                    Text("of \(totalCount)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text("Achievements Unlocked")
+                .font(.headline)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
+
+    private var achievementsGrid: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 16) {
+            ForEach(Achievement.allAchievements) { achievement in
+                AchievementCard(
+                    achievement: achievement,
+                    isUnlocked: stats.hasUnlockedAchievement(achievement.id),
+                    progress: getProgress(for: achievement)
+                )
+                .onTapGesture {
+                    selectedAchievement = achievement
+                }
+            }
+        }
+    }
+
+    private func getProgress(for achievement: Achievement) -> Double {
+        let progressData = gameificationService.getAchievementProgress(stats: stats)
+        return progressData.first { $0.0.id == achievement.id }?.2 ?? 0
+    }
+}
+
+struct AchievementCard: View {
+    let achievement: Achievement
+    let isUnlocked: Bool
+    let progress: Double
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(isUnlocked ? .yellow.opacity(0.2) : Color(.systemGray5))
+                    .frame(width: 60, height: 60)
+
+                if !isUnlocked {
+                    Circle()
+                        .trim(from: 0, to: progress)
+                        .stroke(.blue, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .frame(width: 60, height: 60)
+                        .rotationEffect(.degrees(-90))
+                }
+
+                Image(systemName: achievement.iconName)
+                    .font(.title2)
+                    .foregroundStyle(isUnlocked ? .yellow : .secondary)
+            }
+
+            Text(achievement.title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+
+            if !isUnlocked {
+                Text("\(Int(progress * 100))%")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .opacity(isUnlocked ? 1 : 0.7)
+    }
+}
+
+struct AchievementDetailSheet: View {
+    let achievement: Achievement
+    let isUnlocked: Bool
+    let progress: Double
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(isUnlocked ? .yellow.opacity(0.2) : Color(.systemGray5))
+                    .frame(width: 100, height: 100)
+
+                if !isUnlocked {
+                    Circle()
+                        .trim(from: 0, to: progress)
+                        .stroke(.blue, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .frame(width: 100, height: 100)
+                        .rotationEffect(.degrees(-90))
+                }
+
+                Image(systemName: achievement.iconName)
+                    .font(.system(size: 40))
+                    .foregroundStyle(isUnlocked ? .yellow : .secondary)
+            }
+            .padding(.top, 32)
+
+            VStack(spacing: 8) {
+                Text(achievement.title)
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text(achievement.description)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            if isUnlocked {
+                Label("Unlocked", systemImage: "checkmark.circle.fill")
+                    .font(.headline)
+                    .foregroundStyle(.green)
+            } else {
+                VStack(spacing: 8) {
+                    ProgressView(value: progress)
+                        .tint(.blue)
+
+                    Text("\(Int(progress * 100))% Complete")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 32)
+            }
+
+            Spacer()
+
+            Button("Close") {
+                dismiss()
+            }
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(.systemGray5))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal)
+            .padding(.bottom)
+        }
+    }
+}
+
+#Preview {
+    AchievementsView(stats: UserStats(), gameificationService: GameificationService())
+}
