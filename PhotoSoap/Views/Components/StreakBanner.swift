@@ -97,6 +97,8 @@ struct CompactHeader: View {
     let current: Int
     let target: Int
     let challengeTitle: String
+    let isFilterActive: Bool
+    let onFilterTap: () -> Void
 
     @State private var isAnimating = false
 
@@ -120,6 +122,8 @@ struct CompactHeader: View {
             .padding(.vertical, 8)
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(Capsule())
+
+            FilterButton(isActive: isFilterActive, action: onFilterTap)
 
             Spacer()
 

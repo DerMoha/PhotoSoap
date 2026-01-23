@@ -18,6 +18,8 @@ struct PhotoReviewView: View {
     @State private var showDeleteOverlay = false
     @State private var cachedExcludedIDs: Set<String> = []
     @State private var isProcessingAction = false  // Prevents concurrent button presses
+    @State private var currentFilter: PhotoFilter = .all
+    @State private var showFilterSheet = false
 
     var body: some View {
         NavigationStack {
@@ -73,12 +75,6 @@ struct PhotoReviewView: View {
                 streakCelebration
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Clean my Photos!  ")
-                        .font(.headline)
-                }
-            }
             .onAppear {
                 Task {
                     await loadInitialPhoto()
@@ -88,6 +84,15 @@ struct PhotoReviewView: View {
                 Button("OK") {}
             } message: {
                 Text(error ?? "An unknown error occurred")
+            }
+            .sheet(isPresented: $showFilterSheet) {
+                FilterSheet(
+                    photoLibraryService: photoLibraryService,
+                    currentFilter: currentFilter,
+                    onSelect: { filter in
+                        applyFilter(filter)
+                    }
+                )
             }
         }
     }
@@ -101,7 +106,11 @@ struct PhotoReviewView: View {
             progress: progress,
             current: stats.dailyChallengeProgress,
             target: stats.dailyChallengeTarget,
-            challengeTitle: challenge.title
+            challengeTitle: challenge.title,
+            isFilterActive: !currentFilter.isAll,
+            onFilterTap: {
+                showFilterSheet = true
+            }
         )
     }
 
@@ -396,6 +405,19 @@ struct PhotoReviewView: View {
     private func refreshLibrary() {
         cachedExcludedIDs = Set(stats.reviewedPhotoIDs)
         photoLibraryService.refreshLibrary(excludingIDs: cachedExcludedIDs)
+        noMorePhotos = false
+
+        Task {
+            await loadInitialPhoto()
+        }
+    }
+
+    private func applyFilter(_ filter: PhotoFilter) {
+        currentFilter = filter
+        photoLibraryService.setFilter(filter)
+        cachedExcludedIDs = Set(stats.reviewedPhotoIDs)
+        currentPhoto = nil
+        nextPhoto = nil
         noMorePhotos = false
 
         Task {

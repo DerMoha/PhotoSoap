@@ -81,7 +81,7 @@ struct PermissionRequestView: View {
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("Bommel needs access to your photo library to help you review and organize your photos.")
+            Text("PhotoSoap needs access to your photo library to help you review and organize your photos.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -121,7 +121,7 @@ struct PermissionDeniedView: View {
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("Bommel needs photo library access to work. Please enable it in Settings.")
+            Text("PhotoSoap needs photo library access to work. Please enable it in Settings.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct BommelApp: App {
+struct PhotoSoapApp: App {
     let modelContainer: ModelContainer
 
     init() {
@@ -42,7 +42,7 @@ struct BommelApp: App {
            let fileSize = attributes[.size] as? Int64,
            fileSize > 50_000_000 {
             
-            print("Bommel: Database is \(fileSize / 1_000_000)MB - clearing to prevent memory crash")
+            print("PhotoSoap: Database is \(fileSize / 1_000_000)MB - clearing to prevent memory crash")
             
             // Remove all SwiftData store files
             let storeFiles = [
@@ -55,7 +55,7 @@ struct BommelApp: App {
                 try? fileManager.removeItem(at: file)
             }
             
-            print("Bommel: Database cleared successfully")
+            print("PhotoSoap: Database cleared successfully")
         }
     }
     
@@ -77,7 +77,7 @@ struct BommelApp: App {
             
             try context.save()
         } catch {
-            print("Bommel: Trim migration failed: \(error)")
+            print("PhotoSoap: Trim migration failed: \(error)")
         }
     }
 

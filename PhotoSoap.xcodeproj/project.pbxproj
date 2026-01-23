@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		715E1CA72F21612300CD8842 /* Bommel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bommel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		715E1CA72F21612300CD8842 /* PhotoSoap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoSoap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		715E1CF02F2163F600CD8842 /* Exceptions for "Bommel" folder in "Bommel" target */ = {
+		715E1CF02F2163F600CD8842 /* Exceptions for "PhotoSoap" folder in "PhotoSoap" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 715E1CA62F21612300CD8842 /* Bommel */;
+			target = 715E1CA62F21612300CD8842 /* PhotoSoap */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		715E1CA92F21612300CD8842 /* Bommel */ = {
+		715E1CA92F21612300CD8842 /* PhotoSoap */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				715E1CF02F2163F600CD8842 /* Exceptions for "Bommel" folder in "Bommel" target */,
+				715E1CF02F2163F600CD8842 /* Exceptions for "PhotoSoap" folder in "PhotoSoap" target */,
 			);
-			path = Bommel;
+			path = PhotoSoap;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		715E1C9E2F21612300CD8842 = {
 			isa = PBXGroup;
 			children = (
-				715E1CA92F21612300CD8842 /* Bommel */,
+				715E1CA92F21612300CD8842 /* PhotoSoap */,
 				715E1CA82F21612300CD8842 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		715E1CA82F21612300CD8842 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				715E1CA72F21612300CD8842 /* Bommel.app */,
+				715E1CA72F21612300CD8842 /* PhotoSoap.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		715E1CA62F21612300CD8842 /* Bommel */ = {
+		715E1CA62F21612300CD8842 /* PhotoSoap */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 715E1CB42F21612400CD8842 /* Build configuration list for PBXNativeTarget "Bommel" */;
+			buildConfigurationList = 715E1CB42F21612400CD8842 /* Build configuration list for PBXNativeTarget "PhotoSoap" */;
 			buildPhases = (
 				715E1CA32F21612300CD8842 /* Sources */,
 				715E1CA42F21612300CD8842 /* Frameworks */,
@@ -74,13 +74,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				715E1CA92F21612300CD8842 /* Bommel */,
+				715E1CA92F21612300CD8842 /* PhotoSoap */,
 			);
-			name = Bommel;
+			name = PhotoSoap;
 			packageProductDependencies = (
 			);
-			productName = Bommel;
-			productReference = 715E1CA72F21612300CD8842 /* Bommel.app */;
+			productName = PhotoSoap;
+			productReference = 715E1CA72F21612300CD8842 /* PhotoSoap.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 715E1CA22F21612300CD8842 /* Build configuration list for PBXProject "Bommel" */;
+			buildConfigurationList = 715E1CA22F21612300CD8842 /* Build configuration list for PBXProject "PhotoSoap" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				715E1CA62F21612300CD8842 /* Bommel */,
+				715E1CA62F21612300CD8842 /* PhotoSoap */,
 			);
 		};
 /* End PBXProject section */
@@ -269,8 +269,8 @@
 				DEVELOPMENT_TEAM = M8869GQ6Z6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Bommel/Info.plist;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Bommel needs access to your photo library to help you review and organize your photos.";
+				INFOPLIST_FILE = PhotoSoap/Info.plist;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoSoap needs access to your photo library to help you review and organize your photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -281,7 +281,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.dermoha.Bommel;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dermoha.PhotoSoap;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -303,8 +303,8 @@
 				DEVELOPMENT_TEAM = M8869GQ6Z6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Bommel/Info.plist;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Bommel needs access to your photo library to help you review and organize your photos.";
+				INFOPLIST_FILE = PhotoSoap/Info.plist;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoSoap needs access to your photo library to help you review and organize your photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -315,7 +315,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.dermoha.Bommel;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dermoha.PhotoSoap;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -330,7 +330,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		715E1CA22F21612300CD8842 /* Build configuration list for PBXProject "Bommel" */ = {
+		715E1CA22F21612300CD8842 /* Build configuration list for PBXProject "PhotoSoap" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				715E1CB22F21612400CD8842 /* Debug */,
@@ -339,7 +339,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		715E1CB42F21612400CD8842 /* Build configuration list for PBXNativeTarget "Bommel" */ = {
+		715E1CB42F21612400CD8842 /* Build configuration list for PBXNativeTarget "PhotoSoap" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				715E1CB52F21612400CD8842 /* Debug */,
