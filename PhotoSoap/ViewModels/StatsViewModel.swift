@@ -4,14 +4,6 @@ import Combine
 
 @MainActor
 class StatsViewModel: ObservableObject {
-    @Published var selectedTimeRange: TimeRange = .allTime
-
-    enum TimeRange: String, CaseIterable {
-        case today = "Today"
-        case week = "This Week"
-        case month = "This Month"
-        case allTime = "All Time"
-    }
 
     struct StatItem: Identifiable {
         let id = UUID()
