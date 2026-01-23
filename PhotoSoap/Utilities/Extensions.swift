@@ -2,26 +2,38 @@ import SwiftUI
 import Photos
 import Combine
 
-// MARK: - View Extensions
+// MARK: - Haptic Feedback Helpers
 
-extension View {
-    func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) -> some View {
-        self.onTapGesture {
-            let generator = UIImpactFeedbackGenerator(style: style)
-            generator.impactOccurred()
-        }
+enum Haptic {
+    static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
+        let generator = UIImpactFeedbackGenerator(style: style)
+        generator.impactOccurred()
     }
 
-    func successHaptic() {
+    static func success() {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
     }
 
-    func errorHaptic() {
+    static func error() {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.error)
     }
 
+    static func warning() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+    }
+
+    static func selection() {
+        let generator = UISelectionFeedbackGenerator()
+        generator.selectionChanged()
+    }
+}
+
+// MARK: - View Extensions
+
+extension View {
     @ViewBuilder
     func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
         if condition {
