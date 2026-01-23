@@ -321,8 +321,8 @@ struct PhotoReviewView: View {
 
             let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
 
-            stats.markPhotoReviewed(photo.id)
-            cachedExcludedIDs.insert(photo.id)
+            // Don't add deleted photo to exclusion list - it's gone from the library anyway
+            // The PHPhotoLibraryChangeObserver will update the asset list automatically
             gameificationService.processPhotoReview(
                 action: .delete,
                 fileSize: photo.fileSize,

@@ -1,11 +1,9 @@
 import SwiftUI
+import UIKit
 
 struct ActionButtons: View {
     let onKeep: () -> Void
     let onDelete: () -> Void
-
-    @State private var keepPressed = false
-    @State private var deletePressed = false
 
     private let buttonSize: CGFloat = 65
 
@@ -19,17 +17,9 @@ struct ActionButtons: View {
 
     private var deleteButton: some View {
         Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                deletePressed = true
-            }
-
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                deletePressed = false
-                onDelete()
-            }
+            onDelete()
         } label: {
             ZStack {
                 Circle()
@@ -44,25 +34,16 @@ struct ActionButtons: View {
                     .font(.title2)
                     .foregroundStyle(.red)
             }
-            .scaleEffect(deletePressed ? 0.9 : 1.0)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .accessibilityLabel("Delete photo")
     }
 
     private var keepButton: some View {
         Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                keepPressed = true
-            }
-
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                keepPressed = false
-                onKeep()
-            }
+            onKeep()
         } label: {
             ZStack {
                 Circle()
@@ -78,10 +59,17 @@ struct ActionButtons: View {
                     .fontWeight(.bold)
                     .foregroundStyle(.green)
             }
-            .scaleEffect(keepPressed ? 0.9 : 1.0)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ScaleButtonStyle())
         .accessibilityLabel("Keep photo")
+    }
+}
+
+private struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 

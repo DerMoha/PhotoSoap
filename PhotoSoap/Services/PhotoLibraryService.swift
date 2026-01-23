@@ -35,7 +35,7 @@ enum PhotoLibraryAuthorizationStatus {
 }
 
 @MainActor
-class PhotoLibraryService: ObservableObject {
+class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObserver {
     @Published var authorizationStatus: PhotoLibraryAuthorizationStatus = .notDetermined
     @Published var isLoading = false
     @Published var error: PhotoLibraryError?
@@ -46,8 +46,7 @@ class PhotoLibraryService: ObservableObject {
     
     // Use lazy random sampling - don't pre-filter everything
     private var totalAssetCount: Int = 0
-    private var triedIndices: Set<Int> = []
-    private let maxRetries = 50  // Max attempts to find an unreviewed photo
+    private let baseMaxRetries = 50  // Base attempts to find an unreviewed photo
 
     private var cachedYears: [Int] = []
     private var cachedMonthsByYear: [Int: [Int]] = [:]
@@ -57,8 +56,27 @@ class PhotoLibraryService: ObservableObject {
         .smartAlbumUserLibrary
     ]
 
-    init() {
+    override init() {
+        super.init()
         checkAuthorizationStatus()
+        PHPhotoLibrary.shared().register(self)
+    }
+
+    deinit {
+        PHPhotoLibrary.shared().unregisterChangeObserver(self)
+    }
+
+    // MARK: - PHPhotoLibraryChangeObserver
+
+    nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
+        Task { @MainActor in
+            guard let assets = self.cachedAssets,
+                  let changes = changeInstance.changeDetails(for: assets) else {
+                return
+            }
+            self.cachedAssets = changes.fetchResultAfterChanges
+            self.totalAssetCount = self.cachedAssets?.count ?? 0
+        }
     }
 
     func checkAuthorizationStatus() {
@@ -109,7 +127,6 @@ class PhotoLibraryService: ObservableObject {
             guard let collection = fetchAssetCollection(identifier: identifier) else {
                 cachedAssets = nil
                 totalAssetCount = 0
-                triedIndices = []
                 return
             }
             let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true)
@@ -117,7 +134,6 @@ class PhotoLibraryService: ObservableObject {
         }
 
         totalAssetCount = cachedAssets?.count ?? 0
-        triedIndices = []
     }
 
     /// Gets next photo using random sampling - O(1) memory instead of O(n)
@@ -128,21 +144,21 @@ class PhotoLibraryService: ObservableObject {
             return nil
         }
         
-        // If we've tried too many indices, the library is likely exhausted
-        if triedIndices.count >= totalAssetCount || triedIndices.count >= maxRetries * 10 {
+        // If all photos have been reviewed, we're done
+        if excludingIDs.count >= totalAssetCount {
             return nil
         }
         
+        // Scale retries based on how many photos are excluded (more excluded = harder to find unreviewed)
+        let excludedRatio = Double(excludingIDs.count) / Double(totalAssetCount)
+        let scaledRetries = max(baseMaxRetries, Int(Double(baseMaxRetries) * (1.0 + excludedRatio * 4.0)))
+        
         // Random sampling with retry
-        for _ in 0..<maxRetries {
+        for _ in 0..<scaledRetries {
             let randomIndex = Int.random(in: 0..<totalAssetCount)
             
-            // Skip if we've already tried this index
-            if triedIndices.contains(randomIndex) {
-                continue
-            }
-            
-            triedIndices.insert(randomIndex)
+            // Bounds check - totalAssetCount may briefly exceed actual count during observer update
+            guard randomIndex < assets.count else { continue }
             
             // Get the asset at this index (single access, not iteration)
             let asset = assets.object(at: randomIndex)
@@ -235,7 +251,6 @@ class PhotoLibraryService: ObservableObject {
     func refreshLibrary(excludingIDs: Set<String>) {
         cachedAssets = nil
         totalAssetCount = 0
-        triedIndices = []
         ensureAssetsFetched()
     }
 
@@ -244,7 +259,6 @@ class PhotoLibraryService: ObservableObject {
         currentFilter = filter
         cachedAssets = nil
         totalAssetCount = 0
-        triedIndices = []
     }
 
     func fetchAlbums() -> [AlbumInfo] {
