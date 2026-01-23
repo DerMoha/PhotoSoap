@@ -8,6 +8,23 @@ struct Photo: Identifiable {
     var image: UIImage?
     var fileSize: Int64
 
+    // MARK: - Cached Formatters (expensive to create)
+    
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let shortDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return formatter
+    }()
+
+    // MARK: - Computed Properties
+
     var creationDate: Date? {
         asset.creationDate
     }
@@ -18,17 +35,12 @@ struct Photo: Identifiable {
 
     var formattedDate: String {
         guard let date = creationDate else { return "Unknown date" }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return Self.dateFormatter.string(from: date)
     }
 
     var shortFormattedDate: String {
         guard let date = creationDate else { return "Unknown" }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        return formatter.string(from: date)
+        return Self.shortDateFormatter.string(from: date)
     }
 
     var formattedLocation: String? {
