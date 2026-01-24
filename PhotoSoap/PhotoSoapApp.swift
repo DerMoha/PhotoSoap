@@ -68,7 +68,7 @@ struct PhotoSoapApp: App {
             let allStats = try context.fetch(descriptor)
             
             for stats in allStats {
-                let maxIDs = 10000
+                let maxIDs = 20000
                 if stats.reviewedPhotoIDs.count > maxIDs {
                     let excess = stats.reviewedPhotoIDs.count - maxIDs
                     stats.reviewedPhotoIDs.removeFirst(excess)

@@ -15,7 +15,7 @@ class UserStats {
     var reviewedPhotoIDs: [String]
     
     // Maximum number of photo IDs to retain (prevents unbounded memory growth)
-    @Transient private static let maxReviewedPhotoIDs = 10000
+    @Transient private static let maxReviewedPhotoIDs = 20000
     var unlockedAchievements: [String]
     var dailyChallengeProgress: Int
     var dailyChallengeTarget: Int
