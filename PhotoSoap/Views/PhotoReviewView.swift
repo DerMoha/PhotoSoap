@@ -5,6 +5,8 @@ struct PhotoReviewView: View {
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
     @Bindable var stats: UserStats
+    
+    @Environment(\.modelContext) private var modelContext
 
     @State private var currentPhoto: Photo?
     @State private var nextPhoto: Photo?
@@ -16,7 +18,7 @@ struct PhotoReviewView: View {
     @State private var cardRotation: Double = 0
     @State private var showKeepOverlay = false
     @State private var showDeleteOverlay = false
-    @State private var cachedExcludedIDs: Set<String> = []
+    
     @State private var isProcessingAction = false  // Prevents concurrent button presses
     @State private var currentFilter: PhotoFilter = .all
     @State private var showFilterSheet = false
@@ -264,11 +266,20 @@ struct PhotoReviewView: View {
         error = nil
         noMorePhotos = false
 
-        // Cache excluded IDs once per load operation
-        cachedExcludedIDs = Set(stats.reviewedPhotoIDs)
-
         do {
-            if let photo = try await photoLibraryService.getNextPhoto(excludingIDs: cachedExcludedIDs) {
+            // Load all reviewed IDs into the service cache for performance
+            // fetching all IDs is efficient even for ~100k items
+            let context = modelContext
+            let descriptor = FetchDescriptor<ReviewedPhoto>() 
+            // Optimally we'd fetch properties only but SwiftData is still evolving there.
+            // Fetching 100k empty objects is fast enough (few MBs).
+            let allReviewed = try context.fetch(descriptor)
+            let idSet = Set(allReviewed.map { $0.id })
+            
+            // Populate cache
+            photoLibraryService.setReviewedIDs(idSet)
+            
+            if let photo = try await photoLibraryService.getNextPhoto() {
                 currentPhoto = photo
                 await preloadNextPhoto()
             } else {
@@ -283,7 +294,7 @@ struct PhotoReviewView: View {
     }
 
     private func preloadNextPhoto() async {
-        if let photo = try? await photoLibraryService.getNextPhoto(excludingIDs: cachedExcludedIDs) {
+        if let photo = try? await photoLibraryService.getNextPhoto() {
             nextPhoto = photo
         }
     }
@@ -297,8 +308,11 @@ struct PhotoReviewView: View {
 
         let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
 
-        stats.markPhotoReviewed(photo.id)
-        cachedExcludedIDs.insert(photo.id)
+        // 1. Mark in DB
+        gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+        // 2. Mark in local cache (so we don't see it again this session instantly)
+        photoLibraryService.markReviewed(photo.id)
+        
         gameificationService.processPhotoReview(
             action: .keep,
             fileSize: 0,
@@ -318,11 +332,14 @@ struct PhotoReviewView: View {
 
         do {
             try await photoLibraryService.deletePhoto(photo)
+            
+            // Still mark as reviewed in DB for long-term history/stats
+            gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+            // Do NOT mark in local cache (reviewedIDs) because deleted photos are removed from library,
+            // so they shouldn't count towards the "reviewed vs total" ratio for completion.
 
             let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
 
-            // Don't add deleted photo to exclusion list - it's gone from the library anyway
-            // The PHPhotoLibraryChangeObserver will update the asset list automatically
             gameificationService.processPhotoReview(
                 action: .delete,
                 fileSize: photo.fileSize,
@@ -355,7 +372,7 @@ struct PhotoReviewView: View {
     }
 
     private func loadNextPhoto() async {
-        if let photo = try? await photoLibraryService.getNextPhoto(excludingIDs: cachedExcludedIDs) {
+        if let photo = try? await photoLibraryService.getNextPhoto() {
             currentPhoto = photo
             await preloadNextPhoto()
         } else {
@@ -363,7 +380,7 @@ struct PhotoReviewView: View {
             noMorePhotos = true
         }
     }
-
+    
     private func handleDragGesture(_ value: DragGesture.Value) {
         guard !isProcessingAction else { return }
         
@@ -403,8 +420,7 @@ struct PhotoReviewView: View {
     }
 
     private func refreshLibrary() {
-        cachedExcludedIDs = Set(stats.reviewedPhotoIDs)
-        photoLibraryService.refreshLibrary(excludingIDs: cachedExcludedIDs)
+        photoLibraryService.refreshLibrary()
         noMorePhotos = false
 
         Task {
@@ -415,7 +431,6 @@ struct PhotoReviewView: View {
     private func applyFilter(_ filter: PhotoFilter) {
         currentFilter = filter
         photoLibraryService.setFilter(filter)
-        cachedExcludedIDs = Set(stats.reviewedPhotoIDs)
         currentPhoto = nil
         nextPhoto = nil
         noMorePhotos = false

@@ -10,7 +10,7 @@ struct PhotoSoapApp: App {
         Self.clearOversizedDatabaseIfNeeded()
         
         do {
-            let schema = Schema([UserStats.self])
+            let schema = Schema([UserStats.self, ReviewedPhoto.self])
             let modelConfiguration = ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: false
@@ -20,8 +20,8 @@ struct PhotoSoapApp: App {
                 configurations: [modelConfiguration]
             )
             
-            // Trim data to prevent future issues
-            trimReviewedPhotoIDsIfNeeded()
+            // Migrate existing reviewed IDs to ReviewedPhoto entity
+            migrateReviewedPhotosIfNeeded()
         } catch {
             fatalError("Could not initialize ModelContainer: \(error)")
         }
@@ -59,25 +59,51 @@ struct PhotoSoapApp: App {
         }
     }
     
-    /// Trims the reviewedPhotoIDs array to prevent future bloat
-    private func trimReviewedPhotoIDsIfNeeded() {
+    /// Migrates IDs from UserStats array to ReviewedPhoto entities
+    private func migrateReviewedPhotosIfNeeded() {
         let context = modelContainer.mainContext
         
         do {
             let descriptor = FetchDescriptor<UserStats>()
             let allStats = try context.fetch(descriptor)
             
+            var migrationCount = 0
+            
             for stats in allStats {
-                let maxIDs = 20000
-                if stats.reviewedPhotoIDs.count > maxIDs {
-                    let excess = stats.reviewedPhotoIDs.count - maxIDs
-                    stats.reviewedPhotoIDs.removeFirst(excess)
+                if !stats.reviewedPhotoIDs.isEmpty {
+                    print("PhotoSoap: Migrating \(stats.reviewedPhotoIDs.count) reviewed photos...")
+                    
+                    // 1. Get all IDs to migrate
+                    let idsToMigrate = Set(stats.reviewedPhotoIDs)
+                    
+                    // 2. Fetch ANY existing IDs from DB that match (to avoid duplicates)
+                    // Efficiently: fetch only IDs
+                    let allExistingDescriptor = FetchDescriptor<ReviewedPhoto>()
+                    let allExistingPhotos = try context.fetch(allExistingDescriptor)
+                    let existingIDSet = Set(allExistingPhotos.map { $0.id })
+                    
+                    for id in idsToMigrate {
+                        if !existingIDSet.contains(id) {
+                            let review = ReviewedPhoto(id: id)
+                            context.insert(review)
+                            migrationCount += 1
+                        }
+                    }
+                    
+                    if migrationCount > 0 {
+                        try context.save()
+                        print("PhotoSoap: Successfully migrated \(migrationCount) photos")
+                        
+                        // Clear the array ONLY after successful save to prevent data loss
+                        stats.reviewedPhotoIDs.removeAll()
+                    } else {
+                        // If no migration needed (all duplicates), still clear array
+                        stats.reviewedPhotoIDs.removeAll()
+                    }
                 }
             }
-            
-            try context.save()
         } catch {
-            print("PhotoSoap: Trim migration failed: \(error)")
+            print("PhotoSoap: Migration failed: \(error)")
         }
     }
 

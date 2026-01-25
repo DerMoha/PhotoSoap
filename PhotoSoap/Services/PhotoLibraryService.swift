@@ -55,11 +55,27 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         .smartAlbumAllHidden,
         .smartAlbumUserLibrary
     ]
+    
+    // Local cache for O(1) filtering
+    // Memory usage: ~100k UUID strings is approx 4-5MB. Safe for modern devices.
+    private var reviewedIDs: Set<String> = []
 
     override init() {
         super.init()
         checkAuthorizationStatus()
         PHPhotoLibrary.shared().register(self)
+    }
+    
+    func setReviewedIDs(_ ids: Set<String>) {
+        self.reviewedIDs = ids
+    }
+    
+    func markReviewed(_ id: String) {
+        reviewedIDs.insert(id)
+    }
+    
+    func isReviewed(_ id: String) -> Bool {
+        reviewedIDs.contains(id)
     }
 
     deinit {
@@ -137,24 +153,28 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     /// Gets next photo using random sampling - O(1) memory instead of O(n)
-    func getNextPhoto(excludingIDs: Set<String>) async throws -> Photo? {
+    func getNextPhoto() async throws -> Photo? {
         ensureAssetsFetched()
         
         guard let assets = cachedAssets, totalAssetCount > 0 else {
             return nil
         }
         
-        // If all photos have been reviewed, we're done
-        if excludingIDs.count >= totalAssetCount {
-            return nil
-        }
+        let reviewedCount = reviewedIDs.count
+        
+        // Completion check removed to support deleted photos logic.
+        // Even if reviewedCount >= totalAssetCount, some of those reviewedIDs might imply deleted photos.
+        // We rely on the retry loop to find any remaining unreviewed photos.
         
         // Scale retries based on how many photos are excluded (more excluded = harder to find unreviewed)
-        let excludedRatio = Double(excludingIDs.count) / Double(totalAssetCount)
+        let excludedRatio = Double(reviewedCount) / Double(totalAssetCount)
         let scaledRetries = max(baseMaxRetries, Int(Double(baseMaxRetries) * (1.0 + excludedRatio * 4.0)))
         
+        // Cap retries at a reasonable limit (e.g. 500) to prevent freezing
+        let retries = min(500, scaledRetries)
+        
         // Random sampling with retry
-        for _ in 0..<scaledRetries {
+        for _ in 0..<retries {
             let randomIndex = Int.random(in: 0..<totalAssetCount)
             
             // Bounds check - totalAssetCount may briefly exceed actual count during observer update
@@ -163,8 +183,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             // Get the asset at this index (single access, not iteration)
             let asset = assets.object(at: randomIndex)
             
-            // Check if excluded
-            if excludingIDs.contains(asset.localIdentifier) {
+            // Check if excluded (reviewed) - O(1) Set lookup
+            if reviewedIDs.contains(asset.localIdentifier) {
                 continue
             }
             
@@ -173,19 +193,30 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
         
         // Couldn't find an unreviewed photo after max retries
-        // This likely means most photos have been reviewed
         return nil
     }
 
-    func preloadPhotos(excludingIDs: Set<String>, count: Int = 3) async -> [Photo] {
-        var photos: [Photo] = []
 
-        for _ in 0..<count {
-            if let photo = try? await getNextPhoto(excludingIDs: excludingIDs) {
-                photos.append(photo)
+    func preloadPhotos(count: Int = 3) async -> [Photo] {
+        var photos: [Photo] = []
+        var temporaryExcluded = Set<String>()
+        var attempts = 0
+        let maxAttempts = count * 3 // Prevent infinite loops if library is small
+
+        while photos.count < count && attempts < maxAttempts {
+            attempts += 1
+            if let photo = try? await getNextPhoto() {
+                // Avoid preloading the same photo twice in one batch
+                if !temporaryExcluded.contains(photo.id) {
+                    photos.append(photo)
+                    temporaryExcluded.insert(photo.id)
+                }
+            } else {
+                // If getNextPhoto returns nil (no more photos), stop trying
+                break
             }
         }
-
+        
         return photos
     }
 
@@ -242,13 +273,12 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     /// Returns approximate count - doesn't iterate through all photos
-    func getTotalPhotoCount(excludingIDs: Set<String> = []) -> Int {
+    func getTotalPhotoCount() -> Int {
         ensureAssetsFetched()
-        // Return total count minus excluded (approximation - good enough for UI)
-        return max(0, totalAssetCount - excludingIDs.count)
+        return totalAssetCount
     }
 
-    func refreshLibrary(excludingIDs: Set<String>) {
+    func refreshLibrary() {
         cachedAssets = nil
         totalAssetCount = 0
         ensureAssetsFetched()

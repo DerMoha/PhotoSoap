@@ -15,7 +15,8 @@ class UserStats {
     var reviewedPhotoIDs: [String]
     
     // Maximum number of photo IDs to retain (prevents unbounded memory growth)
-    @Transient private static let maxReviewedPhotoIDs = 20000
+    // Maximum number of photo IDs to retain (prevents unbounded memory growth)
+    // @Transient private static let maxReviewedPhotoIDs = 20000 (Removed)
     var unlockedAchievements: [String]
     var dailyChallengeProgress: Int
     var dailyChallengeTarget: Int
@@ -86,20 +87,18 @@ class UserStats {
         lastLoginDate = Date()
     }
 
+    // MARK: - Legacy / Migration
+    // Kept only for migration in PhotoSoapApp.swift. Do not use for new logic.
+    // Logic moved to ReviewedPhoto model.
+    @available(*, deprecated, message: "Use GameificationService.markPhotoReviewed instead")
     func markPhotoReviewed(_ photoID: String) {
-        if !reviewedPhotoIDs.contains(photoID) {
-            reviewedPhotoIDs.append(photoID)
-            
-            // Prevent unbounded memory growth by trimming oldest entries
-            if reviewedPhotoIDs.count > Self.maxReviewedPhotoIDs {
-                let excess = reviewedPhotoIDs.count - Self.maxReviewedPhotoIDs
-                reviewedPhotoIDs.removeFirst(excess)
-            }
-        }
+        // No-op - moved to GameificationService & ReviewedPhoto
     }
 
+    @available(*, deprecated, message: "Use PhotoLibraryService.isReviewed instead")
     func hasReviewedPhoto(_ photoID: String) -> Bool {
-        reviewedPhotoIDs.contains(photoID)
+        // No-op - deprecated
+        return false
     }
 
     func unlockAchievement(_ achievementID: String) {

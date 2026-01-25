@@ -35,6 +35,24 @@ class GameificationService: ObservableObject {
     func processSkip(stats: UserStats) {
         stats.resetStreak()
     }
+    
+    // MARK: - Review History Management
+    
+    func markPhotoReviewed(id: String, context: ModelContext) {
+        // Check if already exists to prevent duplicates
+        // Note: @Attribute(.unique) on the model helps, but checking first is cleaner
+        let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
+        if (try? context.fetchCount(descriptor)) == 0 {
+            let review = ReviewedPhoto(id: id)
+            context.insert(review)
+            // Save implicitly handled by context autoflush or manual save later
+        }
+    }
+    
+    func isPhotoReviewed(id: String, context: ModelContext) -> Bool {
+        let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
+        return (try? context.fetchCount(descriptor)) ?? 0 > 0
+    }
 
     private func checkStreakMilestone(currentStreak: Int) {
         if streakMilestones.contains(currentStreak) {
