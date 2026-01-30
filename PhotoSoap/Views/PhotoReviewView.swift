@@ -22,6 +22,7 @@ struct PhotoReviewView: View {
     @State private var isProcessingAction = false  // Prevents concurrent button presses
     @State private var currentFilter: PhotoFilter = .all
     @State private var showFilterSheet = false
+    @AppStorage("showAds") private var showAds = true
 
     var body: some View {
         NavigationStack {
@@ -69,7 +70,7 @@ struct PhotoReviewView: View {
                             }
                         )
                         .padding(.top, 12)
-                        .padding(.bottom, 16)
+                        .padding(.bottom, actionButtonsBottomPadding)
                     }
                 }
 
@@ -97,6 +98,13 @@ struct PhotoReviewView: View {
                 )
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            AdBannerSlot()
+        }
+    }
+
+    private var actionButtonsBottomPadding: CGFloat {
+        showAds ? (AdBannerSlot.reservedHeight + 12) : 16
     }
 
     private var compactHeaderSection: some View {

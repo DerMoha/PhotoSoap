@@ -26,6 +26,9 @@ struct AchievementsView: View {
                 .presentationDetents([.medium])
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            AdBannerSlot()
+        }
     }
 
     private var progressHeader: some View {

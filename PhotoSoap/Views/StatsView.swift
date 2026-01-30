@@ -5,6 +5,7 @@ struct StatsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var gameificationService: GameificationService
     @StateObject private var viewModel = StatsViewModel()
+    @AppStorage("showAds") private var showAds = true
 
     var body: some View {
         NavigationStack {
@@ -14,11 +15,15 @@ struct StatsView: View {
                     streaksSection
                     ratioSection
                     achievementsPreviewSection
+                    adsSection
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Statistics")
+        }
+        .safeAreaInset(edge: .bottom) {
+            AdBannerSlot()
         }
     }
 
@@ -144,6 +149,26 @@ struct StatsView: View {
                             .frame(width: 40)
                     }
                 }
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    private var adsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Ads")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("Show banner ads", isOn: $showAds)
+                    .font(.subheadline)
+
+                Text("Banner appears above the tab bar.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
