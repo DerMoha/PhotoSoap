@@ -31,8 +31,11 @@ struct FilterSheet: View {
                     }
                 }
             }
-            .navigationTitle("Select Photos")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Text("Select Photos")
+                        .font(.headline)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
