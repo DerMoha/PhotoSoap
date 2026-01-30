@@ -23,6 +23,7 @@ struct PhotoReviewView: View {
     @State private var currentFilter: PhotoFilter = .all
     @State private var showFilterSheet = false
     @AppStorage("showAds") private var showAds = true
+    @AppStorage("hasPurchasedRemoveAds") private var hasPurchasedRemoveAds = false
 
     var body: some View {
         NavigationStack {
@@ -55,33 +56,24 @@ struct PhotoReviewView: View {
                         Spacer()
                     }
 
-                    // Action buttons with proper spacing from tab bar
-                    if currentPhoto != nil && !isLoading {
-                        ActionButtons(
-                            onKeep: {
-                                Task {
-                                    await keepPhoto()
-                                }
-                            },
-                            onDelete: {
-                                Task {
-                                    await deletePhoto()
-                                }
-                            }
-                        )
-                        .padding(.top, 12)
-                        .padding(.bottom, actionButtonsBottomPadding)
-                    }
                 }
+                .padding(.bottom, reviewContentBottomPadding)
 
                 achievementBanner
                 streakCelebration
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
+                enforceAdsVisibility()
                 Task {
                     await loadInitialPhoto()
                 }
+            }
+            .onChange(of: stats.totalDeleted) { _, _ in
+                enforceAdsVisibility()
+            }
+            .onChange(of: hasPurchasedRemoveAds) { _, _ in
+                enforceAdsVisibility()
             }
             .alert("Error", isPresented: $showError) {
                 Button("OK") {}
@@ -99,12 +91,26 @@ struct PhotoReviewView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            AdBannerSlot()
+            AdBannerSlot(shouldShowAds: shouldShowAds)
         }
     }
 
-    private var actionButtonsBottomPadding: CGFloat {
-        showAds ? (AdBannerSlot.reservedHeight + 12) : 16
+    private var reviewContentBottomPadding: CGFloat {
+        shouldShowAds ? AdBannerSlot.reservedHeight : 0
+    }
+
+    private var canRemoveAds: Bool {
+        hasPurchasedRemoveAds || stats.totalDeleted >= AdRemovalConfig.freeUnlockDeletedCount
+    }
+
+    private var shouldShowAds: Bool {
+        showAds || !canRemoveAds
+    }
+
+    private func enforceAdsVisibility() {
+        if !canRemoveAds && !showAds {
+            showAds = true
+        }
     }
 
     private var compactHeaderSection: some View {

@@ -5,7 +5,9 @@ struct StatsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var gameificationService: GameificationService
     @StateObject private var viewModel = StatsViewModel()
+    @StateObject private var purchaseService = AdRemovalPurchaseService()
     @AppStorage("showAds") private var showAds = true
+    @AppStorage("hasPurchasedRemoveAds") private var hasPurchasedRemoveAds = false
 
     var body: some View {
         NavigationStack {
@@ -22,8 +24,17 @@ struct StatsView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Statistics")
         }
-        .safeAreaInset(edge: .bottom) {
-            AdBannerSlot()
+        .onAppear {
+            enforceAdsVisibility()
+        }
+        .onChange(of: stats.totalDeleted) { _, _ in
+            enforceAdsVisibility()
+        }
+        .onChange(of: hasPurchasedRemoveAds) { _, newValue in
+            if newValue && showAds {
+                showAds = false
+            }
+            enforceAdsVisibility()
         }
     }
 
@@ -162,17 +173,120 @@ struct StatsView: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Toggle("Show banner ads", isOn: $showAds)
+            VStack(alignment: .leading, spacing: 12) {
+                Text(adsMessage)
                     .font(.subheadline)
+
+                ProgressView(value: deleteProgress)
+                    .tint(.blue)
+
+                HStack {
+                    Text("\(stats.totalDeleted.formatted()) / \(deleteGoal.formatted()) deleted")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    if !canRemoveAds {
+                        Text("\(deleteRemaining.formatted()) to go")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if canRemoveAds {
+                    if showAds {
+                        Button {
+                            showAds = false
+                        } label: {
+                            Label("Remove ads", systemImage: "nosign")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    } else {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                            Text("Ads removed")
+                        }
+                        .font(.subheadline)
+
+                        Button("Show ads again") {
+                            showAds = true
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Button {
+                        Task {
+                            await purchaseService.purchase()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if purchaseService.isLoading {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                            Text("Remove ads for \(purchaseService.displayPrice)")
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(purchaseService.isLoading || purchaseService.product == nil)
+
+                    Button("Restore Purchases") {
+                        Task {
+                            await purchaseService.restorePurchases()
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
 
                 Text("Banner appears above the tab bar.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                if let error = purchaseService.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    private var deleteGoal: Int {
+        AdRemovalConfig.freeUnlockDeletedCount
+    }
+
+    private var deleteRemaining: Int {
+        max(deleteGoal - stats.totalDeleted, 0)
+    }
+
+    private var deleteProgress: Double {
+        min(Double(stats.totalDeleted) / Double(deleteGoal), 1)
+    }
+
+    private var canRemoveAds: Bool {
+        hasPurchasedRemoveAds || stats.totalDeleted >= deleteGoal
+    }
+
+    private var adsMessage: String {
+        if canRemoveAds {
+            return "You can remove ads whenever you're ready."
+        }
+
+        return "Delete \(deleteGoal.formatted()) photos to remove ads for free, or remove now for \(purchaseService.displayPrice)."
+    }
+
+    private func enforceAdsVisibility() {
+        if !canRemoveAds && !showAds {
+            showAds = true
         }
     }
 }

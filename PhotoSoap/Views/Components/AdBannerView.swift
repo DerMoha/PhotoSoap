@@ -2,10 +2,10 @@ import SwiftUI
 
 struct AdBannerSlot: View {
     static let reservedHeight: CGFloat = 64
-    @AppStorage("showAds") private var showAds = true
+    let shouldShowAds: Bool
 
     var body: some View {
-        if showAds {
+        if shouldShowAds {
             VStack(spacing: 0) {
                 Divider()
 
@@ -51,7 +51,10 @@ struct AdBannerView: View {
 }
 
 #Preview {
-    AdBannerView()
-        .padding()
-        .background(Color.secondary.opacity(0.08))
+    VStack(spacing: 12) {
+        AdBannerSlot(shouldShowAds: true)
+        AdBannerView()
+    }
+    .padding()
+    .background(Color.secondary.opacity(0.08))
 }
