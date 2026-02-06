@@ -4,8 +4,8 @@ struct PhotoCard: View {
     let photo: Photo
     var offset: CGSize = .zero
     var rotation: Double = 0
-    var showKeepOverlay: Bool = false
-    var showDeleteOverlay: Bool = false
+    var swipeProgress: CGFloat = 0
+    var swipeDirection: SwipeDirection?
 
     var body: some View {
         GeometryReader { geometry in
@@ -79,16 +79,30 @@ struct PhotoCard: View {
         ZStack {
             if showKeepOverlay {
                 keepOverlay
+                    .opacity(overlayOpacity)
                     .transition(.opacity)
             }
 
             if showDeleteOverlay {
                 deleteOverlay
+                    .opacity(overlayOpacity)
                     .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.2), value: showKeepOverlay)
         .animation(.easeInOut(duration: 0.2), value: showDeleteOverlay)
+    }
+
+    private var showKeepOverlay: Bool {
+        swipeDirection == .keep
+    }
+
+    private var showDeleteOverlay: Bool {
+        swipeDirection == .delete
+    }
+
+    private var overlayOpacity: Double {
+        Double(min(max(swipeProgress, 0), 1))
     }
 
     private var keepOverlay: some View {

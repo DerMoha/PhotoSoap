@@ -153,7 +153,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     /// Gets next photo using random sampling - O(1) memory instead of O(n)
-    func getNextPhoto() async throws -> Photo? {
+    func getNextPhoto(excluding excludedIDs: Set<String> = []) async throws -> Photo? {
         ensureAssetsFetched()
         
         guard let assets = cachedAssets, totalAssetCount > 0 else {
@@ -184,7 +184,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             let asset = assets.object(at: randomIndex)
             
             // Check if excluded (reviewed) - O(1) Set lookup
-            if reviewedIDs.contains(asset.localIdentifier) {
+            if reviewedIDs.contains(asset.localIdentifier) || excludedIDs.contains(asset.localIdentifier) {
                 continue
             }
             

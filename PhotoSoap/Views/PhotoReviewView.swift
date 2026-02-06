@@ -16,14 +16,18 @@ struct PhotoReviewView: View {
     @State private var noMorePhotos = false
     @State private var cardOffset: CGSize = .zero
     @State private var cardRotation: Double = 0
-    @State private var showKeepOverlay = false
-    @State private var showDeleteOverlay = false
+    @State private var swipeProgress: CGFloat = 0
+    @State private var swipeDirection: SwipeDirection?
     
     @State private var isProcessingAction = false  // Prevents concurrent button presses
     @State private var currentFilter: PhotoFilter = .all
     @State private var showFilterSheet = false
     @AppStorage("showAds") private var showAds = true
     @AppStorage("hasPurchasedRemoveAds") private var hasPurchasedRemoveAds = false
+
+    private let swipeActionThreshold: CGFloat = 100
+    private let swipeFeedbackDistance: CGFloat = 140
+    private let swipeOverlayThreshold: CGFloat = 12
 
     var body: some View {
         NavigationStack {
@@ -135,8 +139,8 @@ struct PhotoReviewView: View {
             photo: photo,
             offset: cardOffset,
             rotation: cardRotation,
-            showKeepOverlay: showKeepOverlay,
-            showDeleteOverlay: showDeleteOverlay
+            swipeProgress: swipeProgress,
+            swipeDirection: swipeDirection
         )
         .gesture(
             DragGesture()
@@ -308,7 +312,8 @@ struct PhotoReviewView: View {
     }
 
     private func preloadNextPhoto() async {
-        if let photo = try? await photoLibraryService.getNextPhoto() {
+        let excluded = currentPhoto.map { Set([$0.id]) } ?? []
+        if let photo = try? await photoLibraryService.getNextPhoto(excluding: excluded) {
             nextPhoto = photo
         }
     }
@@ -372,8 +377,8 @@ struct PhotoReviewView: View {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             cardOffset = .zero
             cardRotation = 0
-            showKeepOverlay = false
-            showDeleteOverlay = false
+            swipeProgress = 0
+            swipeDirection = nil
         }
 
         if let next = nextPhoto {
@@ -399,25 +404,31 @@ struct PhotoReviewView: View {
         guard !isProcessingAction else { return }
         
         cardOffset = value.translation
-        cardRotation = Double(value.translation.width / 20)
+        cardRotation = Double(value.translation.width / 18)
 
-        let threshold: CGFloat = 50
-        showKeepOverlay = value.translation.width > threshold
-        showDeleteOverlay = value.translation.width < -threshold
+        let translation = value.translation.width
+        let distance = abs(translation)
+        let progress = min(distance / swipeFeedbackDistance, 1)
+
+        if distance < swipeOverlayThreshold {
+            swipeProgress = 0
+            swipeDirection = nil
+        } else {
+            swipeProgress = progress
+            swipeDirection = translation > 0 ? .keep : .delete
+        }
     }
 
     private func handleDragEnd(_ value: DragGesture.Value) async {
         guard !isProcessingAction else { return }
         
-        let threshold: CGFloat = 100
-
-        if value.translation.width > threshold {
+        if value.translation.width > swipeActionThreshold {
             withAnimation(.easeOut(duration: 0.3)) {
                 cardOffset = CGSize(width: 500, height: 0)
             }
             try? await Task.sleep(nanoseconds: 200_000_000)
             await keepPhoto()
-        } else if value.translation.width < -threshold {
+        } else if value.translation.width < -swipeActionThreshold {
             withAnimation(.easeOut(duration: 0.3)) {
                 cardOffset = CGSize(width: -500, height: 0)
             }
@@ -427,8 +438,8 @@ struct PhotoReviewView: View {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                 cardOffset = .zero
                 cardRotation = 0
-                showKeepOverlay = false
-                showDeleteOverlay = false
+                swipeProgress = 0
+                swipeDirection = nil
             }
         }
     }
