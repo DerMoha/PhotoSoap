@@ -38,8 +38,7 @@ struct PhotoSoapApp: App {
         let storeURL = appSupport.appendingPathComponent("default.store")
         
         // Check if database file exists and is suspiciously large (> 50MB suggests bloated data)
-        if let attributes = try? fileManager.attributesOfItem(atPath: storeURL.path),
-           let fileSize = attributes[.size] as? Int64,
+        if let fileSize = sizeOfFile(at: storeURL),
            fileSize > 50_000_000 {
             
             print("PhotoSoap: Database is \(fileSize / 1_000_000)MB - clearing to prevent memory crash")
@@ -57,6 +56,23 @@ struct PhotoSoapApp: App {
             
             print("PhotoSoap: Database cleared successfully")
         }
+    }
+
+    private static func sizeOfFile(at url: URL) -> Int64? {
+        guard let handle = try? FileHandle(forReadingFrom: url) else {
+            return nil
+        }
+
+        defer {
+            try? handle.close()
+        }
+
+        guard let size = try? handle.seekToEnd(),
+              size <= UInt64(Int64.max) else {
+            return nil
+        }
+
+        return Int64(size)
     }
     
     /// Migrates IDs from UserStats array to ReviewedPhoto entities

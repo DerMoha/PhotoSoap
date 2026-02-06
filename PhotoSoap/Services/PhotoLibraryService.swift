@@ -252,16 +252,37 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                     return
                 }
 
-                let resources = PHAssetResource.assetResources(for: asset)
-                let fileSize = resources.first.flatMap { resource -> Int64? in
-                    if let size = resource.value(forKey: "fileSize") as? Int64 {
-                        return size
-                    }
-                    return nil
-                } ?? 0
-
-                let photo = Photo(asset: asset, image: image, fileSize: fileSize)
+                let photo = Photo(asset: asset, image: image, fileSize: 0)
                 continuation.resume(returning: photo)
+            }
+        }
+    }
+
+    func fetchFileSize(for asset: PHAsset, allowNetworkAccess: Bool = false) async -> Int64 {
+        let resources = PHAssetResource.assetResources(for: asset)
+        guard let resource = preferredResource(from: resources) else {
+            return 0
+        }
+
+        let options = PHAssetResourceRequestOptions()
+        options.isNetworkAccessAllowed = allowNetworkAccess
+
+        return await withCheckedContinuation { continuation in
+            var totalBytes: Int64 = 0
+
+            PHAssetResourceManager.default().requestData(
+                for: resource,
+                options: options
+            ) { data in
+                totalBytes += Int64(data.count)
+            } completionHandler: { error in
+                if let error {
+                    print("PhotoSoap: Failed to fetch file size for \(asset.localIdentifier): \(error.localizedDescription)")
+                    continuation.resume(returning: 0)
+                    return
+                }
+
+                continuation.resume(returning: totalBytes)
             }
         }
     }
@@ -431,5 +452,11 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         return fetchOptions
+    }
+
+    private func preferredResource(from resources: [PHAssetResource]) -> PHAssetResource? {
+        resources.first {
+            $0.type == .fullSizePhoto || $0.type == .photo
+        } ?? resources.first
     }
 }

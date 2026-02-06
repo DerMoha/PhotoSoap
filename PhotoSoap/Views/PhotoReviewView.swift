@@ -350,6 +350,13 @@ struct PhotoReviewView: View {
         defer { isProcessingAction = false }
 
         do {
+            let resolvedFileSize: Int64
+            if photo.fileSize > 0 {
+                resolvedFileSize = photo.fileSize
+            } else {
+                resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo.asset)
+            }
+
             try await photoLibraryService.deletePhoto(photo)
             
             // Still mark as reviewed in DB for long-term history/stats
@@ -361,7 +368,7 @@ struct PhotoReviewView: View {
 
             gameificationService.processPhotoReview(
                 action: .delete,
-                fileSize: photo.fileSize,
+                fileSize: resolvedFileSize,
                 stats: stats,
                 challengeType: challengeType
             )

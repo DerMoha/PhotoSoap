@@ -62,6 +62,7 @@ struct Photo: Identifiable {
     }
 
     var fileSizeFormatted: String {
+        guard fileSize > 0 else { return "Unknown size" }
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useKB, .useMB]
         formatter.countStyle = .file
