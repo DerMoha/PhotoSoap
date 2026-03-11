@@ -1,5 +1,6 @@
 import Foundation
 import Photos
+import PhotosUI
 import UIKit
 import Combine
 
@@ -141,7 +142,21 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     func presentLimitedLibraryPicker() {
-        openAppSettings()
+        guard authorizationStatus == .limited else {
+            openAppSettings()
+            return
+        }
+
+        guard let presenter = activeViewController() else {
+            openAppSettings()
+            return
+        }
+
+        PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: presenter) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.refreshLibraryAccessState()
+            }
+        }
     }
 
     func openAppSettings() {
@@ -328,12 +343,21 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     func refreshLibrary() {
+        invalidateCaches()
+        ensureAssetsFetched()
+    }
+
+    func refreshLibraryAccessState() {
+        checkAuthorizationStatus()
+        refreshLibrary()
+    }
+
+    private func invalidateCaches() {
         cachedAssets = nil
         totalAssetCount = 0
         cachedAlbums = []
         cachedYears = []
         cachedMonthsByYear = [:]
-        ensureAssetsFetched()
     }
 
     func setFilter(_ filter: PhotoFilter) {
@@ -536,5 +560,30 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         resources.first {
             $0.type == .fullSizePhoto || $0.type == .photo
         } ?? resources.first
+    }
+
+    private func activeViewController() -> UIViewController? {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }?
+            .windows
+            .first(where: \ .isKeyWindow)
+            .flatMap { topViewController(from: $0.rootViewController) }
+    }
+
+    private func topViewController(from viewController: UIViewController?) -> UIViewController? {
+        if let navigationController = viewController as? UINavigationController {
+            return topViewController(from: navigationController.visibleViewController)
+        }
+
+        if let tabBarController = viewController as? UITabBarController {
+            return topViewController(from: tabBarController.selectedViewController)
+        }
+
+        if let presentedViewController = viewController?.presentedViewController {
+            return topViewController(from: presentedViewController)
+        }
+
+        return viewController
     }
 }

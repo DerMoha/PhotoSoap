@@ -36,12 +36,12 @@ struct ContentView: View {
         }
         .onAppear {
             initializeStats()
-            photoLibraryService.checkAuthorizationStatus()
+            photoLibraryService.refreshLibraryAccessState()
             showBootstrapAlert = bootstrapErrorMessage != nil
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
-            photoLibraryService.checkAuthorizationStatus()
+            photoLibraryService.refreshLibraryAccessState()
         }
         .alert("Recovery Mode", isPresented: $showBootstrapAlert) {
             Button("OK") {}
@@ -206,14 +206,14 @@ private struct LimitedAccessBanner: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Reviewing selected photos only")
                     .font(.subheadline.weight(.semibold))
-                Text("Manage access in Settings to review more of your library.")
+                Text("Choose more photos to expand what you can review, or manage access in Settings later.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Button("Manage") {
+            Button("Choose More") {
                 onManage()
             }
             .buttonStyle(.borderedProminent)
