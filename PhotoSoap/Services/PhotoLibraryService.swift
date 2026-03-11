@@ -56,9 +56,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         .smartAlbumUserLibrary
     ]
     
-    // Local cache for O(1) filtering
-    // Memory usage: ~100k UUID strings is approx 4-5MB. Safe for modern devices.
-    private var reviewedIDs: Set<String> = []
+    // Session cache for O(1) filtering of items already seen during this run.
+    private var sessionReviewedIDs: Set<String> = []
 
     override init() {
         super.init()
@@ -66,16 +65,16 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         PHPhotoLibrary.shared().register(self)
     }
     
-    func setReviewedIDs(_ ids: Set<String>) {
-        self.reviewedIDs = ids
+    func setSessionReviewedIDs(_ ids: Set<String>) {
+        sessionReviewedIDs = ids
     }
     
     func markReviewed(_ id: String) {
-        reviewedIDs.insert(id)
+        sessionReviewedIDs.insert(id)
     }
     
     func isReviewed(_ id: String) -> Bool {
-        reviewedIDs.contains(id)
+        sessionReviewedIDs.contains(id)
     }
 
     deinit {
@@ -160,7 +159,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             return nil
         }
         
-        let reviewedCount = reviewedIDs.count
+        let reviewedCount = sessionReviewedIDs.count
         
         // Completion check removed to support deleted photos logic.
         // Even if reviewedCount >= totalAssetCount, some of those reviewedIDs might imply deleted photos.
@@ -184,7 +183,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             let asset = assets.object(at: randomIndex)
             
             // Check if excluded (reviewed) - O(1) Set lookup
-            if reviewedIDs.contains(asset.localIdentifier) || excludedIDs.contains(asset.localIdentifier) {
+            if sessionReviewedIDs.contains(asset.localIdentifier) || excludedIDs.contains(asset.localIdentifier) {
                 continue
             }
             

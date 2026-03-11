@@ -45,40 +45,30 @@ struct PhotoSoapApp: App {
         do {
             let descriptor = FetchDescriptor<UserStats>()
             let allStats = try context.fetch(descriptor)
-            
-            var migrationCount = 0
-            
+
             for stats in allStats {
                 if !stats.reviewedPhotoIDs.isEmpty {
                     print("PhotoSoap: Migrating \(stats.reviewedPhotoIDs.count) reviewed photos...")
-                    
-                    // 1. Get all IDs to migrate
+
                     let idsToMigrate = Set(stats.reviewedPhotoIDs)
-                    
-                    // 2. Fetch ANY existing IDs from DB that match (to avoid duplicates)
-                    // Efficiently: fetch only IDs
-                    let allExistingDescriptor = FetchDescriptor<ReviewedPhoto>()
-                    let allExistingPhotos = try context.fetch(allExistingDescriptor)
-                    let existingIDSet = Set(allExistingPhotos.map { $0.id })
-                    
+                    var migrationCount = 0
+
                     for id in idsToMigrate {
-                        if !existingIDSet.contains(id) {
+                        let reviewDescriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
+                        if try context.fetchCount(reviewDescriptor) == 0 {
                             let review = ReviewedPhoto(id: id)
                             context.insert(review)
                             migrationCount += 1
                         }
                     }
-                    
+
                     if migrationCount > 0 {
                         try context.save()
                         print("PhotoSoap: Successfully migrated \(migrationCount) photos")
-                        
-                        // Clear the array ONLY after successful save to prevent data loss
-                        stats.reviewedPhotoIDs.removeAll()
-                    } else {
-                        // If no migration needed (all duplicates), still clear array
-                        stats.reviewedPhotoIDs.removeAll()
                     }
+
+                    stats.reviewedPhotoIDs.removeAll()
+                    try context.save()
                 }
             }
         } catch {

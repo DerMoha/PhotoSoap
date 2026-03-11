@@ -285,19 +285,9 @@ struct PhotoReviewView: View {
         noMorePhotos = false
 
         do {
-            // Load all reviewed IDs into the service cache for performance
-            // fetching all IDs is efficient even for ~100k items
-            let context = modelContext
-            let descriptor = FetchDescriptor<ReviewedPhoto>() 
-            // Optimally we'd fetch properties only but SwiftData is still evolving there.
-            // Fetching 100k empty objects is fast enough (few MBs).
-            let allReviewed = try context.fetch(descriptor)
-            let idSet = Set(allReviewed.map { $0.id })
-            
-            // Populate cache
-            photoLibraryService.setReviewedIDs(idSet)
-            
-            if let photo = try await photoLibraryService.getNextPhoto() {
+            photoLibraryService.setSessionReviewedIDs(Set<String>())
+
+            if let photo = try await nextAvailablePhoto() {
                 currentPhoto = photo
                 await preloadNextPhoto()
             } else {
@@ -312,10 +302,31 @@ struct PhotoReviewView: View {
     }
 
     private func preloadNextPhoto() async {
-        let excluded = currentPhoto.map { Set([$0.id]) } ?? []
-        if let photo = try? await photoLibraryService.getNextPhoto(excluding: excluded) {
+        let excluded = currentPhoto.map { Set<String>([$0.id]) } ?? Set<String>()
+        if let photo = try? await nextAvailablePhoto(excluding: excluded) {
             nextPhoto = photo
         }
+    }
+
+    private func nextAvailablePhoto(excluding excludedIDs: Set<String> = []) async throws -> Photo? {
+        var attemptedIDs = excludedIDs
+        let maxAttempts = 80
+
+        for _ in 0..<maxAttempts {
+            guard let photo = try await photoLibraryService.getNextPhoto(excluding: attemptedIDs) else {
+                return nil
+            }
+
+            if gameificationService.isPhotoReviewed(id: photo.id, context: modelContext) {
+                photoLibraryService.markReviewed(photo.id)
+                attemptedIDs.insert(photo.id)
+                continue
+            }
+
+            return photo
+        }
+
+        return nil
     }
 
     private func keepPhoto() async {
@@ -328,7 +339,13 @@ struct PhotoReviewView: View {
         let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
 
         // 1. Mark in DB
-        gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+        do {
+            try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+        } catch {
+            self.error = "Failed to save review history: \(error.localizedDescription)"
+            showError = true
+            return
+        }
         // 2. Mark in local cache (so we don't see it again this session instantly)
         photoLibraryService.markReviewed(photo.id)
         
@@ -360,7 +377,13 @@ struct PhotoReviewView: View {
             try await photoLibraryService.deletePhoto(photo)
             
             // Still mark as reviewed in DB for long-term history/stats
-            gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+            do {
+                try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+            } catch {
+                self.error = "Failed to save review history: \(error.localizedDescription)"
+                showError = true
+                return
+            }
             // Do NOT mark in local cache (reviewedIDs) because deleted photos are removed from library,
             // so they shouldn't count towards the "reviewed vs total" ratio for completion.
 
@@ -398,7 +421,7 @@ struct PhotoReviewView: View {
     }
 
     private func loadNextPhoto() async {
-        if let photo = try? await photoLibraryService.getNextPhoto() {
+        if let photo = try? await nextAvailablePhoto() {
             currentPhoto = photo
             await preloadNextPhoto()
         } else {
