@@ -10,6 +10,7 @@ struct ContentView: View {
     @Query private var statsArray: [UserStats]
     @StateObject private var photoLibraryService = PhotoLibraryService()
     @StateObject private var gameificationService = GameificationService()
+    @StateObject private var adRemovalPurchaseService = AdRemovalPurchaseService()
     @State private var selectedTab = 0
     @State private var showBootstrapAlert = false
 
@@ -37,11 +38,16 @@ struct ContentView: View {
         .onAppear {
             initializeStats()
             photoLibraryService.refreshLibraryAccessState()
+            adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
             showBootstrapAlert = bootstrapErrorMessage != nil
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
             photoLibraryService.refreshLibraryAccessState()
+            adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
+        }
+        .onChange(of: stats.totalDeleted) { _, _ in
+            adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
         }
         .alert("Recovery Mode", isPresented: $showBootstrapAlert) {
             Button("OK") {}
@@ -77,7 +83,11 @@ struct ContentView: View {
                 }
                 .tag(0)
 
-                StatsView(stats: stats, gameificationService: gameificationService)
+                StatsView(
+                    stats: stats,
+                    gameificationService: gameificationService,
+                    adRemovalPurchaseService: adRemovalPurchaseService
+                )
                     .tabItem {
                         Label("Stats", systemImage: "chart.bar")
                     }

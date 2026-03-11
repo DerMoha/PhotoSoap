@@ -4,6 +4,7 @@ import SwiftData
 struct StatsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var gameificationService: GameificationService
+    @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
     @StateObject private var viewModel = StatsViewModel()
 
     var body: some View {
@@ -13,12 +14,16 @@ struct StatsView: View {
                     overviewSection
                     streaksSection
                     ratioSection
+                    adFreeSection
                     achievementsPreviewSection
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Statistics")
+            .onAppear {
+                adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
+            }
         }
     }
 
@@ -151,6 +156,130 @@ struct StatsView: View {
         }
     }
 
+    private var adFreeSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Ad-Free Unlock")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 14) {
+                Label(adFreeTitle, systemImage: adFreeIcon)
+                    .font(.title3.weight(.semibold))
+
+                Text(adFreeMessage)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Loyalty progress")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+
+                        Spacer()
+
+                        Text("\(stats.totalDeleted)/\(AdRemovalConfig.freeUnlockDeletedCount)")
+                            .font(.caption.weight(.semibold))
+                    }
+
+                    ProgressView(value: adRemovalPurchaseService.deleteProgress)
+                        .tint(.orange)
+
+                    Text(progressMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let errorMessage = adRemovalPurchaseService.errorMessage, !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+
+                HStack(spacing: 12) {
+                    Button {
+                        Task {
+                            await adRemovalPurchaseService.purchase()
+                        }
+                    } label: {
+                        if adRemovalPurchaseService.isLoading {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Text(primaryButtonTitle)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(adRemovalPurchaseService.hasAdRemovalEntitlement || adRemovalPurchaseService.isLoading || adRemovalPurchaseService.product == nil)
+
+                    Button("Restore") {
+                        Task {
+                            await adRemovalPurchaseService.restorePurchases()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(adRemovalPurchaseService.isLoading || adRemovalPurchaseService.hasEarnedEntitlement)
+                }
+
+                if adRemovalPurchaseService.product == nil && !adRemovalPurchaseService.hasAdRemovalEntitlement {
+                    Text("Purchase option will appear when the App Store product is available.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    private var adFreeTitle: String {
+        switch adRemovalPurchaseService.unlockSource {
+        case .purchased:
+            return "Ad-free unlocked by purchase"
+        case .earned:
+            return "Ad-free unlocked by loyalty"
+        case .none:
+            return "Remove ads forever"
+        }
+    }
+
+    private var adFreeIcon: String {
+        switch adRemovalPurchaseService.unlockSource {
+        case .none:
+            return "sparkles"
+        case .purchased, .earned:
+            return "checkmark.seal.fill"
+        }
+    }
+
+    private var adFreeMessage: String {
+        switch adRemovalPurchaseService.unlockSource {
+        case .purchased:
+            return "Your purchase will keep the app ad-free on this account once ads are introduced."
+        case .earned:
+            return "You earned permanent ad-free access by deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos."
+        case .none:
+            return "Buy ad-free now for \(adRemovalPurchaseService.displayPrice), or unlock it free after deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos."
+        }
+    }
+
+    private var progressMessage: String {
+        if adRemovalPurchaseService.hasEarnedEntitlement {
+            return "Your loyalty unlock is active."
+        }
+
+        let remainingDeletes = adRemovalPurchaseService.remainingDeletesForUnlock
+        return remainingDeletes == 1
+            ? "Delete 1 more photo to earn ad-free access for free."
+            : "Delete \(remainingDeletes) more photos to earn ad-free access for free."
+    }
+
+    private var primaryButtonTitle: String {
+        adRemovalPurchaseService.hasAdRemovalEntitlement ? "Unlocked" : "Buy for \(adRemovalPurchaseService.displayPrice)"
+    }
+
 }
 
 struct StatCard: View {
@@ -179,5 +308,9 @@ struct StatCard: View {
 }
 
 #Preview {
-    StatsView(stats: UserStats(), gameificationService: GameificationService())
+    StatsView(
+        stats: UserStats(),
+        gameificationService: GameificationService(),
+        adRemovalPurchaseService: AdRemovalPurchaseService(shouldObserveTransactions: false)
+    )
 }

@@ -72,4 +72,50 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(result.bootstrapErrorMessage?.contains("temporary recovery mode") == true)
         XCTAssertNotNil(result.modelContainer)
     }
+
+    @MainActor
+    func testEarnedAdRemovalUnlockRequiresThreshold() {
+        let service = AdRemovalPurchaseService(shouldObserveTransactions: false)
+        let stats = UserStats()
+
+        stats.totalDeleted = AdRemovalConfig.freeUnlockDeletedCount - 1
+        service.refreshEarnedEntitlement(stats: stats)
+
+        XCTAssertFalse(service.hasEarnedEntitlement)
+        XCTAssertFalse(service.hasAdRemovalEntitlement)
+        XCTAssertEqual(service.remainingDeletesForUnlock, 1)
+
+        stats.totalDeleted = AdRemovalConfig.freeUnlockDeletedCount
+        service.refreshEarnedEntitlement(stats: stats)
+
+        XCTAssertTrue(service.hasEarnedEntitlement)
+        XCTAssertTrue(service.hasAdRemovalEntitlement)
+        XCTAssertEqual(service.unlockSource, .earned)
+        XCTAssertEqual(service.remainingDeletesForUnlock, 0)
+        XCTAssertEqual(service.deleteProgress, 1.0)
+    }
+
+    @MainActor
+    func testPurchasedEntitlementUnlocksAdRemoval() {
+        let service = AdRemovalPurchaseService(shouldObserveTransactions: false)
+
+        service.applyPurchasedEntitlement(true)
+
+        XCTAssertTrue(service.hasPurchasedEntitlement)
+        XCTAssertTrue(service.hasAdRemovalEntitlement)
+        XCTAssertEqual(service.unlockSource, .purchased)
+    }
+
+    @MainActor
+    func testDeleteProgressCapsAtOneHundredPercent() {
+        let service = AdRemovalPurchaseService(shouldObserveTransactions: false)
+        let stats = UserStats()
+
+        stats.totalDeleted = AdRemovalConfig.freeUnlockDeletedCount + 250
+        service.refreshEarnedEntitlement(stats: stats)
+
+        XCTAssertEqual(service.currentDeletedCount, AdRemovalConfig.freeUnlockDeletedCount + 250)
+        XCTAssertEqual(service.deleteProgress, 1.0)
+        XCTAssertEqual(service.remainingDeletesForUnlock, 0)
+    }
 }

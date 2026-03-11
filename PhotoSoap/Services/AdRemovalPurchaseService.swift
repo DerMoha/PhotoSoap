@@ -8,16 +8,31 @@ enum AdRemovalConfig {
     static let fallbackPrice = "$0.99"
 }
 
+enum AdRemovalUnlockSource {
+    case none
+    case purchased
+    case earned
+}
+
 @MainActor
 final class AdRemovalPurchaseService: ObservableObject {
     @Published private(set) var product: Product?
     @Published private(set) var isLoading = false
+    @Published private(set) var hasPurchasedEntitlement = false
+    @Published private(set) var hasEarnedEntitlement = false
+    @Published private(set) var currentDeletedCount = 0
     @Published var errorMessage: String?
 
     @AppStorage("hasPurchasedRemoveAds") private var hasPurchasedRemoveAds = false
     private var updatesTask: Task<Void, Never>?
 
-    init() {
+    init(shouldObserveTransactions: Bool = true) {
+        hasPurchasedEntitlement = hasPurchasedRemoveAds
+
+        guard shouldObserveTransactions else {
+            return
+        }
+
         updatesTask = Task {
             await loadProduct()
             await refreshEntitlement()
@@ -31,6 +46,30 @@ final class AdRemovalPurchaseService: ObservableObject {
 
     var displayPrice: String {
         product?.displayPrice ?? AdRemovalConfig.fallbackPrice
+    }
+
+    var hasAdRemovalEntitlement: Bool {
+        hasPurchasedEntitlement || hasEarnedEntitlement
+    }
+
+    var unlockSource: AdRemovalUnlockSource {
+        if hasPurchasedEntitlement {
+            return .purchased
+        }
+
+        if hasEarnedEntitlement {
+            return .earned
+        }
+
+        return .none
+    }
+
+    var deleteProgress: Double {
+        min(1.0, Double(currentDeletedCount) / Double(AdRemovalConfig.freeUnlockDeletedCount))
+    }
+
+    var remainingDeletesForUnlock: Int {
+        max(0, AdRemovalConfig.freeUnlockDeletedCount - currentDeletedCount)
     }
 
     func purchase() async {
@@ -74,6 +113,16 @@ final class AdRemovalPurchaseService: ObservableObject {
         }
     }
 
+    func refreshEarnedEntitlement(stats: UserStats) {
+        currentDeletedCount = stats.totalDeleted
+        hasEarnedEntitlement = stats.totalDeleted >= AdRemovalConfig.freeUnlockDeletedCount
+    }
+
+    func applyPurchasedEntitlement(_ hasEntitlement: Bool) {
+        hasPurchasedEntitlement = hasEntitlement
+        hasPurchasedRemoveAds = hasEntitlement
+    }
+
     private func loadProduct() async {
         do {
             let products = try await Product.products(for: [AdRemovalConfig.productID])
@@ -93,7 +142,7 @@ final class AdRemovalPurchaseService: ObservableObject {
             }
         }
 
-        hasPurchasedRemoveAds = hasEntitlement
+        applyPurchasedEntitlement(hasEntitlement)
     }
 
     private func observeTransactionUpdates() async {
