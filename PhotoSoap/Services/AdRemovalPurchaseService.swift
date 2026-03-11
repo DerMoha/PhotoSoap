@@ -84,13 +84,16 @@ final class AdRemovalPurchaseService: ObservableObject {
     }
 
     private func refreshEntitlement() async {
+        var hasEntitlement = false
+
         for await result in StoreKit.Transaction.currentEntitlements {
             if case .verified(let transaction) = result,
                transaction.productID == AdRemovalConfig.productID {
-                hasPurchasedRemoveAds = true
-                return
+                hasEntitlement = true
             }
         }
+
+        hasPurchasedRemoveAds = hasEntitlement
     }
 
     private func observeTransactionUpdates() async {
@@ -110,8 +113,8 @@ final class AdRemovalPurchaseService: ObservableObject {
     }
 
     private func handleVerified(_ transaction: StoreKit.Transaction) async {
-        hasPurchasedRemoveAds = true
         await transaction.finish()
+        await refreshEntitlement()
     }
 
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {

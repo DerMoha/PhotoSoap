@@ -22,9 +22,6 @@ struct PhotoReviewView: View {
     @State private var isProcessingAction = false  // Prevents concurrent button presses
     @State private var currentFilter: PhotoFilter = .all
     @State private var showFilterSheet = false
-    @AppStorage("showAds") private var showAds = true
-    @AppStorage("hasPurchasedRemoveAds") private var hasPurchasedRemoveAds = false
-
     private let swipeActionThreshold: CGFloat = 100
     private let swipeFeedbackDistance: CGFloat = 140
     private let swipeOverlayThreshold: CGFloat = 12
@@ -61,23 +58,15 @@ struct PhotoReviewView: View {
                     }
 
                 }
-                .padding(.bottom, reviewContentBottomPadding)
 
                 achievementBanner
                 streakCelebration
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                enforceAdsVisibility()
                 Task {
                     await loadInitialPhoto()
                 }
-            }
-            .onChange(of: stats.totalDeleted) { _, _ in
-                enforceAdsVisibility()
-            }
-            .onChange(of: hasPurchasedRemoveAds) { _, _ in
-                enforceAdsVisibility()
             }
             .alert("Error", isPresented: $showError) {
                 Button("OK") {}
@@ -93,27 +82,6 @@ struct PhotoReviewView: View {
                     }
                 )
             }
-        }
-        .safeAreaInset(edge: .bottom) {
-            AdBannerSlot(shouldShowAds: shouldShowAds)
-        }
-    }
-
-    private var reviewContentBottomPadding: CGFloat {
-        shouldShowAds ? AdBannerSlot.reservedHeight : 0
-    }
-
-    private var canRemoveAds: Bool {
-        hasPurchasedRemoveAds || stats.totalDeleted >= AdRemovalConfig.freeUnlockDeletedCount
-    }
-
-    private var shouldShowAds: Bool {
-        showAds || !canRemoveAds
-    }
-
-    private func enforceAdsVisibility() {
-        if !canRemoveAds && !showAds {
-            showAds = true
         }
     }
 
