@@ -45,28 +45,36 @@ struct ContentView: View {
     }
 
     private var mainTabView: some View {
-        TabView(selection: $selectedTab) {
-            PhotoReviewView(
-                photoLibraryService: photoLibraryService,
-                gameificationService: gameificationService,
-                stats: stats
-            )
-            .tabItem {
-                Label("Review", systemImage: "photo.stack")
+        VStack(spacing: 0) {
+            if let bootstrapErrorMessage {
+                RecoveryModeBanner(message: bootstrapErrorMessage)
+                    .padding(.horizontal)
+                    .padding(.top, 8)
             }
-            .tag(0)
 
-            StatsView(stats: stats, gameificationService: gameificationService)
+            TabView(selection: $selectedTab) {
+                PhotoReviewView(
+                    photoLibraryService: photoLibraryService,
+                    gameificationService: gameificationService,
+                    stats: stats
+                )
                 .tabItem {
-                    Label("Stats", systemImage: "chart.bar")
+                    Label("Review", systemImage: "photo.stack")
                 }
-                .tag(1)
+                .tag(0)
 
-            AchievementsView(stats: stats, gameificationService: gameificationService)
-                .tabItem {
-                    Label("Achievements", systemImage: "trophy")
-                }
-                .tag(2)
+                StatsView(stats: stats, gameificationService: gameificationService)
+                    .tabItem {
+                        Label("Stats", systemImage: "chart.bar")
+                    }
+                    .tag(1)
+
+                AchievementsView(stats: stats, gameificationService: gameificationService)
+                    .tabItem {
+                        Label("Achievements", systemImage: "trophy")
+                    }
+                    .tag(2)
+            }
         }
     }
 
@@ -155,6 +163,24 @@ struct PermissionDeniedView: View {
             Spacer()
         }
         .padding()
+    }
+}
+
+private struct RecoveryModeBanner: View {
+    let message: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label("Recovery Mode", systemImage: "externaldrive.badge.exclamationmark")
+                .font(.headline)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.orange.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
 
