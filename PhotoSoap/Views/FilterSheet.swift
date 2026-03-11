@@ -44,7 +44,7 @@ struct FilterSheet: View {
             }
         }
         .task {
-            loadData()
+            await loadData()
         }
     }
 
@@ -173,15 +173,16 @@ struct FilterSheet: View {
         dismiss()
     }
 
-    private func loadData() {
-        albums = photoLibraryService.fetchAlbums()
-        availableYears = photoLibraryService.getAvailableYears()
+    private func loadData() async {
+        let filterData = await photoLibraryService.loadFilterData()
+        albums = filterData.albums
+        availableYears = filterData.availableYears
 
         if let firstYear = availableYears.first {
             if !availableYears.contains(selectedYear) {
                 selectedYear = firstYear
             }
-            availableMonths = photoLibraryService.getAvailableMonths(for: selectedYear)
+            availableMonths = filterData.availableMonthsByYear[selectedYear] ?? []
         } else {
             availableMonths = []
         }

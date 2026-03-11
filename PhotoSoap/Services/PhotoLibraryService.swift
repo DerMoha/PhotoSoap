@@ -58,6 +58,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     private var totalAssetCount: Int = 0
     private let baseMaxRetries = 50  // Base attempts to find an unreviewed photo
 
+    private var cachedAlbums: [AlbumInfo] = []
     private var cachedYears: [Int] = []
     private var cachedMonthsByYear: [Int: [Int]] = [:]
 
@@ -101,6 +102,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             }
             self.cachedAssets = changes.fetchResultAfterChanges
             self.totalAssetCount = self.cachedAssets?.count ?? 0
+            self.cachedAlbums = []
+            self.cachedYears = []
+            self.cachedMonthsByYear = [:]
         }
     }
 
@@ -109,7 +113,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         updateAuthorizationStatus(status)
     }
 
-    static func mappedAuthorizationStatus(from status: PHAuthorizationStatus) -> PhotoLibraryAuthorizationStatus {
+    nonisolated static func mappedAuthorizationStatus(from status: PHAuthorizationStatus) -> PhotoLibraryAuthorizationStatus {
         switch status {
         case .notDetermined:
             return .notDetermined
@@ -326,6 +330,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     func refreshLibrary() {
         cachedAssets = nil
         totalAssetCount = 0
+        cachedAlbums = []
+        cachedYears = []
+        cachedMonthsByYear = [:]
         ensureAssetsFetched()
     }
 
@@ -337,9 +344,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     func loadFilterData() async -> FilterData {
-        if !cachedYears.isEmpty {
+        if !cachedAlbums.isEmpty && !cachedYears.isEmpty {
             return FilterData(
-                albums: fetchAlbums(),
+                albums: cachedAlbums,
                 availableYears: cachedYears,
                 availableMonthsByYear: cachedMonthsByYear
             )
@@ -350,6 +357,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             Self.buildFilterData(excludedSmartAlbumSubtypes: excludedSubtypes)
         }.value
 
+        cachedAlbums = filterData.albums
         cachedYears = filterData.availableYears
         cachedMonthsByYear = filterData.availableMonthsByYear
         return filterData
