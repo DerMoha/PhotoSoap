@@ -7,36 +7,47 @@ struct PhotoSoapApp: App {
     let bootstrapErrorMessage: String?
 
     init() {
-        do {
-            let schema = Self.appSchema
-            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            modelContainer = try ModelContainer(
-                for: schema,
-                configurations: [modelConfiguration]
-            )
-            bootstrapErrorMessage = nil
+        let bootstrap = Self.bootstrapContainer()
+        modelContainer = bootstrap.modelContainer
+        bootstrapErrorMessage = bootstrap.bootstrapErrorMessage
 
+        if bootstrap.bootstrapErrorMessage == nil {
             // Migrate existing reviewed IDs to ReviewedPhoto entity
             migrateReviewedPhotosIfNeeded()
+        }
+    }
+
+    nonisolated static func bootstrapContainer(
+        makeContainer: (Schema, ModelConfiguration) throws -> ModelContainer = { schema, configuration in
+            try ModelContainer(for: schema, configurations: [configuration])
+        }
+    ) -> AppBootstrapResult {
+        do {
+            let schema = appSchema
+            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
+            return AppBootstrapResult(
+                modelContainer: try makeContainer(schema, modelConfiguration),
+                bootstrapErrorMessage: nil
+            )
         } catch {
             print("PhotoSoap: Falling back to in-memory store after persistent store failure: \(error)")
 
-            let schema = Self.appSchema
+            let schema = appSchema
             let fallbackConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
 
             do {
-                modelContainer = try ModelContainer(
-                    for: schema,
-                    configurations: [fallbackConfiguration]
+                return AppBootstrapResult(
+                    modelContainer: try makeContainer(schema, fallbackConfiguration),
+                    bootstrapErrorMessage: "PhotoSoap could not open your saved data and started in a temporary recovery mode. Your new changes may not persist until this is fixed."
                 )
-                bootstrapErrorMessage = "PhotoSoap could not open your saved data and started in a temporary recovery mode. Your new changes may not persist until this is fixed."
             } catch {
                 fatalError("Could not initialize fallback ModelContainer: \(error)")
             }
         }
     }
 
-    private static let appSchema = Schema([UserStats.self, ReviewedPhoto.self])
+    private nonisolated static let appSchema = Schema([UserStats.self, ReviewedPhoto.self])
     
     /// Migrates IDs from UserStats array to ReviewedPhoto entities
     private func migrateReviewedPhotosIfNeeded() {
@@ -82,4 +93,9 @@ struct PhotoSoapApp: App {
         }
         .modelContainer(modelContainer)
     }
+}
+
+struct AppBootstrapResult {
+    let modelContainer: ModelContainer
+    let bootstrapErrorMessage: String?
 }

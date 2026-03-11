@@ -1,5 +1,6 @@
 import XCTest
 import SwiftData
+import Photos
 @testable import PhotoSoap
 
 final class SmokeTests: XCTestCase {
@@ -43,5 +44,32 @@ final class SmokeTests: XCTestCase {
 
         XCTAssertEqual(count, 1)
         XCTAssertEqual(review.id, "photo-1")
+    }
+
+    @MainActor
+    func testAuthorizationStatusMappingCoversPermissionEdges() {
+        XCTAssertEqual(PhotoLibraryService.mappedAuthorizationStatus(from: .notDetermined), .notDetermined)
+        XCTAssertEqual(PhotoLibraryService.mappedAuthorizationStatus(from: .authorized), .authorized)
+        XCTAssertEqual(PhotoLibraryService.mappedAuthorizationStatus(from: .denied), .denied)
+        XCTAssertEqual(PhotoLibraryService.mappedAuthorizationStatus(from: .restricted), .restricted)
+        XCTAssertEqual(PhotoLibraryService.mappedAuthorizationStatus(from: .limited), .limited)
+    }
+
+    func testBootstrapFallsBackToRecoveryModeWhenPersistentStoreFails() throws {
+        enum TestError: Error {
+            case persistentStoreFailed
+        }
+
+        let result = PhotoSoapApp.bootstrapContainer { schema, configuration in
+            if configuration.isStoredInMemoryOnly {
+                return try ModelContainer(for: schema, configurations: [configuration])
+            }
+
+            throw TestError.persistentStoreFailed
+        }
+
+        XCTAssertNotNil(result.bootstrapErrorMessage)
+        XCTAssertTrue(result.bootstrapErrorMessage?.contains("temporary recovery mode") == true)
+        XCTAssertNotNil(result.modelContainer)
     }
 }
