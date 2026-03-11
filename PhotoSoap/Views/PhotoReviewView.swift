@@ -324,6 +324,10 @@ struct PhotoReviewView: View {
             challengeType: challengeType
         )
 
+        guard persistReviewStats() else {
+            return
+        }
+
         await advanceToNextPhoto()
     }
 
@@ -364,10 +368,25 @@ struct PhotoReviewView: View {
                 challengeType: challengeType
             )
 
+            guard persistReviewStats() else {
+                return
+            }
+
             await advanceToNextPhoto()
         } catch {
             self.error = "Failed to delete photo: \(error.localizedDescription)"
             showError = true
+        }
+    }
+
+    private func persistReviewStats() -> Bool {
+        do {
+            try modelContext.save()
+            return true
+        } catch {
+            self.error = "Failed to save your progress: \(error.localizedDescription)"
+            showError = true
+            return false
         }
     }
 
