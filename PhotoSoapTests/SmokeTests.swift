@@ -118,4 +118,44 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(service.deleteProgress, 1.0)
         XCTAssertEqual(service.remainingDeletesForUnlock, 0)
     }
+
+    @MainActor
+    func testAdCoordinatorDisablesAdsWhenAdFreeIsUnlocked() {
+        let configuration = AdMobRuntimeConfiguration(
+            appID: AdMobConfig.testAppID,
+            usesTestIdentifiers: true,
+            unitIDsByPlacement: [
+                .statsBanner: AdMobConfig.testBannerUnitID,
+                .achievementsBanner: AdMobConfig.testBannerUnitID,
+                .reviewCompletionInterstitial: AdMobConfig.testInterstitialUnitID
+            ],
+            hasTrackingUsageDescription: true
+        )
+        let coordinator = AdCoordinator(configuration: configuration)
+
+        XCTAssertTrue(coordinator.adsEnabled)
+        XCTAssertTrue(coordinator.shouldShowBanner(at: .statsBanner))
+        XCTAssertTrue(coordinator.canPresentInterstitial(at: .reviewCompletionInterstitial))
+
+        coordinator.updateEntitlement(hasAdRemovalEntitlement: true)
+
+        XCTAssertFalse(coordinator.adsEnabled)
+        XCTAssertFalse(coordinator.shouldShowBanner(at: .statsBanner))
+        XCTAssertFalse(coordinator.canPresentInterstitial(at: .reviewCompletionInterstitial))
+    }
+
+    @MainActor
+    func testAdCoordinatorFlagsIncompleteConfiguration() {
+        let configuration = AdMobRuntimeConfiguration(
+            appID: "",
+            usesTestIdentifiers: false,
+            unitIDsByPlacement: [:],
+            hasTrackingUsageDescription: false
+        )
+        let coordinator = AdCoordinator(configuration: configuration)
+
+        XCTAssertFalse(coordinator.isConfigured)
+        XCTAssertFalse(coordinator.adsEnabled)
+        XCTAssertFalse(coordinator.integrationChecklist.isEmpty)
+    }
 }

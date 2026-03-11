@@ -5,7 +5,9 @@ struct StatsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var gameificationService: GameificationService
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
+    @ObservedObject var adCoordinator: AdCoordinator
     @StateObject private var viewModel = StatsViewModel()
+    @State private var isShowingAdFreeSheet = false
 
     var body: some View {
         NavigationStack {
@@ -23,6 +25,15 @@ struct StatsView: View {
             .navigationTitle("Statistics")
             .onAppear {
                 adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
+                adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
+            }
+            .sheet(isPresented: $isShowingAdFreeSheet) {
+                AdFreeUpgradeSheet(
+                    stats: stats,
+                    adRemovalPurchaseService: adRemovalPurchaseService,
+                    adCoordinator: adCoordinator
+                )
+                .presentationDetents([.medium, .large])
             }
         }
     }
@@ -163,11 +174,25 @@ struct StatsView: View {
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 14) {
-                Label(adFreeTitle, systemImage: adFreeIcon)
-                    .font(.title3.weight(.semibold))
+                HStack(alignment: .top) {
+                    Label(adFreeTitle, systemImage: adFreeIcon)
+                        .font(.title3.weight(.semibold))
+
+                    Spacer()
+
+                    Button("Details") {
+                        isShowingAdFreeSheet = true
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
 
                 Text(adFreeMessage)
                     .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Label(adCoordinator.statusSummary, systemImage: adCoordinator.adsEnabled ? "play.circle.fill" : "wrench.and.screwdriver.fill")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -311,6 +336,7 @@ struct StatCard: View {
     StatsView(
         stats: UserStats(),
         gameificationService: GameificationService(),
-        adRemovalPurchaseService: AdRemovalPurchaseService(shouldObserveTransactions: false)
+        adRemovalPurchaseService: AdRemovalPurchaseService(shouldObserveTransactions: false),
+        adCoordinator: AdCoordinator()
     )
 }

@@ -11,6 +11,7 @@ struct ContentView: View {
     @StateObject private var photoLibraryService = PhotoLibraryService()
     @StateObject private var gameificationService = GameificationService()
     @StateObject private var adRemovalPurchaseService = AdRemovalPurchaseService()
+    @StateObject private var adCoordinator = AdCoordinator()
     @State private var selectedTab = 0
     @State private var showBootstrapAlert = false
 
@@ -39,15 +40,21 @@ struct ContentView: View {
             initializeStats()
             photoLibraryService.refreshLibraryAccessState()
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
+            adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
             showBootstrapAlert = bootstrapErrorMessage != nil
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
             photoLibraryService.refreshLibraryAccessState()
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
+            adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
         }
         .onChange(of: stats.totalDeleted) { _, _ in
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
+            adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
+        }
+        .onChange(of: adRemovalPurchaseService.hasAdRemovalEntitlement) { _, hasEntitlement in
+            adCoordinator.updateEntitlement(hasAdRemovalEntitlement: hasEntitlement)
         }
         .alert("Recovery Mode", isPresented: $showBootstrapAlert) {
             Button("OK") {}
@@ -86,7 +93,8 @@ struct ContentView: View {
                 StatsView(
                     stats: stats,
                     gameificationService: gameificationService,
-                    adRemovalPurchaseService: adRemovalPurchaseService
+                    adRemovalPurchaseService: adRemovalPurchaseService,
+                    adCoordinator: adCoordinator
                 )
                     .tabItem {
                         Label("Stats", systemImage: "chart.bar")
