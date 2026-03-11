@@ -309,22 +309,19 @@ struct PhotoReviewView: View {
         // 1. Mark in DB
         do {
             try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+            gameificationService.processPhotoReview(
+                action: .keep,
+                fileSize: 0,
+                stats: stats,
+                challengeType: challengeType
+            )
         } catch {
-            self.error = "Failed to save review history: \(error.localizedDescription)"
+            self.error = "Failed to update review history: \(error.localizedDescription)"
             showError = true
             return
         }
-        // 2. Mark in local cache (so we don't see it again this session instantly)
-        photoLibraryService.markReviewed(photo.id)
-        
-        gameificationService.processPhotoReview(
-            action: .keep,
-            fileSize: 0,
-            stats: stats,
-            challengeType: challengeType
-        )
 
-        guard persistReviewStats() else {
+        guard persistReviewProgress(for: photo.id, cacheInSession: true) else {
             return
         }
 
@@ -348,27 +345,23 @@ struct PhotoReviewView: View {
 
             try await photoLibraryService.deletePhoto(photo)
             
-            // Still mark as reviewed in DB for long-term history/stats
+            let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
+
             do {
                 try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+                gameificationService.processPhotoReview(
+                    action: .delete,
+                    fileSize: resolvedFileSize,
+                    stats: stats,
+                    challengeType: challengeType
+                )
             } catch {
-                self.error = "Failed to save review history: \(error.localizedDescription)"
+                self.error = "Failed to update review history: \(error.localizedDescription)"
                 showError = true
                 return
             }
-            // Do NOT mark in local cache (reviewedIDs) because deleted photos are removed from library,
-            // so they shouldn't count towards the "reviewed vs total" ratio for completion.
 
-            let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-
-            gameificationService.processPhotoReview(
-                action: .delete,
-                fileSize: resolvedFileSize,
-                stats: stats,
-                challengeType: challengeType
-            )
-
-            guard persistReviewStats() else {
+            guard persistReviewProgress(for: photo.id, cacheInSession: false) else {
                 return
             }
 
@@ -379,11 +372,17 @@ struct PhotoReviewView: View {
         }
     }
 
-    private func persistReviewStats() -> Bool {
+    private func persistReviewProgress(for photoID: String, cacheInSession: Bool) -> Bool {
         do {
             try modelContext.save()
+
+            if cacheInSession {
+                photoLibraryService.markReviewed(photoID)
+            }
+
             return true
         } catch {
+            modelContext.rollback()
             self.error = "Failed to save your progress: \(error.localizedDescription)"
             showError = true
             return false

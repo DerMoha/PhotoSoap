@@ -43,7 +43,6 @@ class GameificationService: ObservableObject {
         if (try? context.fetchCount(descriptor)) == 0 {
             let review = ReviewedPhoto(id: id)
             context.insert(review)
-            try context.save()
         }
     }
     
