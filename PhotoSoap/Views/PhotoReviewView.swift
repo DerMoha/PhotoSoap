@@ -22,6 +22,8 @@ struct PhotoReviewView: View {
     @State private var isProcessingAction = false  // Prevents concurrent button presses
     @State private var currentFilter: PhotoFilter = .all
     @State private var showFilterSheet = false
+    @State private var persistedReviewedIDs: Set<String> = []
+    @State private var knownUnreviewedIDs: Set<String> = []
     private let swipeActionThreshold: CGFloat = 100
     private let swipeFeedbackDistance: CGFloat = 140
     private let swipeOverlayThreshold: CGFloat = 12
@@ -251,6 +253,8 @@ struct PhotoReviewView: View {
         isLoading = true
         error = nil
         noMorePhotos = false
+        persistedReviewedIDs.removeAll()
+        knownUnreviewedIDs.removeAll()
 
         do {
             photoLibraryService.setSessionReviewedIDs(Set<String>())
@@ -285,7 +289,7 @@ struct PhotoReviewView: View {
                 return nil
             }
 
-            if gameificationService.isPhotoReviewed(id: photo.id, context: modelContext) {
+            if isKnownReviewed(photo.id) {
                 photoLibraryService.markReviewed(photo.id)
                 attemptedIDs.insert(photo.id)
                 continue
@@ -375,6 +379,8 @@ struct PhotoReviewView: View {
     private func persistReviewProgress(for photoID: String, cacheInSession: Bool) -> Bool {
         do {
             try modelContext.save()
+            persistedReviewedIDs.insert(photoID)
+            knownUnreviewedIDs.remove(photoID)
 
             if cacheInSession {
                 photoLibraryService.markReviewed(photoID)
@@ -387,6 +393,25 @@ struct PhotoReviewView: View {
             showError = true
             return false
         }
+    }
+
+    private func isKnownReviewed(_ photoID: String) -> Bool {
+        if persistedReviewedIDs.contains(photoID) || photoLibraryService.isReviewed(photoID) {
+            return true
+        }
+
+        if knownUnreviewedIDs.contains(photoID) {
+            return false
+        }
+
+        let isReviewed = gameificationService.isPhotoReviewed(id: photoID, context: modelContext)
+        if isReviewed {
+            persistedReviewedIDs.insert(photoID)
+        } else {
+            knownUnreviewedIDs.insert(photoID)
+        }
+
+        return isReviewed
     }
 
     private func advanceToNextPhoto() async {
