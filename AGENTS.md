@@ -1,153 +1,154 @@
 # PhotoSoap Agent Guide
-
 This file is for agentic coding assistants working in this repository.
-Keep guidance concise and aligned with the current codebase.
-
-## Project Overview
-- SwiftUI + SwiftData iOS app for photo review and gamification.
-- Primary target/scheme: PhotoSoap (shared).
-- Secondary shared scheme: Bommel (legacy/unused).
-
+Keep guidance short, practical, and aligned with the current SwiftUI codebase.
+## Project Snapshot
+- iOS app built with SwiftUI, SwiftData, Photos, and StoreKit-related services.
+- Main app target and shared scheme: `PhotoSoap`.
+- The project currently has one app target in `PhotoSoap.xcodeproj`.
+- No XCTest target is configured today, even though the shared scheme has a `TestAction`.
+- Historical references to `Bommel` are stale and only appear in user-specific Xcode metadata and git history.
 ## Repository Layout
-- PhotoSoap/PhotoSoapApp.swift: app entry, model container setup.
-- PhotoSoap/Models/: SwiftData models and enums.
-- PhotoSoap/Services/: Photo library and gamification logic.
-- PhotoSoap/ViewModels/: view model helpers.
-- PhotoSoap/Views/: SwiftUI screens.
-- PhotoSoap/Views/Components/: reusable view pieces.
-- PhotoSoap/Utilities/: extensions, modifiers, utilities.
-- PhotoSoap/Assets.xcassets/: app assets.
-- PhotoSoap.xcodeproj/: Xcode project and schemes.
-
+- `PhotoSoap/PhotoSoapApp.swift`: app entry, model container bootstrap, migration helpers.
+- `PhotoSoap/Models/`: SwiftData models and small domain enums.
+- `PhotoSoap/Services/`: photo library, gamification, and purchase services.
+- `PhotoSoap/ViewModels/`: lightweight presentation helpers.
+- `PhotoSoap/Views/`: screens and flow-level SwiftUI views.
+- `PhotoSoap/Views/Components/`: reusable UI pieces.
+- `PhotoSoap/Utilities/`: extensions and general helpers.
+- `PhotoSoap/Assets.xcassets/`: colors, images, and symbols.
+- `PhotoSoap.xcodeproj/`: Xcode project, shared scheme, and build settings.
 ## Build, Run, Test
-Use Xcode for interactive development, or xcodebuild for CI.
-
-### List schemes
+Use Xcode for interactive work, or `xcodebuild` for scripted verification.
+### Shared scheme
 ```bash
 xcodebuild -list -project PhotoSoap.xcodeproj
 ```
-
-### Build (simulator)
+### Build for simulator
 ```bash
 xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build
 ```
-
-### Build (device, generic)
+### Build for generic iOS device
 ```bash
 xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Release -destination 'generic/platform=iOS' build
 ```
-
-### Run
-- Open the project: `open PhotoSoap.xcodeproj` and run the PhotoSoap scheme.
-- Or `xcodebuild` + `xcrun simctl` if scripting a simulator run.
-
-### Test (all)
-- No XCTest targets are present today.
-- If a test target is added (ex: PhotoSoapTests), run:
+### Run in Xcode
+```bash
+open PhotoSoap.xcodeproj
+```
+### Test all
+- There is no XCTest bundle in the project today, so `xcodebuild test` will not execute app tests yet.
+- If a test target is added later, use:
 ```bash
 xcodebuild test -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 15'
 ```
-
-### Test (single test)
+### Run a single test
+- Single-test execution is not available yet because no test target exists.
+- After adding a shared XCTest target such as `PhotoSoapTests`, use:
 ```bash
 xcodebuild test -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:PhotoSoapTests/SomeTestCase/testExample
 ```
-- Replace target/class/method with real XCTest names.
-
-### Lint / Format
-- No SwiftLint/SwiftFormat config is checked in.
-- Use Xcode's formatter (Ctrl+I) and match existing SwiftUI style.
-
-## Cursor / Copilot Rules
-- No `.cursor/rules`, `.cursorrules`, or `.github/copilot-instructions.md` found.
-
-## Code Style Guidelines
-
+### Analyze
+```bash
+xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap analyze
+```
+### Lint / format
+- No `SwiftLint`, `SwiftFormat`, or other lint config is checked in.
+- Use Xcode formatting (`Editor > Structure > Re-Indent`, or `Ctrl+I`) and match existing file style.
+- If you add lint or format tooling, update this guide with the exact commands.
+### Environment note
+- In this workspace, `xcodebuild -list` currently fails before project inspection because a local Xcode plug-in is missing and suggests `xcodebuild -runFirstLaunch`.
+- Treat that as a machine-specific issue, not a repository configuration rule.
+## Agent Instructions Sources
+- Root agent guide: `AGENTS.md`.
+- No `.cursorrules` file found.
+- No `.cursor/rules/` directory found.
+- No `.github/copilot-instructions.md` file found.
+## Swift Code Style
 ### Imports
-- Keep imports at the top of the file with a single blank line after.
-- Order Apple frameworks consistently (ex: SwiftUI, SwiftData, Photos).
-- Avoid unused imports; remove when not needed.
-
+- Keep imports at the top of the file with one blank line after the import block.
+- Prefer consistent Apple-framework ordering, usually UI frameworks first, then data/system frameworks.
+- Common patterns here include `SwiftUI`, `SwiftData`, `Photos`, `UIKit`, `Foundation`, and `Combine`.
+- Remove unused imports when editing a file.
 ### Formatting
-- 4-space indentation, one statement per line.
-- Prefer trailing closure syntax for SwiftUI builders.
-- Use `// MARK: - Section` to group logical blocks.
-- Keep view bodies readable via extracted `private var` sections.
-- Place `#Preview` at the bottom of view files.
-
+- Use 4-space indentation and one statement per line.
+- Favor trailing-closure syntax in SwiftUI builders.
+- Use blank lines to separate logical sections, not every individual statement.
+- Prefer extracted `private var`, `private func`, and `@ViewBuilder` helpers over oversized `body` blocks.
+- Keep `#Preview` at the bottom of SwiftUI view files.
+- Use `// MARK: - Section` for meaningful section breaks.
 ### Naming
-- Types and protocols: PascalCase (`PhotoLibraryService`).
-- Properties, methods, enum cases: lowerCamelCase.
-- Boolean names start with `is`, `has`, `should`.
-- Use singular nouns for model types (`Photo`, `UserStats`).
-
-### SwiftUI Views
-- Views are `struct` types conforming to `View`.
-- Use `@State`, `@StateObject`, `@ObservedObject`, `@Environment` as needed.
-- Extract complex layout pieces into `private var` or `private func` sections.
-- Use `@ViewBuilder` helpers for conditional view fragments.
-- Keep animations explicit with `withAnimation` or `.animation(..., value:)`.
-- Use `NavigationStack`, `TabView`, `ZStack`, `LazyVGrid` per existing patterns.
-
-### View Models
-- View models are `@MainActor class` and `ObservableObject`.
-- Expose read-only computed data where possible.
-- Use small struct helpers for display items (ex: `StatItem`).
-
+- Types, protocols, and enums: PascalCase.
+- Properties, functions, and enum cases: lowerCamelCase.
+- Boolean names should read as predicates, usually starting with `is`, `has`, or `should`.
+- Prefer singular nouns for model types such as `Photo`, `UserStats`, and `ReviewedPhoto`.
+- Use descriptive names for state flags instead of short abbreviations.
+### Types and structure
+- SwiftUI screens and components are `struct` types conforming to `View`.
+- View models are `@MainActor` classes conforming to `ObservableObject`.
+- UI-facing services are also typically `@MainActor` `ObservableObject` classes.
+- SwiftData entities use `@Model` classes with explicit initializers.
+- Keep one primary type per file unless a tiny helper type is tightly coupled to it.
+- Prefer `private` for caches, constants, and helpers not used across files.
+### SwiftUI conventions
+- Use property wrappers intentionally: `@State`, `@StateObject`, `@ObservedObject`, `@Environment`, `@Query`, `@AppStorage`, and `@Bindable` where appropriate.
+- Keep view bodies declarative and move substantial subtrees into private computed properties or helper functions.
+- Use `NavigationStack`, `TabView`, `ZStack`, and other containers in the same style already present.
+- Use `Task {}` to bridge async service calls from button taps and lifecycle hooks.
+- Keep previews simple and local, usually with in-memory model containers where needed.
+### SwiftData conventions
+- Define explicit initializers instead of relying on many inline default property values.
+- Keep derived values as computed properties, not persisted storage, when practical.
+- Query models with `FetchDescriptor`, `#Predicate`, and `SortDescriptor`.
+- Preserve migration helpers and deprecated compatibility code unless you are intentionally removing legacy behavior.
+### Error handling and concurrency
+- Prefer `guard` and early returns for invalid state.
+- Use `enum` errors conforming to `LocalizedError` for user-facing failures.
+- Wrap Photos, persistence, and async operations with `do/catch` when failure is expected.
+- Surface alerts and UI messaging from `error.localizedDescription` where that pattern already exists.
+- Use `fatalError` only for unrecoverable bootstrap failures, such as model container initialization.
+- Prefer `async`/`await`; use `withCheckedContinuation` or `withCheckedThrowingContinuation` when bridging callbacks.
+- For delegate or nonisolated callbacks, hop back to the main actor before mutating observable state.
+### Logging and comments
+- Keep logging lightweight and prefix debug prints with `PhotoSoap:`.
+- Avoid noisy logs inside tight loops or rapidly updating UI paths.
+- Add comments only when a block is non-obvious.
+- Prefer clear naming and extracted helpers over explanatory comments.
+- Preserve meaningful `// MARK:` sections and remove stale or redundant comments when touching nearby code.
+## Working Patterns By Layer
+### App bootstrap
+- `PhotoSoapApp` owns model container setup and migration helpers.
+- Bootstrap code may clear oversized stores, run migrations, and fail fast if the persistent stack cannot initialize.
+### Models
+- Models are mutable `@Model` classes with focused methods for domain updates.
+- Keep formatting helpers, such as byte-count display, as computed properties.
+- Use availability annotations when deprecating legacy APIs.
 ### Services
-- Services touching UI state are `@MainActor` and `ObservableObject`.
-- Keep side effects inside services (Photos, SwiftData fetches).
-- Use `@Published` for any state consumed by views.
-- Use `private` properties for caches and derived state.
-
-### Data Models (SwiftData)
-- Use `@Model` classes for persisted entities.
-- Define explicit initializers with defaults.
-- Store derived values as computed properties, not persisted fields.
-- Use `FetchDescriptor` + `#Predicate` + `SortDescriptor` for queries.
-
-### Error Handling
-- Use `enum` errors conforming to `LocalizedError` for user-facing messages.
-- Prefer `guard` + early return for invalid state.
-- Use `do/catch` around persistence and Photos APIs.
-- Surface errors with `error.localizedDescription` in alerts.
-- Use `fatalError` only for unrecoverable bootstrap failures (model container init).
-
-### Concurrency
-- Use `async`/`await` for Photos and data operations.
-- Keep UI mutations on the main actor.
-- Use `Task { }` from UI actions to bridge async calls.
-- Use `withCheckedThrowingContinuation` to wrap callback APIs.
-
-### Logging
-- Use lightweight `print` statements with a `PhotoSoap:` prefix.
-- Avoid noisy logging in tight loops or repeated UI updates.
-
-### Assets & Styling
-- Store assets in `Assets.xcassets` and refer via `Image`/`Color` assets.
-- Prefer system colors (`Color(.systemGroupedBackground)`) for platform fidelity.
-- Keep typography consistent with existing `font(.headline)` style usage.
-
-### File Organization
-- Keep files focused: one primary type per file.
-- Components live in `Views/Components` for reuse.
-- Utilities belong in `Utilities/Extensions.swift` when broadly useful.
-
-### Suggested Defaults for New Code
-- New services: `@MainActor class`, `ObservableObject`, `@Published` state.
-- New views: `struct`, `private` view sections, `#Preview` with sample data.
-- New errors: `enum` with `LocalizedError` conformance.
-- New SwiftData models: `@Model` classes with explicit init.
-
-## Example Commands (Copy/Paste)
+- Services own side effects, business rules, Photos access, and persistence fetches.
+- Publish only state that views consume.
+- Keep caches, thresholds, and implementation details private.
+- Prefer narrow methods like `processPhotoReview(...)` or `getNextPhoto(...)` over broad controller-style APIs.
+### View models
+- View models are lightweight presentation adapters.
+- Expose computed display items and formatting helpers rather than mirroring model state unnecessarily.
+### Views
+- Extract large sections into `private var` or `private func` helpers.
+- Use `@ViewBuilder` for conditional fragments that would otherwise clutter `body`.
+- Maintain platform-native styling patterns already used in the app, including system colors and standard SwiftUI typography.
+## Practical Guidance For Agents
+- Check for unrelated working tree changes before editing; do not revert user changes.
+- Match the style of the file you are touching rather than imposing a new pattern.
+- Prefer surgical edits over broad refactors unless the task requires larger cleanup.
+- If you add a test target, make sure the scheme remains shared so CI and agents can discover it.
+- When documenting commands in future updates, prefer copy-pasteable commands with explicit project, scheme, and destination values.
+## Handy Commands
 ```bash
 open PhotoSoap.xcodeproj
 xcodebuild -list -project PhotoSoap.xcodeproj
 xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 15' build
+xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap analyze
 xcodebuild test -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:PhotoSoapTests/SomeTestCase/testExample
 ```
-
-## Notes
-- If you add tests, ensure the scheme is shared so CI can discover it.
-- Keep new code consistent with existing SwiftUI patterns and sectioning.
-- Update this guide when adding linting, CI, or new targets.
+## Keep This File Updated
+- Update this guide when adding test targets, linting, formatting tools, CI workflows, or new shared schemes.
+- Remove stale references when project structure changes.
+- Keep the document concise enough for fast agent scanning, but specific enough to prevent guesswork.
