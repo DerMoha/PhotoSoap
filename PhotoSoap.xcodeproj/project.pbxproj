@@ -8,6 +8,8 @@
 
 /* Begin PBXFileReference section */
 		715E1CA72F21612300CD8842 /* PhotoSoap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoSoap.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		71A100000000000000000001 /* PhotoSoapTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PhotoSoapTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		71A10000000000000000000D /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = System/Library/Frameworks/XCTest.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -29,13 +31,40 @@
 			path = PhotoSoap;
 			sourceTree = "<group>";
 		};
+		71A100000000000000000002 /* PhotoSoapTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PhotoSoapTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXBuildFile section */
+		71A10000000000000000000E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71A10000000000000000000D /* XCTest.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		71A100000000000000000007 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 715E1C9F2F21612300CD8842 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 715E1CA62F21612300CD8842;
+			remoteInfo = PhotoSoap;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		715E1CA42F21612300CD8842 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		71A100000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71A10000000000000000000E /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,6 +75,8 @@
 			isa = PBXGroup;
 			children = (
 				715E1CA92F21612300CD8842 /* PhotoSoap */,
+				71A100000000000000000002 /* PhotoSoapTests */,
+				71A10000000000000000000C /* Frameworks */,
 				715E1CA82F21612300CD8842 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,8 +85,17 @@
 			isa = PBXGroup;
 			children = (
 				715E1CA72F21612300CD8842 /* PhotoSoap.app */,
+				71A100000000000000000001 /* PhotoSoapTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		71A10000000000000000000C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				71A10000000000000000000D /* XCTest.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -83,6 +123,29 @@
 			productReference = 715E1CA72F21612300CD8842 /* PhotoSoap.app */;
 			productType = "com.apple.product-type.application";
 		};
+		71A100000000000000000006 /* PhotoSoapTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 71A10000000000000000000B /* Build configuration list for PBXNativeTarget "PhotoSoapTests" */;
+			buildPhases = (
+				71A100000000000000000005 /* Sources */,
+				71A100000000000000000003 /* Frameworks */,
+				71A100000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				71A100000000000000000008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				71A100000000000000000002 /* PhotoSoapTests */,
+			);
+			name = PhotoSoapTests;
+			packageProductDependencies = (
+			);
+			productName = PhotoSoapTests;
+			productReference = 71A100000000000000000001 /* PhotoSoapTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -95,6 +158,10 @@
 				TargetAttributes = {
 					715E1CA62F21612300CD8842 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					71A100000000000000000006 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 715E1CA62F21612300CD8842;
 					};
 				};
 			};
@@ -113,12 +180,20 @@
 			projectRoot = "";
 			targets = (
 				715E1CA62F21612300CD8842 /* PhotoSoap */,
+				71A100000000000000000006 /* PhotoSoapTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		715E1CA52F21612300CD8842 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		71A100000000000000000004 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -135,7 +210,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		71A100000000000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		71A100000000000000000008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 715E1CA62F21612300CD8842 /* PhotoSoap */;
+			targetProxy = 71A100000000000000000007 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		715E1CB22F21612400CD8842 /* Debug */ = {
@@ -327,6 +417,55 @@
 			};
 			name = Release;
 		};
+		71A100000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = M8869GQ6Z6;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.dermoha.PhotoSoapTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PhotoSoap.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PhotoSoap";
+			};
+			name = Debug;
+		};
+		71A10000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = M8869GQ6Z6;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.dermoha.PhotoSoapTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PhotoSoap.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PhotoSoap";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -347,6 +486,15 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		71A10000000000000000000B /* Build configuration list for PBXNativeTarget "PhotoSoapTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71A100000000000000000009 /* Debug */,
+				71A10000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
