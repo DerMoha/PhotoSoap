@@ -32,6 +32,16 @@ enum PhotoLibraryAuthorizationStatus {
     case denied
     case restricted
     case limited
+
+    var hasPhotoAccess: Bool {
+        self == .authorized || self == .limited
+    }
+}
+
+struct FilterData {
+    let albums: [AlbumInfo]
+    let availableYears: [Int]
+    let availableMonthsByYear: [Int: [Int]]
 }
 
 @MainActor
@@ -99,21 +109,25 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         updateAuthorizationStatus(status)
     }
 
-    private func updateAuthorizationStatus(_ status: PHAuthorizationStatus) {
+    static func mappedAuthorizationStatus(from status: PHAuthorizationStatus) -> PhotoLibraryAuthorizationStatus {
         switch status {
         case .notDetermined:
-            authorizationStatus = .notDetermined
+            return .notDetermined
         case .authorized:
-            authorizationStatus = .authorized
+            return .authorized
         case .denied:
-            authorizationStatus = .denied
+            return .denied
         case .restricted:
-            authorizationStatus = .restricted
+            return .restricted
         case .limited:
-            authorizationStatus = .limited
+            return .limited
         @unknown default:
-            authorizationStatus = .denied
+            return .denied
         }
+    }
+
+    private func updateAuthorizationStatus(_ status: PHAuthorizationStatus) {
+        authorizationStatus = Self.mappedAuthorizationStatus(from: status)
     }
 
     func requestAuthorization() async -> Bool {
@@ -122,21 +136,32 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return status == .authorized || status == .limited
     }
 
+    func presentLimitedLibraryPicker() {
+        openAppSettings()
+    }
+
+    func openAppSettings() {
+        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+            return
+        }
+        UIApplication.shared.open(settingsURL)
+    }
+
     /// Fetches assets lazily - only gets the count, doesn't iterate
     private func ensureAssetsFetched() {
         guard cachedAssets == nil else { return }
 
         switch currentFilter {
         case .all:
-            let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
+            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
             cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
         case .year(let year):
             let interval = dateIntervalForYear(year)
-            let options = makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false)
+            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false)
             cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
         case .month(let year, let month):
             let interval = dateIntervalForMonth(year: year, month: month)
-            let options = makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false)
+            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false)
             cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
         case .album(let identifier, _):
             guard let collection = fetchAssetCollection(identifier: identifier) else {
@@ -144,7 +169,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 totalAssetCount = 0
                 return
             }
-            let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true)
+            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true)
             cachedAssets = PHAsset.fetchAssets(in: collection, options: options)
         }
 
@@ -311,7 +336,84 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         totalAssetCount = 0
     }
 
+    func loadFilterData() async -> FilterData {
+        if !cachedYears.isEmpty {
+            return FilterData(
+                albums: fetchAlbums(),
+                availableYears: cachedYears,
+                availableMonthsByYear: cachedMonthsByYear
+            )
+        }
+
+        let excludedSubtypes = excludedSmartAlbumSubtypes
+        let filterData = await Task.detached(priority: .userInitiated) {
+            Self.buildFilterData(excludedSmartAlbumSubtypes: excludedSubtypes)
+        }.value
+
+        cachedYears = filterData.availableYears
+        cachedMonthsByYear = filterData.availableMonthsByYear
+        return filterData
+    }
+
     func fetchAlbums() -> [AlbumInfo] {
+        Self.buildAlbums(excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
+    }
+
+    func getAvailableYears() -> [Int] {
+        buildYearMonthCacheIfNeeded()
+        return cachedYears
+    }
+
+    func getAvailableMonths(for year: Int) -> [Int] {
+        buildYearMonthCacheIfNeeded()
+        return cachedMonthsByYear[year] ?? []
+    }
+
+    private func buildYearMonthCacheIfNeeded() {
+        guard cachedYears.isEmpty else { return }
+
+        let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
+        let assets = PHAsset.fetchAssets(with: .image, options: options)
+        let calendar = Calendar.current
+        var years = Set<Int>()
+        var monthsByYear: [Int: Set<Int>] = [:]
+
+        assets.enumerateObjects { asset, _, _ in
+            guard let date = asset.creationDate else { return }
+            let year = calendar.component(.year, from: date)
+            let month = calendar.component(.month, from: date)
+            years.insert(year)
+            monthsByYear[year, default: []].insert(month)
+        }
+
+        cachedYears = years.sorted(by: >)
+        cachedMonthsByYear = monthsByYear.mapValues { $0.sorted() }
+    }
+
+    private nonisolated static func buildFilterData(excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> FilterData {
+        let albums = buildAlbums(excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
+        let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
+        let assets = PHAsset.fetchAssets(with: .image, options: options)
+        let calendar = Calendar.current
+        var years = Set<Int>()
+        var monthsByYear: [Int: Set<Int>] = [:]
+
+        assets.enumerateObjects { asset, _, _ in
+            guard let date = asset.creationDate else { return }
+            let year = calendar.component(.year, from: date)
+            let month = calendar.component(.month, from: date)
+            years.insert(year)
+            monthsByYear[year, default: []].insert(month)
+        }
+
+        return FilterData(
+            albums: albums,
+            availableYears: years.sorted(by: >),
+            availableMonthsByYear: monthsByYear.mapValues { $0.sorted() }
+        )
+    }
+
+    private nonisolated static func buildAlbums(excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> [AlbumInfo] {
         var albums: [AlbumInfo] = []
         let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true)
 
@@ -333,7 +435,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         let smartAlbums = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: nil)
         smartAlbums.enumerateObjects { collection, _, _ in
-            guard !self.excludedSmartAlbumSubtypes.contains(collection.assetCollectionSubtype) else { return }
+            guard !excludedSmartAlbumSubtypes.contains(collection.assetCollectionSubtype) else { return }
             let assets = PHAsset.fetchAssets(in: collection, options: options)
             guard assets.count > 0 else { return }
             let title = collection.localizedTitle ?? "Untitled Album"
@@ -349,37 +451,6 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         return albums.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
-    }
-
-    func getAvailableYears() -> [Int] {
-        buildYearMonthCacheIfNeeded()
-        return cachedYears
-    }
-
-    func getAvailableMonths(for year: Int) -> [Int] {
-        buildYearMonthCacheIfNeeded()
-        return cachedMonthsByYear[year] ?? []
-    }
-
-    private func buildYearMonthCacheIfNeeded() {
-        guard cachedYears.isEmpty else { return }
-
-        let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
-        let assets = PHAsset.fetchAssets(with: .image, options: options)
-        let calendar = Calendar.current
-        var years = Set<Int>()
-        var monthsByYear: [Int: Set<Int>] = [:]
-
-        assets.enumerateObjects { asset, _, _ in
-            guard let date = asset.creationDate else { return }
-            let year = calendar.component(.year, from: date)
-            let month = calendar.component(.month, from: date)
-            years.insert(year)
-            monthsByYear[year, default: []].insert(month)
-        }
-
-        cachedYears = years.sorted(by: >)
-        cachedMonthsByYear = monthsByYear.mapValues { $0.sorted() }
     }
 
     private func fetchAssetCollection(identifier: String) -> PHAssetCollection? {
@@ -422,7 +493,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return DateInterval(start: startDate, end: endDate)
     }
 
-    private func makeFetchOptions(
+    private nonisolated static func makeFetchOptions(
         dateInterval: DateInterval?,
         includeMediaTypePredicate: Bool
     ) -> PHFetchOptions {

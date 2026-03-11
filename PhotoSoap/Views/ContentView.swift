@@ -5,6 +5,7 @@ import UIKit
 struct ContentView: View {
     let bootstrapErrorMessage: String?
 
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     @Query private var statsArray: [UserStats]
     @StateObject private var photoLibraryService = PhotoLibraryService()
@@ -35,7 +36,12 @@ struct ContentView: View {
         }
         .onAppear {
             initializeStats()
+            photoLibraryService.checkAuthorizationStatus()
             showBootstrapAlert = bootstrapErrorMessage != nil
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else { return }
+            photoLibraryService.checkAuthorizationStatus()
         }
         .alert("Recovery Mode", isPresented: $showBootstrapAlert) {
             Button("OK") {}
@@ -50,6 +56,14 @@ struct ContentView: View {
                 RecoveryModeBanner(message: bootstrapErrorMessage)
                     .padding(.horizontal)
                     .padding(.top, 8)
+            }
+
+            if photoLibraryService.authorizationStatus == .limited {
+                LimitedAccessBanner {
+                    photoLibraryService.presentLimitedLibraryPicker()
+                }
+                .padding(.horizontal)
+                .padding(.top, bootstrapErrorMessage == nil ? 8 : 0)
             }
 
             TabView(selection: $selectedTab) {
@@ -180,6 +194,33 @@ private struct RecoveryModeBanner: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Color.orange.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+private struct LimitedAccessBanner: View {
+    let onManage: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Reviewing selected photos only")
+                    .font(.subheadline.weight(.semibold))
+                Text("Manage access in Settings to review more of your library.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Button("Manage") {
+                onManage()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        }
+        .padding(12)
+        .background(Color.blue.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
