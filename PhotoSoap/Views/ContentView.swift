@@ -3,11 +3,14 @@ import SwiftData
 import UIKit
 
 struct ContentView: View {
+    let bootstrapErrorMessage: String?
+
     @Environment(\.modelContext) private var modelContext
     @Query private var statsArray: [UserStats]
     @StateObject private var photoLibraryService = PhotoLibraryService()
     @StateObject private var gameificationService = GameificationService()
     @State private var selectedTab = 0
+    @State private var showBootstrapAlert = false
 
     private var stats: UserStats {
         if let existingStats = statsArray.first {
@@ -32,6 +35,12 @@ struct ContentView: View {
         }
         .onAppear {
             initializeStats()
+            showBootstrapAlert = bootstrapErrorMessage != nil
+        }
+        .alert("Recovery Mode", isPresented: $showBootstrapAlert) {
+            Button("OK") {}
+        } message: {
+            Text(bootstrapErrorMessage ?? "")
         }
     }
 
@@ -150,6 +159,6 @@ struct PermissionDeniedView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(bootstrapErrorMessage: nil)
         .modelContainer(for: UserStats.self, inMemory: true)
 }

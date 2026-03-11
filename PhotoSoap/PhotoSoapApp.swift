@@ -4,76 +4,39 @@ import SwiftData
 @main
 struct PhotoSoapApp: App {
     let modelContainer: ModelContainer
+    let bootstrapErrorMessage: String?
 
     init() {
-        // Check if we need to clear corrupted data before initializing SwiftData
-        Self.clearOversizedDatabaseIfNeeded()
-        
         do {
-            let schema = Schema([UserStats.self, ReviewedPhoto.self])
-            let modelConfiguration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false
-            )
+            let schema = Self.appSchema
+            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             modelContainer = try ModelContainer(
                 for: schema,
                 configurations: [modelConfiguration]
             )
-            
+            bootstrapErrorMessage = nil
+
             // Migrate existing reviewed IDs to ReviewedPhoto entity
             migrateReviewedPhotosIfNeeded()
         } catch {
-            fatalError("Could not initialize ModelContainer: \(error)")
-        }
-    }
-    
-    /// Clears the database if it's too large (prevents memory crash on startup)
-    private static func clearOversizedDatabaseIfNeeded() {
-        let fileManager = FileManager.default
-        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            return
-        }
-        
-        // SwiftData default database location
-        let storeURL = appSupport.appendingPathComponent("default.store")
-        
-        // Check if database file exists and is suspiciously large (> 50MB suggests bloated data)
-        if let fileSize = sizeOfFile(at: storeURL),
-           fileSize > 50_000_000 {
-            
-            print("PhotoSoap: Database is \(fileSize / 1_000_000)MB - clearing to prevent memory crash")
-            
-            // Remove all SwiftData store files
-            let storeFiles = [
-                storeURL,
-                storeURL.appendingPathExtension("shm"),
-                storeURL.appendingPathExtension("wal")
-            ]
-            
-            for file in storeFiles {
-                try? fileManager.removeItem(at: file)
+            print("PhotoSoap: Falling back to in-memory store after persistent store failure: \(error)")
+
+            let schema = Self.appSchema
+            let fallbackConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+
+            do {
+                modelContainer = try ModelContainer(
+                    for: schema,
+                    configurations: [fallbackConfiguration]
+                )
+                bootstrapErrorMessage = "PhotoSoap could not open your saved data and started in a temporary recovery mode. Your new changes may not persist until this is fixed."
+            } catch {
+                fatalError("Could not initialize fallback ModelContainer: \(error)")
             }
-            
-            print("PhotoSoap: Database cleared successfully")
         }
     }
 
-    private static func sizeOfFile(at url: URL) -> Int64? {
-        guard let handle = try? FileHandle(forReadingFrom: url) else {
-            return nil
-        }
-
-        defer {
-            try? handle.close()
-        }
-
-        guard let size = try? handle.seekToEnd(),
-              size <= UInt64(Int64.max) else {
-            return nil
-        }
-
-        return Int64(size)
-    }
+    private static let appSchema = Schema([UserStats.self, ReviewedPhoto.self])
     
     /// Migrates IDs from UserStats array to ReviewedPhoto entities
     private func migrateReviewedPhotosIfNeeded() {
@@ -125,7 +88,7 @@ struct PhotoSoapApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(bootstrapErrorMessage: bootstrapErrorMessage)
         }
         .modelContainer(modelContainer)
     }
