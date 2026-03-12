@@ -17,6 +17,47 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(stats.sessionReviewCount, 1)
     }
 
+    @MainActor
+    func testAnalyticsServiceRecordsEventNameAndProperties() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+
+        let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
+        analyticsService.setEnabled(true)
+
+        analyticsService.track(.paywallOpened(source: "stats_card"))
+
+        XCTAssertEqual(analyticsService.recordedEvents.count, 1)
+        XCTAssertEqual(analyticsService.recordedEvents.first?.name, "paywall_opened")
+        XCTAssertEqual(analyticsService.recordedEvents.first?.properties["source"], "stats_card")
+    }
+
+    @MainActor
+    func testAnalyticsServiceSkipsEventsWhenDisabled() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+
+        let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
+
+        analyticsService.track(.statsViewed())
+
+        XCTAssertFalse(analyticsService.isEnabled)
+        XCTAssertTrue(analyticsService.recordedEvents.isEmpty)
+    }
+
+    @MainActor
+    func testAnalyticsPreferencePersistsAcrossInstances() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+
+        let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
+        analyticsService.setEnabled(true)
+
+        let restoredService = AnalyticsService(defaults: defaults, recorder: { _ in })
+
+        XCTAssertTrue(restoredService.isEnabled)
+    }
+
     func testIncrementDeletedTracksStorageFreed() {
         let stats = UserStats()
 
@@ -75,7 +116,14 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testEarnedAdRemovalUnlockRequiresThreshold() {
-        let service = AdRemovalPurchaseService(shouldObserveTransactions: false)
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
+        analyticsService.setEnabled(true)
+        let service = AdRemovalPurchaseService(
+            analyticsService: analyticsService,
+            shouldObserveTransactions: false
+        )
         let stats = UserStats()
 
         stats.totalDeleted = AdRemovalConfig.freeUnlockDeletedCount - 1
@@ -93,11 +141,17 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(service.unlockSource, .earned)
         XCTAssertEqual(service.remainingDeletesForUnlock, 0)
         XCTAssertEqual(service.deleteProgress, 1.0)
+        XCTAssertTrue(analyticsService.recordedEvents.contains(where: { $0.name == "loyalty_unlock_earned" }))
     }
 
     @MainActor
     func testPurchasedEntitlementUnlocksAdRemoval() {
-        let service = AdRemovalPurchaseService(shouldObserveTransactions: false)
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let service = AdRemovalPurchaseService(
+            analyticsService: AnalyticsService(defaults: defaults, recorder: { _ in }),
+            shouldObserveTransactions: false
+        )
 
         service.applyPurchasedEntitlement(true)
 
@@ -108,7 +162,12 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testDeleteProgressCapsAtOneHundredPercent() {
-        let service = AdRemovalPurchaseService(shouldObserveTransactions: false)
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let service = AdRemovalPurchaseService(
+            analyticsService: AnalyticsService(defaults: defaults, recorder: { _ in }),
+            shouldObserveTransactions: false
+        )
         let stats = UserStats()
 
         stats.totalDeleted = AdRemovalConfig.freeUnlockDeletedCount + 250

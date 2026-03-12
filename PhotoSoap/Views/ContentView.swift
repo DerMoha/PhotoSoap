@@ -8,12 +8,22 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     @Query private var statsArray: [UserStats]
+    @StateObject private var analyticsService: AnalyticsService
     @StateObject private var photoLibraryService = PhotoLibraryService()
     @StateObject private var gameificationService = GameificationService()
-    @StateObject private var adRemovalPurchaseService = AdRemovalPurchaseService()
+    @StateObject private var adRemovalPurchaseService: AdRemovalPurchaseService
     @StateObject private var adCoordinator = AdCoordinator()
     @State private var selectedTab = 0
     @State private var showBootstrapAlert = false
+    @State private var hasTrackedAppOpen = false
+
+    init(bootstrapErrorMessage: String?, analyticsService: AnalyticsService = AnalyticsService()) {
+        self.bootstrapErrorMessage = bootstrapErrorMessage
+        _analyticsService = StateObject(wrappedValue: analyticsService)
+        _adRemovalPurchaseService = StateObject(
+            wrappedValue: AdRemovalPurchaseService(analyticsService: analyticsService)
+        )
+    }
 
     private var stats: UserStats {
         if let existingStats = statsArray.first {
@@ -28,20 +38,29 @@ struct ContentView: View {
     var body: some View {
         Group {
             if photoLibraryService.authorizationStatus == .notDetermined {
-                PermissionRequestView(photoLibraryService: photoLibraryService)
+                PermissionRequestView(
+                    photoLibraryService: photoLibraryService,
+                    analyticsService: analyticsService
+                )
             } else if photoLibraryService.authorizationStatus == .denied ||
                       photoLibraryService.authorizationStatus == .restricted {
-                PermissionDeniedView()
+                PermissionDeniedView(analyticsService: analyticsService)
             } else {
                 mainTabView
             }
         }
         .onAppear {
+            if !hasTrackedAppOpen {
+                analyticsService.track(.appOpened())
+                hasTrackedAppOpen = true
+            }
+
             initializeStats()
             photoLibraryService.refreshLibraryAccessState()
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
             adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
             showBootstrapAlert = bootstrapErrorMessage != nil
+            analyticsService.track(.permissionStatusChanged(photoLibraryService.authorizationStatus))
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
@@ -55,6 +74,12 @@ struct ContentView: View {
         }
         .onChange(of: adRemovalPurchaseService.hasAdRemovalEntitlement) { _, hasEntitlement in
             adCoordinator.updateEntitlement(hasAdRemovalEntitlement: hasEntitlement)
+        }
+        .onChange(of: photoLibraryService.authorizationStatus) { _, status in
+            analyticsService.track(.permissionStatusChanged(status))
+        }
+        .onChange(of: selectedTab) { _, newTab in
+            analyticsService.track(.tabSelected(tabName(for: newTab)))
         }
         .alert("Recovery Mode", isPresented: $showBootstrapAlert) {
             Button("OK") {}
@@ -73,6 +98,7 @@ struct ContentView: View {
 
             if photoLibraryService.authorizationStatus == .limited {
                 LimitedAccessBanner {
+                    analyticsService.track(.limitedLibraryPickerOpened())
                     photoLibraryService.presentLimitedLibraryPicker()
                 }
                 .padding(.horizontal)
@@ -83,7 +109,8 @@ struct ContentView: View {
                 PhotoReviewView(
                     photoLibraryService: photoLibraryService,
                     gameificationService: gameificationService,
-                    stats: stats
+                    stats: stats,
+                    analyticsService: analyticsService
                 )
                 .tabItem {
                     Label("Review", systemImage: "photo.stack")
@@ -94,7 +121,8 @@ struct ContentView: View {
                     stats: stats,
                     gameificationService: gameificationService,
                     adRemovalPurchaseService: adRemovalPurchaseService,
-                    adCoordinator: adCoordinator
+                    adCoordinator: adCoordinator,
+                    analyticsService: analyticsService
                 )
                     .tabItem {
                         Label("Stats", systemImage: "chart.bar")
@@ -114,10 +142,24 @@ struct ContentView: View {
         gameificationService.updateDailyStreak(stats: stats)
         gameificationService.ensureDailyChallengeIsSet(stats: stats)
     }
+
+    private func tabName(for selection: Int) -> String {
+        switch selection {
+        case 0:
+            return "review"
+        case 1:
+            return "stats"
+        case 2:
+            return "achievements"
+        default:
+            return "unknown"
+        }
+    }
 }
 
 struct PermissionRequestView: View {
     @ObservedObject var photoLibraryService: PhotoLibraryService
+    @ObservedObject var analyticsService: AnalyticsService
 
     var body: some View {
         VStack(spacing: 24) {
@@ -138,6 +180,7 @@ struct PermissionRequestView: View {
                 .padding(.horizontal, 32)
 
             Button {
+                analyticsService.track(.permissionRequestTapped())
                 Task {
                     await photoLibraryService.requestAuthorization()
                 }
@@ -159,6 +202,8 @@ struct PermissionRequestView: View {
 }
 
 struct PermissionDeniedView: View {
+    @ObservedObject var analyticsService: AnalyticsService
+
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
@@ -178,6 +223,7 @@ struct PermissionDeniedView: View {
                 .padding(.horizontal, 32)
 
             Button {
+                analyticsService.track(.settingsOpened())
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(settingsURL)
                 }

@@ -25,8 +25,10 @@ final class AdRemovalPurchaseService: ObservableObject {
 
     @AppStorage("hasPurchasedRemoveAds") private var hasPurchasedRemoveAds = false
     private var updatesTask: Task<Void, Never>?
+    private let analyticsService: AnalyticsService
 
-    init(shouldObserveTransactions: Bool = true) {
+    init(analyticsService: AnalyticsService, shouldObserveTransactions: Bool = true) {
+        self.analyticsService = analyticsService
         hasPurchasedEntitlement = hasPurchasedRemoveAds
 
         guard shouldObserveTransactions else {
@@ -78,6 +80,8 @@ final class AdRemovalPurchaseService: ObservableObject {
             return
         }
 
+        analyticsService.track(.purchaseStarted(productID: product.id))
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -87,6 +91,7 @@ final class AdRemovalPurchaseService: ObservableObject {
             switch result {
             case .success(let verificationResult):
                 let transaction = try checkVerified(verificationResult)
+                analyticsService.track(.purchaseCompleted(productID: transaction.productID, source: "purchase"))
                 await handleVerified(transaction)
             case .pending:
                 errorMessage = "Purchase pending approval."
@@ -101,6 +106,8 @@ final class AdRemovalPurchaseService: ObservableObject {
     }
 
     func restorePurchases() async {
+        analyticsService.track(.purchaseRestoreStarted())
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -108,14 +115,20 @@ final class AdRemovalPurchaseService: ObservableObject {
         do {
             try await AppStore.sync()
             await refreshEntitlement()
+            analyticsService.track(.purchaseRestoreCompleted(hasEntitlement: hasPurchasedEntitlement))
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     func refreshEarnedEntitlement(stats: UserStats) {
+        let hadEarnedEntitlement = hasEarnedEntitlement
         currentDeletedCount = stats.totalDeleted
         hasEarnedEntitlement = stats.totalDeleted >= AdRemovalConfig.freeUnlockDeletedCount
+
+        if !hadEarnedEntitlement && hasEarnedEntitlement {
+            analyticsService.track(.loyaltyUnlockEarned(threshold: AdRemovalConfig.freeUnlockDeletedCount))
+        }
     }
 
     func applyPurchasedEntitlement(_ hasEntitlement: Bool) {

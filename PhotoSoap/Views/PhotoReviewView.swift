@@ -5,6 +5,7 @@ struct PhotoReviewView: View {
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
     @Bindable var stats: UserStats
+    @ObservedObject var analyticsService: AnalyticsService
     
     @Environment(\.modelContext) private var modelContext
 
@@ -24,6 +25,7 @@ struct PhotoReviewView: View {
     @State private var showFilterSheet = false
     @State private var persistedReviewedIDs: Set<String> = []
     @State private var knownUnreviewedIDs: Set<String> = []
+    @State private var hasTrackedReviewStart = false
     private let swipeActionThreshold: CGFloat = 100
     private let swipeFeedbackDistance: CGFloat = 140
     private let swipeOverlayThreshold: CGFloat = 12
@@ -66,6 +68,11 @@ struct PhotoReviewView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
+                if !hasTrackedReviewStart {
+                    analyticsService.track(.reviewStarted(filter: currentFilter))
+                    hasTrackedReviewStart = true
+                }
+
                 Task {
                     await loadInitialPhoto()
                 }
@@ -329,6 +336,8 @@ struct PhotoReviewView: View {
             return
         }
 
+        analyticsService.track(.photoKept(filter: currentFilter))
+
         await advanceToNextPhoto()
     }
 
@@ -368,6 +377,8 @@ struct PhotoReviewView: View {
             guard persistReviewProgress(for: photo.id, cacheInSession: false) else {
                 return
             }
+
+            analyticsService.track(.photoDeleted(filter: currentFilter))
 
             await advanceToNextPhoto()
         } catch {
@@ -438,6 +449,7 @@ struct PhotoReviewView: View {
         } else {
             currentPhoto = nil
             noMorePhotos = true
+            analyticsService.track(.reviewBatchCompleted(filter: currentFilter))
         }
     }
     
@@ -500,6 +512,7 @@ struct PhotoReviewView: View {
         currentPhoto = nil
         nextPhoto = nil
         noMorePhotos = false
+        analyticsService.track(.filterApplied(filter))
 
         Task {
             await loadInitialPhoto()
@@ -511,6 +524,7 @@ struct PhotoReviewView: View {
     PhotoReviewView(
         photoLibraryService: PhotoLibraryService(),
         gameificationService: GameificationService(),
-        stats: UserStats()
+        stats: UserStats(),
+        analyticsService: AnalyticsService()
     )
 }

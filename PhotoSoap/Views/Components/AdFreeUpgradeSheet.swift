@@ -7,6 +7,7 @@ struct AdFreeUpgradeSheet: View {
     @Bindable var stats: UserStats
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
     @ObservedObject var adCoordinator: AdCoordinator
+    @ObservedObject var analyticsService: AnalyticsService
 
     var body: some View {
         NavigationStack {
@@ -22,6 +23,9 @@ struct AdFreeUpgradeSheet: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Ad-Free")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                analyticsService.track(.paywallOpened(source: "ad_free_sheet"))
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
@@ -216,7 +220,11 @@ struct AdFreeUpgradeSheet: View {
 #Preview {
     AdFreeUpgradeSheet(
         stats: UserStats(),
-        adRemovalPurchaseService: AdRemovalPurchaseService(shouldObserveTransactions: false),
-        adCoordinator: AdCoordinator()
+        adRemovalPurchaseService: AdRemovalPurchaseService(
+            analyticsService: AnalyticsService(),
+            shouldObserveTransactions: false
+        ),
+        adCoordinator: AdCoordinator(),
+        analyticsService: AnalyticsService()
     )
 }

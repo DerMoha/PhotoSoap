@@ -6,6 +6,7 @@ struct StatsView: View {
     @ObservedObject var gameificationService: GameificationService
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
     @ObservedObject var adCoordinator: AdCoordinator
+    @ObservedObject var analyticsService: AnalyticsService
     @StateObject private var viewModel = StatsViewModel()
     @State private var isShowingAdFreeSheet = false
 
@@ -16,6 +17,7 @@ struct StatsView: View {
                     overviewSection
                     streaksSection
                     ratioSection
+                    analyticsSection
                     adFreeSection
                     achievementsPreviewSection
                 }
@@ -26,12 +28,14 @@ struct StatsView: View {
             .onAppear {
                 adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
                 adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
+                analyticsService.track(.statsViewed())
             }
             .sheet(isPresented: $isShowingAdFreeSheet) {
                 AdFreeUpgradeSheet(
                     stats: stats,
                     adRemovalPurchaseService: adRemovalPurchaseService,
-                    adCoordinator: adCoordinator
+                    adCoordinator: adCoordinator,
+                    analyticsService: analyticsService
                 )
                 .presentationDetents([.medium, .large])
             }
@@ -181,6 +185,7 @@ struct StatsView: View {
                     Spacer()
 
                     Button("Details") {
+                        analyticsService.track(.paywallOpened(source: "stats_card"))
                         isShowingAdFreeSheet = true
                     }
                     .buttonStyle(.bordered)
@@ -257,6 +262,41 @@ struct StatsView: View {
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
+    }
+
+    private var analyticsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Privacy")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 14) {
+                Toggle(isOn: analyticsToggleBinding) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Share Anonymous Usage Analytics")
+                            .font(.subheadline.weight(.semibold))
+                        Text("Help improve PhotoSoap with lightweight product analytics that never include photo contents, asset IDs, or location data.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .tint(.blue)
+
+                Text(analyticsService.isEnabled ? "Anonymous analytics are currently on." : "Anonymous analytics are currently off.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    private var analyticsToggleBinding: Binding<Bool> {
+        Binding(
+            get: { analyticsService.isEnabled },
+            set: { analyticsService.setEnabled($0) }
+        )
     }
 
     private var adFreeTitle: String {
@@ -336,7 +376,11 @@ struct StatCard: View {
     StatsView(
         stats: UserStats(),
         gameificationService: GameificationService(),
-        adRemovalPurchaseService: AdRemovalPurchaseService(shouldObserveTransactions: false),
-        adCoordinator: AdCoordinator()
+        adRemovalPurchaseService: AdRemovalPurchaseService(
+            analyticsService: AnalyticsService(),
+            shouldObserveTransactions: false
+        ),
+        adCoordinator: AdCoordinator(),
+        analyticsService: AnalyticsService()
     )
 }
