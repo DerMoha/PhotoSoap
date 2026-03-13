@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		71B200000000000000000001 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 71B200000000000000000002 /* GoogleMobileAds */; };
 		71A10000000000000000000E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71A10000000000000000000D /* XCTest.framework */; };
+		71B200000000000000000001 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 71B200000000000000000002 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -177,13 +177,13 @@
 			);
 			mainGroup = 715E1C9E2F21612300CD8842;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				71B200000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 715E1CA82F21612300CD8842 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
-			packageReferences = (
-				71B200000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
-			);
 			targets = (
 				715E1CA62F21612300CD8842 /* PhotoSoap */,
 				71A100000000000000000006 /* PhotoSoapTests */,

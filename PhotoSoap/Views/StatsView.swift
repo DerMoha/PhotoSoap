@@ -275,16 +275,22 @@ struct StatsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Share Anonymous Usage Analytics")
                             .font(.subheadline.weight(.semibold))
-                        Text("Help improve PhotoSoap with lightweight product analytics that never include photo contents, asset IDs, or location data. This setting is off by default.")
+                        Text("Optional usage analytics help improve PhotoSoap and stay off by default. They never include photo contents, asset IDs, or location data.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
                 .tint(.blue)
 
-                    Text(analyticsService.isEnabled ? "Anonymous analytics are currently on." : "Anonymous analytics are currently off. You can keep using the app without enabling them.")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("PhotoSoap always keeps anonymous community totals for installs, photos reviewed, photos deleted, and storage freed so you can see the app's overall impact later.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+
+                    Text(analyticsService.isEnabled ? "Optional usage analytics are currently on." : "Optional usage analytics are currently off. You can keep using the app without enabling them.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))

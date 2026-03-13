@@ -58,6 +58,60 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(restoredService.isEnabled)
     }
 
+    @MainActor
+    func testAggregateMetricsRegistersInstallOnlyOnce() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let service = AggregateMetricsService(
+            defaults: defaults,
+            sink: TestAggregateMetricsSink(isConfigured: false),
+            allowsAutomaticFlush: false
+        )
+
+        service.registerInstallIfNeeded()
+        service.registerInstallIfNeeded()
+
+        XCTAssertEqual(service.pendingMetrics.installs, 1)
+    }
+
+    @MainActor
+    func testAggregateMetricsTrackReviewsDeletesAndSpaceFreed() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let service = AggregateMetricsService(
+            defaults: defaults,
+            sink: TestAggregateMetricsSink(isConfigured: false),
+            allowsAutomaticFlush: false
+        )
+
+        service.recordReview()
+        service.recordDeletion(bytesFreed: 4_096)
+
+        XCTAssertEqual(service.pendingMetrics.reviewedPhotos, 2)
+        XCTAssertEqual(service.pendingMetrics.deletedPhotos, 1)
+        XCTAssertEqual(service.pendingMetrics.bytesFreed, 4_096)
+    }
+
+    @MainActor
+    func testAggregateMetricsFlushesThroughConfiguredSink() async {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let sink = TestAggregateMetricsSink()
+        let service = AggregateMetricsService(defaults: defaults, sink: sink, allowsAutomaticFlush: false)
+
+        service.registerInstallIfNeeded()
+        service.recordDeletion(bytesFreed: 2_048)
+        await service.flushForTesting()
+
+        let payloads = await sink.payloads
+        XCTAssertEqual(payloads.count, 1)
+        XCTAssertEqual(payloads.first?.metrics.installs, 1)
+        XCTAssertEqual(payloads.first?.metrics.reviewedPhotos, 1)
+        XCTAssertEqual(payloads.first?.metrics.deletedPhotos, 1)
+        XCTAssertEqual(payloads.first?.metrics.bytesFreed, 2_048)
+        XCTAssertTrue(service.pendingMetrics.isEmpty)
+    }
+
     func testIncrementDeletedTracksStorageFreed() {
         let stats = UserStats()
 
@@ -208,5 +262,22 @@ final class SmokeTests: XCTestCase {
         XCTAssertFalse(coordinator.isConfigured)
         XCTAssertFalse(coordinator.adsEnabled)
         XCTAssertEqual(coordinator.statusSummary, "Banner ads are not configured yet.")
+    }
+}
+
+private actor TestAggregateMetricsSink: AggregateMetricsSink {
+    let isConfigured: Bool
+    private(set) var payloads: [AggregateMetricsPayload] = []
+
+    init(isConfigured: Bool = true) {
+        self.isConfigured = isConfigured
+    }
+
+    func send(_ payload: AggregateMetricsPayload) async throws {
+        guard isConfigured else {
+            throw MetricsError.notConfigured
+        }
+
+        payloads.append(payload)
     }
 }

@@ -100,6 +100,7 @@ final class AggregateMetricsService: ObservableObject {
     private let defaults: UserDefaults
     private let bundle: Bundle
     private let sink: AggregateMetricsSink
+    private let allowsAutomaticFlush: Bool
     private var isFlushing = false
     private var shouldFlushAgain = false
 
@@ -107,10 +108,12 @@ final class AggregateMetricsService: ObservableObject {
         defaults: UserDefaults = .standard,
         bundle: Bundle = .main,
         sink: AggregateMetricsSink? = nil,
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        allowsAutomaticFlush: Bool = true
     ) {
         self.defaults = defaults
         self.bundle = bundle
+        self.allowsAutomaticFlush = allowsAutomaticFlush
         self.pendingMetrics = Self.loadPendingMetrics(from: defaults)
 
         if let existingInstallID = defaults.string(forKey: Self.installIDKey), !existingInstallID.isEmpty {
@@ -165,7 +168,7 @@ final class AggregateMetricsService: ObservableObject {
     }
 
     private func scheduleAutomaticFlushIfNeeded() {
-        guard sink.isConfigured else { return }
+        guard allowsAutomaticFlush, sink.isConfigured else { return }
 
         if pendingMetrics.installs > 0 || pendingMetrics.deletedPhotos >= 10 || pendingMetrics.reviewedPhotos >= 25 || pendingMetrics.bytesFreed >= 100_000_000 {
             flushPendingMetricsIfNeeded()
@@ -205,6 +208,10 @@ final class AggregateMetricsService: ObservableObject {
             shouldFlushAgain = false
             await flushPendingMetrics()
         }
+    }
+
+    func flushForTesting() async {
+        await flushPendingMetrics()
     }
 
     private func persistPendingMetrics() {

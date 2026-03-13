@@ -20,14 +20,15 @@ PhotoSoap now uses a single non-personalized AdMob banner placed directly below 
 - Keep ads non-personalized and do not request App Tracking Transparency unless the ad strategy changes.
 - Leave `NSPrivacyTracking` set to `false` in `PhotoSoap/PrivacyInfo.xcprivacy` unless tracking is intentionally introduced later.
 - Verify the shipped privacy manifests from Google Mobile Ads and the app's own `PhotoSoap/PrivacyInfo.xcprivacy` still match the final binary.
-- Complete the App Store privacy questionnaire to reflect optional anonymous analytics, non-personalized ads, and the fact that photo contents are never sent for analytics.
+- Complete the App Store privacy questionnaire to reflect anonymous aggregate community totals, optional usage analytics, non-personalized ads, and the fact that photo contents are never sent for analytics.
 
 ## Current privacy posture
 
 - `PhotoSoap/PrivacyInfo.xcprivacy` currently declares no tracking, no collected data at the app level, and only `UserDefaults` accessed API usage.
 - `PhotoSoap/Info.plist` contains only Photos permission strings plus the AdMob app ID and single review-banner unit ID.
-- The app's own analytics are optional, off by default, and do not send photo contents, asset IDs, or location data.
-- The first-run welcome sheet explains optional analytics, the single review banner, and the free loyalty unlock after 2000 deleted photos.
+- The app always keeps anonymous aggregate totals for installs, photos reviewed, photos deleted, and storage freed.
+- Optional usage analytics remain off by default and do not send photo contents, asset IDs, or location data.
+- The first-run welcome sheet explains anonymous community totals, the single review banner, and the free loyalty unlock after 2000 deleted photos.
 
 ## Embedded SDK manifest notes
 
@@ -39,10 +40,10 @@ PhotoSoap now uses a single non-personalized AdMob banner placed directly below 
 ## App Store Connect starting point
 
 - Tracking: start with `No` because PhotoSoap does not request ATT and is intended to use non-personalized ads only.
-- Photos or videos: `No` for collected data sent off-device by the app, because PhotoSoap reviews the library locally and the app's own analytics do not transmit photo contents.
+- Photos or videos: `No` for collected data sent off-device by the app, because PhotoSoap reviews the library locally and neither aggregate totals nor optional analytics transmit photo contents.
 - Purchases: review carefully during submission; StoreKit powers ad-free unlocks, but PhotoSoap does not maintain its own purchase profile beyond entitlement state.
 - Identifiers and usage data: expect to disclose the categories declared by the embedded Google SDK manifests.
-- Privacy policy text should clearly say that PhotoSoap may show one non-personalized ad while reviewing, optional analytics are off by default, and ad-free unlock is available by purchase or after 2000 deleted photos.
+- Privacy policy text should clearly say that PhotoSoap may show one non-personalized ad while reviewing, keeps anonymous totals for installs/reviews/deletes/storage freed, offers optional usage analytics that are off by default, and unlocks ad-free by purchase or after 2000 deleted photos.
 
 ## Final submission check
 
@@ -56,4 +57,4 @@ PhotoSoap now uses a single non-personalized AdMob banner placed directly below 
 - Use test ad requests for development and TestFlight before the production rollout is approved in AdMob.
 - Verify buy, restore, and loyalty unlock paths still suppress ads.
 - Confirm the banner appears only below the current review photo and that the space collapses when ads are disabled.
-- Confirm the first-run welcome sheet explains analytics, the single banner placement, and the free loyalty unlock at 2000 deleted photos.
+- Confirm the first-run welcome sheet explains community totals, the single banner placement, and the free loyalty unlock at 2000 deleted photos.

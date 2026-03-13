@@ -331,10 +331,10 @@ private struct QuickStartInfoSheet: View {
                     }
 
                     QuickStartCard(
-                        title: "Anonymous analytics are optional",
+                        title: "Community totals stay anonymous",
                         systemImage: "chart.bar.xaxis",
                         tint: .blue,
-                        message: "Usage analytics are off by default. If you turn them on later in Stats > Privacy, they help improve the app without including photo contents, asset IDs, or location data."
+                        message: "PhotoSoap keeps anonymous totals for installs, photos reviewed, photos deleted, and storage freed. Optional usage analytics stay off by default and never include photo contents, asset IDs, or location data."
                     )
 
                     QuickStartCard(
