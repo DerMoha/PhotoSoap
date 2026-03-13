@@ -18,7 +18,7 @@
                BlueprintIdentifier = "715E1CA62F21612300CD8842"
                BuildableName = "PhotoSoap.app"
                BlueprintName = "PhotoSoap"
-            ReferencedContainer = "container:PhotoSoap.xcodeproj">
+               ReferencedContainer = "container:PhotoSoap.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry

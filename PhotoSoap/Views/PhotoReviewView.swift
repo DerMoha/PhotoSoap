@@ -6,6 +6,7 @@ struct PhotoReviewView: View {
     @ObservedObject var gameificationService: GameificationService
     @Bindable var stats: UserStats
     @ObservedObject var analyticsService: AnalyticsService
+    @ObservedObject var adCoordinator: AdCoordinator
     
     @Environment(\.modelContext) private var modelContext
 
@@ -52,9 +53,11 @@ struct PhotoReviewView: View {
                         noMorePhotosView
                         Spacer()
                     } else if let photo = currentPhoto {
-                        photoCardSection(photo: photo)
+                        reviewContent(photo: photo)
                             .padding(.top, 8)
                             .padding(.horizontal, 12)
+                            .padding(.bottom, 12)
+                            .frame(maxHeight: .infinity)
                     } else {
                         Spacer()
                         emptyStateView
@@ -130,6 +133,22 @@ struct PhotoReviewView: View {
                     }
                 }
         )
+    }
+
+    @ViewBuilder
+    private func reviewContent(photo: Photo) -> some View {
+        VStack(spacing: 12) {
+            photoCardSection(photo: photo)
+                .frame(maxHeight: .infinity)
+
+            if adCoordinator.shouldShowBanner(at: .reviewBanner),
+               let unitID = adCoordinator.unitID(for: .reviewBanner) {
+                ReviewBannerAdView(adUnitID: unitID)
+                    .frame(height: 60)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: adCoordinator.adsEnabled)
     }
 
     private var loadingView: some View {
@@ -525,6 +544,7 @@ struct PhotoReviewView: View {
         photoLibraryService: PhotoLibraryService(),
         gameificationService: GameificationService(),
         stats: UserStats(),
-        analyticsService: AnalyticsService()
+        analyticsService: AnalyticsService(),
+        adCoordinator: AdCoordinator()
     )
 }

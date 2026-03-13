@@ -7,6 +7,7 @@ struct ContentView: View {
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("hasSeenQuickStartInfo") private var hasSeenQuickStartInfo = false
     @Query private var statsArray: [UserStats]
     @StateObject private var analyticsService: AnalyticsService
     @StateObject private var photoLibraryService = PhotoLibraryService()
@@ -15,6 +16,7 @@ struct ContentView: View {
     @StateObject private var adCoordinator = AdCoordinator()
     @State private var selectedTab = 0
     @State private var showBootstrapAlert = false
+    @State private var showQuickStartSheet = false
     @State private var hasTrackedAppOpen = false
 
     init(bootstrapErrorMessage: String?, analyticsService: AnalyticsService = AnalyticsService()) {
@@ -60,6 +62,7 @@ struct ContentView: View {
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
             adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
             showBootstrapAlert = bootstrapErrorMessage != nil
+            updateQuickStartPresentation()
             analyticsService.track(.permissionStatusChanged(photoLibraryService.authorizationStatus))
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -76,6 +79,7 @@ struct ContentView: View {
             adCoordinator.updateEntitlement(hasAdRemovalEntitlement: hasEntitlement)
         }
         .onChange(of: photoLibraryService.authorizationStatus) { _, status in
+            updateQuickStartPresentation(for: status)
             analyticsService.track(.permissionStatusChanged(status))
         }
         .onChange(of: selectedTab) { _, newTab in
@@ -85,6 +89,10 @@ struct ContentView: View {
             Button("OK") {}
         } message: {
             Text(bootstrapErrorMessage ?? "")
+        }
+        .sheet(isPresented: $showQuickStartSheet) {
+            QuickStartInfoSheet()
+                .presentationDetents([.medium, .large])
         }
     }
 
@@ -110,7 +118,8 @@ struct ContentView: View {
                     photoLibraryService: photoLibraryService,
                     gameificationService: gameificationService,
                     stats: stats,
-                    analyticsService: analyticsService
+                    analyticsService: analyticsService,
+                    adCoordinator: adCoordinator
                 )
                 .tabItem {
                     Label("Review", systemImage: "photo.stack")
@@ -154,6 +163,12 @@ struct ContentView: View {
         default:
             return "unknown"
         }
+    }
+
+    private func updateQuickStartPresentation(for status: PhotoLibraryAuthorizationStatus? = nil) {
+        let currentStatus = status ?? photoLibraryService.authorizationStatus
+        let canShowMainExperience = currentStatus == .authorized || currentStatus == .limited
+        showQuickStartSheet = canShowMainExperience && !hasSeenQuickStartInfo
     }
 }
 
@@ -286,6 +301,91 @@ private struct LimitedAccessBanner: View {
         .padding(12)
         .background(Color.blue.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+private struct QuickStartInfoSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("hasSeenQuickStartInfo") private var hasSeenQuickStartInfo = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("A quick heads-up before you start")
+                            .font(.title2.weight(.bold))
+                        Text("PhotoSoap keeps monetization simple and privacy-focused while you review your library.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    QuickStartCard(
+                        title: "Anonymous analytics are optional",
+                        systemImage: "chart.bar.xaxis",
+                        tint: .blue,
+                        message: "Usage analytics are off by default. If you turn them on later in Stats > Privacy, they help improve the app without including photo contents, asset IDs, or location data."
+                    )
+
+                    QuickStartCard(
+                        title: "One non-personalized ad banner",
+                        systemImage: "rectangle.bottomthird.inset.filled",
+                        tint: .orange,
+                        message: "PhotoSoap shows a single non-personalized banner directly below the photo you are currently reviewing. It does not appear on the Stats or Achievements tabs."
+                    )
+
+                    QuickStartCard(
+                        title: "Loyalty unlock at 2000 deletes",
+                        systemImage: "sparkles",
+                        tint: .green,
+                        message: "Delete 2000 photos and the review banner disappears permanently for free. You can also buy ad-free at any time."
+                    )
+                }
+                .padding()
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Welcome")
+            .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom) {
+                Button("Got it") {
+                    hasSeenQuickStartInfo = true
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(.ultraThinMaterial)
+            }
+        }
+        .interactiveDismissDisabled()
+    }
+}
+
+private struct QuickStartCard: View {
+    let title: String
+    let systemImage: String
+    let tint: Color
+    let message: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: systemImage)
+                .font(.headline)
+                .foregroundStyle(tint)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 }
 

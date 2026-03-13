@@ -2,73 +2,47 @@ import Foundation
 import Combine
 
 enum AdPlacement: String, CaseIterable, Identifiable {
-    case statsBanner
-    case achievementsBanner
-    case reviewCompletionInterstitial
+    case reviewBanner
 
     var id: String { rawValue }
 
     var displayName: String {
-        switch self {
-        case .statsBanner:
-            return "Stats banner"
-        case .achievementsBanner:
-            return "Achievements banner"
-        case .reviewCompletionInterstitial:
-            return "Review completion interstitial"
-        }
+        "Review banner"
     }
 
     var kind: AdPlacementKind {
-        switch self {
-        case .statsBanner, .achievementsBanner:
-            return .banner
-        case .reviewCompletionInterstitial:
-            return .interstitial
-        }
+        .banner
     }
 }
 
 enum AdPlacementKind {
     case banner
-    case interstitial
 }
 
 enum AdMobConfig {
     static let appIDInfoKey = "GADApplicationIdentifier"
-    static let usesTestIdentifiersInfoKey = "PhotoSoapUsesAdMobTestIdentifiers"
-    static let statsBannerUnitIDInfoKey = "PhotoSoapAdMobStatsBannerUnitID"
-    static let achievementsBannerUnitIDInfoKey = "PhotoSoapAdMobAchievementsBannerUnitID"
-    static let reviewInterstitialUnitIDInfoKey = "PhotoSoapAdMobReviewInterstitialUnitID"
+    static let reviewBannerUnitIDInfoKey = "PhotoSoapAdMobReviewBannerUnitID"
 
-    static let testAppID = "ca-app-pub-3940256099942544~1458002511"
-    static let testBannerUnitID = "ca-app-pub-3940256099942544/2435281174"
-    static let testInterstitialUnitID = "ca-app-pub-3940256099942544/4411468910"
+    static let productionAppID = "ca-app-pub-2843751619926314~5457248604"
+    static let productionReviewBannerUnitID = "ca-app-pub-2843751619926314/7851807225"
 }
 
 struct AdMobRuntimeConfiguration {
     let appID: String
-    let usesTestIdentifiers: Bool
     let unitIDsByPlacement: [AdPlacement: String]
-    let hasTrackingUsageDescription: Bool
 
     var isConfigured: Bool {
-        !appID.isEmpty && AdPlacement.allCases.allSatisfy { unitIDsByPlacement[$0]?.isEmpty == false }
+        !appID.isEmpty && unitIDsByPlacement[.reviewBanner]?.isEmpty == false
     }
 
     static func from(bundle: Bundle) -> AdMobRuntimeConfiguration {
         let info = bundle.infoDictionary ?? [:]
-        let trackingDescription = info["NSUserTrackingUsageDescription"] as? String
 
         return AdMobRuntimeConfiguration(
             appID: info[AdMobConfig.appIDInfoKey] as? String ?? "",
-            usesTestIdentifiers: info[AdMobConfig.usesTestIdentifiersInfoKey] as? Bool ?? false,
             unitIDsByPlacement: [
-                .statsBanner: info[AdMobConfig.statsBannerUnitIDInfoKey] as? String ?? "",
-                .achievementsBanner: info[AdMobConfig.achievementsBannerUnitIDInfoKey] as? String ?? "",
-                .reviewCompletionInterstitial: info[AdMobConfig.reviewInterstitialUnitIDInfoKey] as? String ?? ""
-            ],
-            hasTrackingUsageDescription: trackingDescription?.isEmpty == false
+                .reviewBanner: info[AdMobConfig.reviewBannerUnitIDInfoKey] as? String ?? ""
+            ]
         )
     }
 }
@@ -77,14 +51,9 @@ struct AdMobRuntimeConfiguration {
 final class AdCoordinator: ObservableObject {
     @Published private(set) var adsEnabled = false
     @Published private(set) var isConfigured = false
-    @Published private(set) var usesTestIdentifiers = false
-    @Published private(set) var hasTrackingUsageDescription = false
 
     private let configuration: AdMobRuntimeConfiguration
     private var hasAdRemovalEntitlement = false
-
-    let bannerPlacements: [AdPlacement] = [.statsBanner, .achievementsBanner]
-    let interstitialPlacements: [AdPlacement] = [.reviewCompletionInterstitial]
 
     init(configuration: AdMobRuntimeConfiguration? = nil) {
         self.configuration = configuration ?? AdMobRuntimeConfiguration.from(bundle: .main)
@@ -93,40 +62,14 @@ final class AdCoordinator: ObservableObject {
 
     var statusSummary: String {
         if hasAdRemovalEntitlement {
-            return "Ads are suppressed because ad-free access is unlocked."
+            return "Ad-free is active, so the review banner stays hidden."
         }
 
         if !isConfigured {
-            return "Ad placements are scaffolded, but AdMob identifiers still need to be configured."
+            return "Banner ads are not configured yet."
         }
 
-        if usesTestIdentifiers {
-            return "AdMob test identifiers are configured for development and review-safe wiring."
-        }
-
-        return "Production ad identifiers are configured and ready for SDK wiring."
-    }
-
-    var integrationChecklist: [String] {
-        var items = [String]()
-
-        if !isConfigured {
-            items.append("Replace the AdMob identifiers in Info.plist before enabling production ads.")
-        }
-
-        if !hasTrackingUsageDescription {
-            items.append("Add an App Tracking Transparency purpose string before requesting personalized ads.")
-        }
-
-        if usesTestIdentifiers {
-            items.append("Keep using test identifiers in development and switch to production IDs before release.")
-        }
-
-        if items.isEmpty {
-            items.append("Link the ad SDK and load placements through AdCoordinator.")
-        }
-
-        return items
+        return "One banner can appear below the current photo while you review."
     }
 
     func unitID(for placement: AdPlacement) -> String? {
@@ -137,10 +80,6 @@ final class AdCoordinator: ObservableObject {
         placement.kind == .banner && adsEnabled && unitID(for: placement)?.isEmpty == false
     }
 
-    func canPresentInterstitial(at placement: AdPlacement) -> Bool {
-        placement.kind == .interstitial && adsEnabled && unitID(for: placement)?.isEmpty == false
-    }
-
     func updateEntitlement(hasAdRemovalEntitlement: Bool) {
         self.hasAdRemovalEntitlement = hasAdRemovalEntitlement
         refreshConfigurationState()
@@ -148,8 +87,6 @@ final class AdCoordinator: ObservableObject {
 
     private func refreshConfigurationState() {
         isConfigured = configuration.isConfigured
-        usesTestIdentifiers = configuration.usesTestIdentifiers
-        hasTrackingUsageDescription = configuration.hasTrackingUsageDescription
         adsEnabled = isConfigured && !hasAdRemovalEntitlement
     }
 }

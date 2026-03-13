@@ -196,7 +196,7 @@ struct StatsView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Label(adCoordinator.statusSummary, systemImage: adCoordinator.adsEnabled ? "play.circle.fill" : "wrench.and.screwdriver.fill")
+                Label(adCoordinator.statusSummary, systemImage: adCoordinator.adsEnabled ? "rectangle.bottomthird.inset.filled" : "checkmark.seal.fill")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -275,16 +275,16 @@ struct StatsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Share Anonymous Usage Analytics")
                             .font(.subheadline.weight(.semibold))
-                        Text("Help improve PhotoSoap with lightweight product analytics that never include photo contents, asset IDs, or location data.")
+                        Text("Help improve PhotoSoap with lightweight product analytics that never include photo contents, asset IDs, or location data. This setting is off by default.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
                 .tint(.blue)
 
-                Text(analyticsService.isEnabled ? "Anonymous analytics are currently on." : "Anonymous analytics are currently off.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    Text(analyticsService.isEnabled ? "Anonymous analytics are currently on." : "Anonymous analytics are currently off. You can keep using the app without enabling them.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
@@ -322,11 +322,11 @@ struct StatsView: View {
     private var adFreeMessage: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "Your purchase will keep the app ad-free on this account once ads are introduced."
+            return "Your purchase hides the review banner on this account."
         case .earned:
             return "You earned permanent ad-free access by deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos."
         case .none:
-            return "Buy ad-free now for \(adRemovalPurchaseService.displayPrice), or unlock it free after deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos."
+            return "Buy ad-free now for \(adRemovalPurchaseService.displayPrice), or unlock it free after deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos. Until then, one non-personalized banner appears below the photo you are reviewing."
         }
     }
 

@@ -6,6 +6,21 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		71B200000000000000000001 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 71B200000000000000000002 /* GoogleMobileAds */; };
+		71A10000000000000000000E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71A10000000000000000000D /* XCTest.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		71A100000000000000000007 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 715E1C9F2F21612300CD8842 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 715E1CA62F21612300CD8842;
+			remoteInfo = PhotoSoap;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		715E1CA72F21612300CD8842 /* PhotoSoap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoSoap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		71A100000000000000000001 /* PhotoSoapTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PhotoSoapTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -38,25 +53,12 @@
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
-/* Begin PBXBuildFile section */
-		71A10000000000000000000E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71A10000000000000000000D /* XCTest.framework */; };
-/* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		71A100000000000000000007 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 715E1C9F2F21612300CD8842 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 715E1CA62F21612300CD8842;
-			remoteInfo = PhotoSoap;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFrameworksBuildPhase section */
 		715E1CA42F21612300CD8842 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				71B200000000000000000001 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +120,7 @@
 			);
 			name = PhotoSoap;
 			packageProductDependencies = (
+				71B200000000000000000002 /* GoogleMobileAds */,
 			);
 			productName = PhotoSoap;
 			productReference = 715E1CA72F21612300CD8842 /* PhotoSoap.app */;
@@ -178,6 +181,9 @@
 			productRefGroup = 715E1CA82F21612300CD8842 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
+			packageReferences = (
+				71B200000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			targets = (
 				715E1CA62F21612300CD8842 /* PhotoSoap */,
 				71A100000000000000000006 /* PhotoSoapTests */,
@@ -497,6 +503,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		71B200000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		71B200000000000000000002 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 71B200000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 715E1C9F2F21612300CD8842 /* Project object */;
 }

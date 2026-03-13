@@ -181,40 +181,32 @@ final class SmokeTests: XCTestCase {
     @MainActor
     func testAdCoordinatorDisablesAdsWhenAdFreeIsUnlocked() {
         let configuration = AdMobRuntimeConfiguration(
-            appID: AdMobConfig.testAppID,
-            usesTestIdentifiers: true,
+            appID: AdMobConfig.productionAppID,
             unitIDsByPlacement: [
-                .statsBanner: AdMobConfig.testBannerUnitID,
-                .achievementsBanner: AdMobConfig.testBannerUnitID,
-                .reviewCompletionInterstitial: AdMobConfig.testInterstitialUnitID
-            ],
-            hasTrackingUsageDescription: true
+                .reviewBanner: AdMobConfig.productionReviewBannerUnitID
+            ]
         )
         let coordinator = AdCoordinator(configuration: configuration)
 
         XCTAssertTrue(coordinator.adsEnabled)
-        XCTAssertTrue(coordinator.shouldShowBanner(at: .statsBanner))
-        XCTAssertTrue(coordinator.canPresentInterstitial(at: .reviewCompletionInterstitial))
+        XCTAssertTrue(coordinator.shouldShowBanner(at: .reviewBanner))
 
         coordinator.updateEntitlement(hasAdRemovalEntitlement: true)
 
         XCTAssertFalse(coordinator.adsEnabled)
-        XCTAssertFalse(coordinator.shouldShowBanner(at: .statsBanner))
-        XCTAssertFalse(coordinator.canPresentInterstitial(at: .reviewCompletionInterstitial))
+        XCTAssertFalse(coordinator.shouldShowBanner(at: .reviewBanner))
     }
 
     @MainActor
     func testAdCoordinatorFlagsIncompleteConfiguration() {
         let configuration = AdMobRuntimeConfiguration(
             appID: "",
-            usesTestIdentifiers: false,
-            unitIDsByPlacement: [:],
-            hasTrackingUsageDescription: false
+            unitIDsByPlacement: [:]
         )
         let coordinator = AdCoordinator(configuration: configuration)
 
         XCTAssertFalse(coordinator.isConfigured)
         XCTAssertFalse(coordinator.adsEnabled)
-        XCTAssertFalse(coordinator.integrationChecklist.isEmpty)
+        XCTAssertEqual(coordinator.statusSummary, "Banner ads are not configured yet.")
     }
 }

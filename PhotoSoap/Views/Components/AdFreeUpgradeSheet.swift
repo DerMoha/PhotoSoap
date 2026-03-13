@@ -15,8 +15,7 @@ struct AdFreeUpgradeSheet: View {
                 VStack(alignment: .leading, spacing: 24) {
                     heroSection
                     loyaltySection
-                    futureAdsSection
-                    readinessSection
+                    bannerSection
                 }
                 .padding()
             }
@@ -119,47 +118,29 @@ struct AdFreeUpgradeSheet: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
-    private var futureAdsSection: some View {
+    private var bannerSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Planned Ad Placements")
+            Text("Review Banner")
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            ForEach(adCoordinator.bannerPlacements + adCoordinator.interstitialPlacements) { placement in
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: placement.kind == .banner ? "rectangle.bottomthird.inset.filled" : "sparkles.rectangle.stack")
-                        .foregroundStyle(.blue)
-                        .frame(width: 24)
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "rectangle.bottomthird.inset.filled")
+                    .foregroundStyle(.blue)
+                    .frame(width: 24)
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(placement.displayName)
-                            .font(.subheadline.weight(.semibold))
-                        Text(placementDescription(for: placement))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("One banner, only while reviewing")
+                        .font(.subheadline.weight(.semibold))
+                    Text("PhotoSoap shows a single non-personalized banner directly below the current photo. It never appears on the Stats or Achievements tabs.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-    }
 
-    private var readinessSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("AdMob Readiness")
-                .font(.headline)
+            Label(adCoordinator.statusSummary, systemImage: adCoordinator.adsEnabled ? "play.circle.fill" : "checkmark.seal.fill")
+                .font(.caption)
                 .foregroundStyle(.secondary)
-
-            Text(adCoordinator.statusSummary)
-                .font(.subheadline)
-
-            ForEach(adCoordinator.integrationChecklist, id: \.self) { item in
-                Label(item, systemImage: "checklist")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
@@ -184,11 +165,11 @@ struct AdFreeUpgradeSheet: View {
     private var heroMessage: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "Your StoreKit purchase will suppress future ads on supported placements across the app."
+            return "Your StoreKit purchase hides the review banner everywhere on this account."
         case .earned:
-            return "Your cleanup streak earned permanent ad-free access once ads are introduced."
+            return "Your cleanup streak earned permanent ad-free access, so the review banner stays hidden."
         case .none:
-            return "Pay once for ad-free access, or keep deleting photos until you hit the free loyalty unlock."
+            return "Pay once to remove the non-personalized banner below your current photo, or keep deleting photos until you hit the free loyalty unlock."
         }
     }
 
@@ -203,17 +184,6 @@ struct AdFreeUpgradeSheet: View {
 
         let remainingDeletes = adRemovalPurchaseService.remainingDeletesForUnlock
         return remainingDeletes == 1 ? "1 to go" : "\(remainingDeletes) to go"
-    }
-
-    private func placementDescription(for placement: AdPlacement) -> String {
-        switch placement {
-        case .statsBanner:
-            return "Reserved for a lightweight banner below your stats cards."
-        case .achievementsBanner:
-            return "Reserved for a secondary banner on the achievements screen."
-        case .reviewCompletionInterstitial:
-            return "Reserved for natural pauses after a review batch, never during active swiping."
-        }
     }
 }
 
