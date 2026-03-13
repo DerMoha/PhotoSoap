@@ -10,6 +10,7 @@ struct ContentView: View {
     @AppStorage("hasSeenQuickStartInfo") private var hasSeenQuickStartInfo = false
     @Query private var statsArray: [UserStats]
     @StateObject private var analyticsService: AnalyticsService
+    @StateObject private var aggregateMetricsService = AggregateMetricsService()
     @StateObject private var photoLibraryService = PhotoLibraryService()
     @StateObject private var gameificationService = GameificationService()
     @StateObject private var adRemovalPurchaseService: AdRemovalPurchaseService
@@ -59,6 +60,7 @@ struct ContentView: View {
 
             initializeStats()
             photoLibraryService.refreshLibraryAccessState()
+            aggregateMetricsService.registerInstallIfNeeded()
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
             adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
             showBootstrapAlert = bootstrapErrorMessage != nil
@@ -66,10 +68,17 @@ struct ContentView: View {
             analyticsService.track(.permissionStatusChanged(photoLibraryService.authorizationStatus))
         }
         .onChange(of: scenePhase) { _, newPhase in
-            guard newPhase == .active else { return }
-            photoLibraryService.refreshLibraryAccessState()
-            adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
-            adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
+            switch newPhase {
+            case .active:
+                photoLibraryService.refreshLibraryAccessState()
+                aggregateMetricsService.flushPendingMetricsIfNeeded()
+                adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
+                adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
+            case .inactive, .background:
+                aggregateMetricsService.flushPendingMetricsIfNeeded()
+            @unknown default:
+                break
+            }
         }
         .onChange(of: stats.totalDeleted) { _, _ in
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
@@ -119,6 +128,7 @@ struct ContentView: View {
                     gameificationService: gameificationService,
                     stats: stats,
                     analyticsService: analyticsService,
+                    aggregateMetricsService: aggregateMetricsService,
                     adCoordinator: adCoordinator
                 )
                 .tabItem {

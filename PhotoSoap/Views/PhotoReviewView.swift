@@ -6,6 +6,7 @@ struct PhotoReviewView: View {
     @ObservedObject var gameificationService: GameificationService
     @Bindable var stats: UserStats
     @ObservedObject var analyticsService: AnalyticsService
+    @ObservedObject var aggregateMetricsService: AggregateMetricsService
     @ObservedObject var adCoordinator: AdCoordinator
     
     @Environment(\.modelContext) private var modelContext
@@ -356,6 +357,7 @@ struct PhotoReviewView: View {
         }
 
         analyticsService.track(.photoKept(filter: currentFilter))
+        aggregateMetricsService.recordReview()
 
         await advanceToNextPhoto()
     }
@@ -398,6 +400,7 @@ struct PhotoReviewView: View {
             }
 
             analyticsService.track(.photoDeleted(filter: currentFilter))
+            aggregateMetricsService.recordDeletion(bytesFreed: resolvedFileSize)
 
             await advanceToNextPhoto()
         } catch {
@@ -545,6 +548,7 @@ struct PhotoReviewView: View {
         gameificationService: GameificationService(),
         stats: UserStats(),
         analyticsService: AnalyticsService(),
+        aggregateMetricsService: AggregateMetricsService(),
         adCoordinator: AdCoordinator()
     )
 }
