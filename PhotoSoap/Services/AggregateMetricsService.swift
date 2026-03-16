@@ -5,16 +5,18 @@ struct AggregateMetrics: Codable, Equatable {
     var installs: Int = 0
     var reviewedPhotos: Int = 0
     var deletedPhotos: Int = 0
+    var keptPhotos: Int = 0
     var bytesFreed: Int64 = 0
 
     var isEmpty: Bool {
-        installs == 0 && reviewedPhotos == 0 && deletedPhotos == 0 && bytesFreed == 0
+        installs == 0 && reviewedPhotos == 0 && deletedPhotos == 0 && keptPhotos == 0 && bytesFreed == 0
     }
 
     mutating func subtract(_ other: AggregateMetrics) {
         installs = max(0, installs - other.installs)
         reviewedPhotos = max(0, reviewedPhotos - other.reviewedPhotos)
         deletedPhotos = max(0, deletedPhotos - other.deletedPhotos)
+        keptPhotos = max(0, keptPhotos - other.keptPhotos)
         bytesFreed = max(0, bytesFreed - other.bytesFreed)
     }
 }
@@ -35,19 +37,23 @@ protocol AggregateMetricsSink {
 
 struct AggregateMetricsConfiguration {
     static let endpointURLInfoKey = "PhotoSoapAggregateMetricsEndpointURL"
+    static let anonKeyInfoKey = "PhotoSoapAggregateMetricsAnonKey"
 
     let endpointURL: URL?
+    let anonKey: String?
 
     static func from(bundle: Bundle) -> AggregateMetricsConfiguration {
         let rawValue = bundle.object(forInfoDictionaryKey: endpointURLInfoKey) as? String
         let endpointURL = rawValue.flatMap(URL.init(string:))
-        return AggregateMetricsConfiguration(endpointURL: endpointURL)
+        let anonKey = bundle.object(forInfoDictionaryKey: anonKeyInfoKey) as? String
+        return AggregateMetricsConfiguration(endpointURL: endpointURL, anonKey: anonKey)
     }
 }
 
 struct RemoteAggregateMetricsSink: AggregateMetricsSink {
     let endpointURL: URL
     let session: URLSession
+    let anonKey: String
 
     var isConfigured: Bool { true }
 
@@ -55,6 +61,8 @@ struct RemoteAggregateMetricsSink: AggregateMetricsSink {
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(anonKey, forHTTPHeaderField: "apikey")
+        request.setValue(anonKey, forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONEncoder().encode(payload)
 
         let (_, response) = try await session.data(for: request)
@@ -124,10 +132,12 @@ final class AggregateMetricsService: ObservableObject {
             self.installID = newInstallID
         }
 
+        let config = AggregateMetricsConfiguration.from(bundle: bundle)
+
         if let sink {
             self.sink = sink
-        } else if let endpointURL = AggregateMetricsConfiguration.from(bundle: bundle).endpointURL {
-            self.sink = RemoteAggregateMetricsSink(endpointURL: endpointURL, session: session)
+        } else if let endpointURL = config.endpointURL, let anonKey = config.anonKey {
+            self.sink = RemoteAggregateMetricsSink(endpointURL: endpointURL, session: session, anonKey: anonKey)
         } else {
             self.sink = UnconfiguredAggregateMetricsSink()
         }
@@ -148,6 +158,7 @@ final class AggregateMetricsService: ObservableObject {
 
     func recordReview() {
         pendingMetrics.reviewedPhotos += 1
+        pendingMetrics.keptPhotos += 1
         persistPendingMetrics()
         scheduleAutomaticFlushIfNeeded()
     }
@@ -155,6 +166,7 @@ final class AggregateMetricsService: ObservableObject {
     func recordDeletion(bytesFreed: Int64) {
         pendingMetrics.reviewedPhotos += 1
         pendingMetrics.deletedPhotos += 1
+        pendingMetrics.keptPhotos -= 1
         pendingMetrics.bytesFreed += max(0, bytesFreed)
         persistPendingMetrics()
         scheduleAutomaticFlushIfNeeded()
@@ -170,7 +182,7 @@ final class AggregateMetricsService: ObservableObject {
     private func scheduleAutomaticFlushIfNeeded() {
         guard allowsAutomaticFlush, sink.isConfigured else { return }
 
-        if pendingMetrics.installs > 0 || pendingMetrics.deletedPhotos >= 10 || pendingMetrics.reviewedPhotos >= 25 || pendingMetrics.bytesFreed >= 100_000_000 {
+        if pendingMetrics.installs > 0 || pendingMetrics.deletedPhotos >= 10 || (pendingMetrics.keptPhotos + pendingMetrics.deletedPhotos) >= 25 || pendingMetrics.bytesFreed >= 100_000_000 {
             flushPendingMetricsIfNeeded()
         }
     }

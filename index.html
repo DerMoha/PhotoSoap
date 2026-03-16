@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhotoSoap - Clean Your Photo Library</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+    }
+    .container {
+      text-align: center;
+      max-width: 600px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #ff6b6b, #feca57);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .tagline {
+      color: #8892b0;
+      font-size: 1.1rem;
+      margin-bottom: 3rem;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .stat {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .stat-label {
+      color: #8892b0;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .download-btn {
+      display: inline-block;
+      background: linear-gradient(90deg, #ff6b6b, #feca57);
+      color: #1a1a2e;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255,107,107,0.3);
+    }
+    .footer {
+      margin-top: 3rem;
+      color: #8892b0;
+      font-size: 0.85rem;
+    }
+    .footer a { color: #feca57; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PhotoSoap</h1>
+    <p class="tagline">Clean your photo library, one swipe at a time</p>
+    
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-icon">💥</div>
+        <div class="stat-value" id="deleted">--</div>
+        <div class="stat-label">Photos Deleted</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">💾</div>
+        <div class="stat-value" id="freed">--</div>
+        <div class="stat-label">Storage Freed</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">👁️</div>
+        <div class="stat-value" id="reviewed">--</div>
+        <div class="stat-label">Photos Reviewed</div>
+      </div>
+    </div>
+    
+    <a href="https://apps.apple.com" class="download-btn">Download on App Store</a>
+    
+    <p class="footer">
+      Privacy-first • No tracking • <a href="#">Privacy Policy</a>
+    </p>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://csmluwnhkirnbrvtnxwn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_EmugIOR1g7FGrL6AHb2fxA_u6fdtJQq';
+
+    function formatNumber(num) {
+      if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toString();
+    }
+
+    function formatBytes(bytes) {
+      if (bytes >= 1099511627776) return (bytes / 1099511627776).toFixed(1) + ' TB';
+      if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+      if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+      if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return bytes + ' B';
+    }
+
+    async function fetchStats() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/aggregated_stats?select=*`,
+          {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          }
+        );
+        const data = await response.json();
+        if (data && data[0]) {
+          document.getElementById('deleted').textContent = formatNumber(data[0].total_deleted);
+          document.getElementById('freed').textContent = formatBytes(data[0].total_bytes_freed);
+          document.getElementById('reviewed').textContent = formatNumber(data[0].total_reviewed);
+        }
+      } catch (e) {
+        console.error('Failed to fetch stats:', e);
+      }
+    }
+
+    fetchStats();
+    setInterval(fetchStats, 30000);
+  </script>
+</body>
+</html>
