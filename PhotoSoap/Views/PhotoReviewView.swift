@@ -403,9 +403,14 @@ struct PhotoReviewView: View {
             aggregateMetricsService.recordDeletion(bytesFreed: resolvedFileSize)
 
             await advanceToNextPhoto()
-        } catch {
-            self.error = "Failed to delete photo: \(error.localizedDescription)"
-            showError = true
+        } catch let error as NSError {
+            if error.code == 3072 {
+                aggregateMetricsService.recordReview()
+                await advanceToNextPhoto()
+            } else {
+                self.error = "Failed to delete photo: \(error.localizedDescription)"
+                showError = true
+            }
         }
     }
 
