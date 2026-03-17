@@ -4,7 +4,7 @@ Keep guidance short, practical, and aligned with the current SwiftUI codebase.
 ## Project Snapshot
 - iOS app built with SwiftUI, SwiftData, Photos, and StoreKit-related services.
 - Main app target and shared scheme: `PhotoSoap`.
-- The project currently has one app target in `PhotoSoap.xcodeproj`.
+- The project uses `PhotoSoap.xcworkspace` (CocoaPods). Always use the workspace, not the `.xcodeproj` directly.
 - No XCTest target is configured today, even though the shared scheme has a `TestAction`.
 - Historical references to `Bommel` are stale and only appear in user-specific Xcode metadata and git history.
 ## Repository Layout
@@ -17,6 +17,8 @@ Keep guidance short, practical, and aligned with the current SwiftUI codebase.
 - `PhotoSoap/Utilities/`: extensions and general helpers.
 - `PhotoSoap/Assets.xcassets/`: colors, images, and symbols.
 - `PhotoSoap.xcodeproj/`: Xcode project, shared scheme, and build settings.
+- `Podfile` / `Podfile.lock`: CocoaPods dependency configuration (Google Mobile Ads SDK).
+- `Pods/`: CocoaPods-managed dependencies (not committed to git).
 ## Build, Run, Test
 Use Xcode for interactive work, or `xcodebuild` for scripted verification.
 ### Shared scheme
@@ -25,31 +27,31 @@ xcodebuild -list -project PhotoSoap.xcodeproj
 ```
 ### Build for simulator
 ```bash
-xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build
+xcodebuild -workspace PhotoSoap.xcworkspace -scheme PhotoSoap -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 ### Build for generic iOS device
 ```bash
-xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Release -destination 'generic/platform=iOS' build
+xcodebuild -workspace PhotoSoap.xcworkspace -scheme PhotoSoap -configuration Release -destination 'generic/platform=iOS' build
 ```
 ### Run in Xcode
 ```bash
-open PhotoSoap.xcodeproj
+open PhotoSoap.xcworkspace
 ```
 ### Test all
 - There is no XCTest bundle in the project today, so `xcodebuild test` will not execute app tests yet.
 - If a test target is added later, use:
 ```bash
-xcodebuild test -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -workspace PhotoSoap.xcworkspace -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 ### Run a single test
 - Single-test execution is not available yet because no test target exists.
 - After adding a shared XCTest target such as `PhotoSoapTests`, use:
 ```bash
-xcodebuild test -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:PhotoSoapTests/SomeTestCase/testExample
+xcodebuild test -workspace PhotoSoap.xcworkspace -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:PhotoSoapTests/SomeTestCase/testExample
 ```
 ### Analyze
 ```bash
-xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap analyze
+xcodebuild -workspace PhotoSoap.xcworkspace -scheme PhotoSoap analyze
 ```
 ### Lint / format
 - No `SwiftLint`, `SwiftFormat`, or other lint config is checked in.
@@ -142,11 +144,11 @@ xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap analyze
 - When documenting commands in future updates, prefer copy-pasteable commands with explicit project, scheme, and destination values.
 ## Handy Commands
 ```bash
-open PhotoSoap.xcodeproj
+open PhotoSoap.xcworkspace
 xcodebuild -list -project PhotoSoap.xcodeproj
-xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 15' build
-xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap analyze
-xcodebuild test -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:PhotoSoapTests/SomeTestCase/testExample
+xcodebuild -workspace PhotoSoap.xcworkspace -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+xcodebuild -workspace PhotoSoap.xcworkspace -scheme PhotoSoap analyze
+xcodebuild test -workspace PhotoSoap.xcworkspace -scheme PhotoSoap -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:PhotoSoapTests/SomeTestCase/testExample
 ```
 ## Keep This File Updated
 - Update this guide when adding test targets, linting, formatting tools, CI workflows, or new shared schemes.

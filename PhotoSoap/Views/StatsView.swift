@@ -9,6 +9,9 @@ struct StatsView: View {
     @ObservedObject var analyticsService: AnalyticsService
     @StateObject private var viewModel = StatsViewModel()
     @State private var isShowingAdFreeSheet = false
+    #if DEBUG
+    @State private var isShowingDevOptions = false
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -39,6 +42,23 @@ struct StatsView: View {
                 )
                 .presentationDetents([.medium, .large])
             }
+            #if DEBUG
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isShowingDevOptions = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
+            }
+            .sheet(isPresented: $isShowingDevOptions) {
+                DeveloperOptionsView(
+                    adRemovalPurchaseService: adRemovalPurchaseService,
+                    adCoordinator: adCoordinator
+                )
+            }
+            #endif
         }
     }
 
@@ -311,6 +331,8 @@ struct StatsView: View {
             return "Ad-free unlocked by purchase"
         case .earned:
             return "Ad-free unlocked by loyalty"
+        case .coupon:
+            return "Ad-free unlocked by coupon"
         case .none:
             return "Remove ads forever"
         }
@@ -320,7 +342,7 @@ struct StatsView: View {
         switch adRemovalPurchaseService.unlockSource {
         case .none:
             return "sparkles"
-        case .purchased, .earned:
+        case .purchased, .earned, .coupon:
             return "checkmark.seal.fill"
         }
     }
@@ -331,6 +353,8 @@ struct StatsView: View {
             return "Your purchase hides the review banner on this account."
         case .earned:
             return "You earned permanent ad-free access by deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos."
+        case .coupon:
+            return "Your coupon code unlocked permanent ad-free access."
         case .none:
             return "Buy ad-free now for \(adRemovalPurchaseService.displayPrice), or unlock it free after deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos. Until then, one non-personalized banner appears below the photo you are reviewing."
         }

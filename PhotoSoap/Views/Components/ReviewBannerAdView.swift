@@ -14,7 +14,7 @@ struct ReviewBannerAdView: UIViewControllerRepresentable {
 }
 
 final class ReviewBannerAdViewController: UIViewController {
-    private let bannerView = GADBannerView()
+    private let bannerView = BannerView()
     private var adUnitID: String
     private var lastLoadedWidth: CGFloat = 0
     private var lastLoadedAdUnitID: String?
@@ -65,8 +65,8 @@ final class ReviewBannerAdViewController: UIViewController {
             return
         }
 
-        bannerView.adSize = GADCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(width)
-        bannerView.load(GADRequest())
+        bannerView.adSize = largeAnchoredAdaptiveBanner(width: width)
+        bannerView.load(Request())
         lastLoadedWidth = width
         lastLoadedAdUnitID = adUnitID
     }

@@ -9,12 +9,15 @@ struct AdFreeUpgradeSheet: View {
     @ObservedObject var adCoordinator: AdCoordinator
     @ObservedObject var analyticsService: AnalyticsService
 
+    @State private var isShowingRedeemSheet = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     heroSection
                     loyaltySection
+                    couponSection
                     bannerSection
                 }
                 .padding()
@@ -31,6 +34,10 @@ struct AdFreeUpgradeSheet: View {
                         dismiss()
                     }
                 }
+            }
+            .sheet(isPresented: $isShowingRedeemSheet) {
+                RedeemCouponSheet(adRemovalPurchaseService: adRemovalPurchaseService)
+                    .presentationDetents([.medium])
             }
         }
     }
@@ -147,12 +154,36 @@ struct AdFreeUpgradeSheet: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
+    @ViewBuilder
+    private var couponSection: some View {
+        if !adRemovalPurchaseService.hasAdRemovalEntitlement {
+            Button {
+                isShowingRedeemSheet = true
+            } label: {
+                HStack {
+                    Label("Have a code?", systemImage: "ticket")
+                        .font(.subheadline.weight(.medium))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+        }
+    }
+
     private var heroTitle: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
             return "You already unlocked ad-free access"
         case .earned:
             return "Your loyalty unlocked ad-free access"
+        case .coupon:
+            return "Your coupon unlocked ad-free access"
         case .none:
             return "Keep PhotoSoap ad-free forever"
         }
@@ -168,6 +199,8 @@ struct AdFreeUpgradeSheet: View {
             return "Your StoreKit purchase hides the review banner everywhere on this account."
         case .earned:
             return "Your cleanup streak earned permanent ad-free access, so the review banner stays hidden."
+        case .coupon:
+            return "A redeemed coupon code keeps the review banner hidden. Thank you for testing PhotoSoap!"
         case .none:
             return "Pay once to remove the non-personalized banner below your current photo, or keep deleting photos until you hit the free loyalty unlock."
         }

@@ -8,7 +8,7 @@ struct PhotoSoapApp: App {
     let bootstrapErrorMessage: String?
 
     init() {
-        GADMobileAds.sharedInstance().start(completionHandler: nil)
+        MobileAds.shared.start(completionHandler: nil)
 
         let bootstrap = Self.bootstrapContainer()
         modelContainer = bootstrap.modelContainer
