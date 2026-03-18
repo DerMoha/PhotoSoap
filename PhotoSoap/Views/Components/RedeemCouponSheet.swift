@@ -79,7 +79,7 @@ struct RedeemCouponSheet: View {
         switch result {
         case .success, .alreadyRedeemed:
             return "checkmark.seal.fill"
-        case .invalidCode:
+        case .invalidCode, .expiredCode:
             return "xmark.circle"
         case nil:
             return "ticket"
@@ -90,7 +90,7 @@ struct RedeemCouponSheet: View {
         switch result {
         case .success, .alreadyRedeemed:
             return .green
-        case .invalidCode:
+        case .invalidCode, .expiredCode:
             return .red
         case nil:
             return .blue
@@ -105,6 +105,8 @@ struct RedeemCouponSheet: View {
             return "coupon.alreadyRedeemed"
         case .invalidCode:
             return "coupon.invalid"
+        case .expiredCode:
+            return "coupon.expired"
         case nil:
             return "Redeem a Code"
         }
@@ -118,6 +120,8 @@ struct RedeemCouponSheet: View {
             return "coupon.alreadyRedeemed.description"
         case .invalidCode:
             return "coupon.invalid.description"
+        case .expiredCode:
+            return "coupon.expired.description"
         case nil:
             return "coupon.description"
         }
@@ -131,12 +135,18 @@ struct RedeemCouponSheet: View {
             return
         }
 
-        if CouponService.validate(code: code) {
+        let validationResult = CouponService.validate(code: code)
+        switch validationResult {
+        case .success:
             adRemovalPurchaseService.applyCouponEntitlement(true)
             result = .success
             isAnimatingSuccess = true
-        } else {
+        case .alreadyRedeemed:
+            result = .alreadyRedeemed
+        case .invalidCode:
             result = .invalidCode
+        case .expiredCode:
+            result = .expiredCode
         }
     }
 }

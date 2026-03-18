@@ -5,23 +5,60 @@ enum CouponRedemptionResult {
     case success
     case alreadyRedeemed
     case invalidCode
+    case expiredCode
+}
+
+struct SignedCouponToken: Codable {
+    let code: String
+    let timestamp: UInt64
+    let signature: String
+
+    var isExpired: Bool {
+        let thirtyDays: UInt64 = 30 * 24 * 60 * 60
+        return Date().timeIntervalSince1970 > TimeInterval(timestamp + thirtyDays)
+    }
 }
 
 enum CouponService {
-    // To generate a hash for a new coupon code, run:
-    //   echo -n "YOURCODEHERE" | shasum -a 256
-    // Codes are normalized to uppercase before hashing.
-    private static let validCodeHashes: Set<String> = [
-        "0476d34fc74167e41ec7159f80e90b9207cbb5bd04c7bacb95a9e2e713cda87b",
-        "3bb9af82233aebdf8ba976f5a32293f9d2ec102380085519e55d80a82444363a",
-    ]
+    private static let secretKey = SymmetricKey(data: Data("PhotoSoap-CouponSecret-v1".utf8))
 
-    static func validate(code: String) -> Bool {
+    static func validate(code: String) -> CouponRedemptionResult {
         let normalized = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        guard !normalized.isEmpty else { return false }
+        guard !normalized.isEmpty else { return .invalidCode }
 
-        let hash = SHA256.hash(data: Data(normalized.utf8))
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
-        return validCodeHashes.contains(hashString)
+        let components = normalized.split(separator: "-").map(String.init)
+        guard components.count == 3,
+              let timestamp = UInt64(components[0]),
+              let _ = UInt64(components[1]) else {
+            return .invalidCode
+        }
+
+        let expectedSignature = components[2]
+        let message = "\(timestamp)-\(components[1])"
+
+        let expectedHMAC = HMAC<SHA256>.authenticationCode(for: Data(message.utf8), using: secretKey)
+        let expectedHMACString = Data(expectedHMAC).base64EncodedString()
+
+        guard expectedHMACString == expectedSignature else {
+            return .invalidCode
+        }
+
+        let token = SignedCouponToken(code: components[1], timestamp: timestamp, signature: expectedSignature)
+
+        if token.isExpired {
+            return .expiredCode
+        }
+
+        return .success
+    }
+
+    static func generateToken(for code: String) -> String? {
+        let timestamp = UInt64(Date().timeIntervalSince1970)
+        let message = "\(timestamp)-\(code)"
+
+        let hmac = HMAC<SHA256>.authenticationCode(for: Data(message.utf8), using: secretKey)
+        let signature = Data(hmac).base64EncodedString()
+
+        return "\(timestamp)-\(code)-\(signature)"
     }
 }
