@@ -116,8 +116,9 @@ struct PhotoReviewView: View {
     }
 
     private func photoCardSection(photo: Photo) -> some View {
-        PhotoCard(
+        PhotoCardDisplay(
             photo: photo,
+            photoLibraryService: photoLibraryService,
             offset: cardOffset,
             rotation: cardRotation,
             swipeProgress: swipeProgress,

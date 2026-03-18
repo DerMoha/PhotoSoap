@@ -6,6 +6,7 @@ struct PhotoCard: View {
     var rotation: Double = 0
     var swipeProgress: CGFloat = 0
     var swipeDirection: SwipeDirection?
+    var fileSizeOverride: Int64?
 
     var body: some View {
         GeometryReader { geometry in
@@ -62,7 +63,7 @@ struct PhotoCard: View {
             Spacer()
 
             // File size
-            Text(photo.fileSizeFormatted)
+            Text(fileSizeOverride.map { formatFileSize($0) } ?? photo.fileSizeFormatted)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -73,6 +74,14 @@ struct PhotoCard: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
+    }
+
+    private func formatFileSize(_ bytes: Int64) -> String {
+        guard bytes > 0 else { return "Unknown size" }
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
     }
 
     private var overlays: some View {
