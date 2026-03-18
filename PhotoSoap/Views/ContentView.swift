@@ -132,7 +132,7 @@ struct ContentView: View {
                     adCoordinator: adCoordinator
                 )
                 .tabItem {
-                    Label("Review", systemImage: "photo.stack")
+                    Label("review.tab", systemImage: "photo.stack")
                 }
                 .tag(0)
 
@@ -144,13 +144,13 @@ struct ContentView: View {
                     analyticsService: analyticsService
                 )
                     .tabItem {
-                        Label("Stats", systemImage: "chart.bar")
+                        Label("stats.tab", systemImage: "chart.bar")
                     }
                     .tag(1)
 
                 AchievementsView(stats: stats, gameificationService: gameificationService)
                     .tabItem {
-                        Label("Achievements", systemImage: "trophy")
+                        Label("achievements.tab", systemImage: "trophy")
                     }
                     .tag(2)
             }
@@ -194,11 +194,11 @@ struct PermissionRequestView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.blue)
 
-            Text("Photo Library Access")
+            Text("permission.title")
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("PhotoSoap needs access to your photo library to help you review and organize your photos.")
+            Text("permission.description")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -210,7 +210,7 @@ struct PermissionRequestView: View {
                     await photoLibraryService.requestAuthorization()
                 }
             } label: {
-                Text("Allow Access")
+                Text("permission.allow")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -237,11 +237,11 @@ struct PermissionDeniedView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.orange)
 
-            Text("Access Denied")
+            Text("permission.denied.title")
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("PhotoSoap needs photo library access to work. Please enable it in Settings.")
+            Text("permission.denied.description")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -253,7 +253,7 @@ struct PermissionDeniedView: View {
                     UIApplication.shared.open(settingsURL)
                 }
             } label: {
-                Text("Open Settings")
+                Text("permission.denied.openSettings")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -274,7 +274,7 @@ private struct RecoveryModeBanner: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("Recovery Mode", systemImage: "externaldrive.badge.exclamationmark")
+            Label("recoveryMode.title", systemImage: "externaldrive.badge.exclamationmark")
                 .font(.headline)
             Text(message)
                 .font(.caption)
@@ -293,16 +293,16 @@ private struct LimitedAccessBanner: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Reviewing selected photos only")
+                Text("limitedAccess.title")
                     .font(.subheadline.weight(.semibold))
-                Text("Choose more photos to expand what you can review, or manage access in Settings later.")
+                Text("limitedAccess.description")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Button("Choose More") {
+            Button("limitedAccess.chooseMore") {
                 onManage()
             }
             .buttonStyle(.borderedProminent)
@@ -323,41 +323,41 @@ private struct QuickStartInfoSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("A quick heads-up before you start")
+                        Text("onboarding.headsUp")
                             .font(.title2.weight(.bold))
-                        Text("PhotoSoap keeps monetization simple and privacy-focused while you review your library.")
+                        Text("onboarding.subtitle")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
 
                     QuickStartCard(
-                        title: "Community totals stay anonymous",
+                        title: "onboarding.card.anonymity.title",
                         systemImage: "chart.bar.xaxis",
                         tint: .blue,
-                        message: "PhotoSoap keeps anonymous totals for installs, photos reviewed, photos deleted, and storage freed. Optional usage analytics stay off by default and never include photo contents, asset IDs, or location data."
+                        message: "onboarding.card.anonymity.description"
                     )
 
                     QuickStartCard(
-                        title: "One non-personalized ad banner",
+                        title: "onboarding.card.banner.title",
                         systemImage: "rectangle.bottomthird.inset.filled",
                         tint: .orange,
-                        message: "PhotoSoap shows a single non-personalized banner directly below the photo you are currently reviewing. It does not appear on the Stats or Achievements tabs."
+                        message: "onboarding.card.banner.description"
                     )
 
                     QuickStartCard(
-                        title: "Loyalty unlock at 2000 deletes",
+                        title: "onboarding.card.loyalty.title",
                         systemImage: "sparkles",
                         tint: .green,
-                        message: "Delete 2000 photos and the review banner disappears permanently for free. You can also buy ad-free at any time."
+                        message: "onboarding.card.loyalty.description"
                     )
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Welcome")
+            .navigationTitle("onboarding.welcome")
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
-                Button("Got it") {
+                Button("onboarding.gotIt") {
                     hasSeenQuickStartInfo = true
                     dismiss()
                 }

@@ -51,8 +51,6 @@
 		};
 		71A100000000000000000002 /* PhotoSoapTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = PhotoSoapTests;
 			sourceTree = "<group>";
 		};
@@ -113,7 +111,6 @@
 				E5E4F1AE1D439161FC998B30 /* Pods-PhotoSoap.debug.xcconfig */,
 				62330C4B1DC0A66CF987B4CF /* Pods-PhotoSoap.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -252,9 +249,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PhotoSoap/Pods-PhotoSoap-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PhotoSoap/Pods-PhotoSoap-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -572,8 +573,6 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
-
-
 	};
 	rootObject = 715E1C9F2F21612300CD8842 /* Project object */;
 }

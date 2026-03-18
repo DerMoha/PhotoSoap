@@ -84,7 +84,7 @@ struct PhotoReviewView: View {
             .alert("Error", isPresented: $showError) {
                 Button("OK") {}
             } message: {
-                Text(error ?? "An unknown error occurred")
+                Text(error ?? "error.unknown")
             }
             .sheet(isPresented: $showFilterSheet) {
                 FilterSheet(
@@ -156,7 +156,7 @@ struct PhotoReviewView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Loading photos...")
+            Text("review.loading")
                 .foregroundStyle(.secondary)
         }
     }
@@ -166,10 +166,10 @@ struct PhotoReviewView: View {
             Image(systemName: "photo.badge.plus")
                 .font(.system(size: 60))
                 .foregroundStyle(.secondary)
-            Text("No photos to review")
+            Text("review.empty")
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text("Your photo library appears to be empty")
+            Text("review.empty.description")
                 .foregroundStyle(.secondary)
         }
     }
@@ -180,17 +180,17 @@ struct PhotoReviewView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.green)
 
-            Text("All Done!")
+            Text("review.complete.title")
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("You've reviewed all your photos!")
+            Text("review.complete.subtitle")
                 .font(.body)
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 8) {
-                Text("\(stats.totalReviewed) photos reviewed")
-                Text("\(stats.totalDeleted) deleted • \(stats.totalKept) kept")
+                Text(String(localized: "review.stats", defaultValue: "\(stats.totalReviewed) photos reviewed"))
+                Text(String(localized: "review.statsDetail", defaultValue: "\(stats.totalDeleted) deleted • \(stats.totalKept) kept"))
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -198,7 +198,7 @@ struct PhotoReviewView: View {
             Button {
                 refreshLibrary()
             } label: {
-                Label("Start Over", systemImage: "arrow.counterclockwise")
+                Label("review.startOver", systemImage: "arrow.counterclockwise")
                     .font(.headline)
                     .padding()
                     .background(.blue)
@@ -223,7 +223,7 @@ struct PhotoReviewView: View {
                         .foregroundStyle(.yellow)
 
                     VStack(alignment: .leading) {
-                        Text("Achievement Unlocked!")
+                        Text("achievement.unlocked")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Text(achievement.title)
@@ -255,11 +255,11 @@ struct PhotoReviewView: View {
                         .font(.system(size: 50))
                         .foregroundStyle(.orange)
 
-                    Text("\(milestone) Streak!")
+                    Text(String(localized: "streak.milestone", defaultValue: "\(milestone) Streak!"))
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("Keep it up!")
+                    Text("streak.fire")
                         .foregroundStyle(.secondary)
                 }
                 .padding(32)

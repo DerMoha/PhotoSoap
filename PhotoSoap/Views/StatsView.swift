@@ -27,7 +27,7 @@ struct StatsView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Statistics")
+            .navigationTitle("stats.title")
             .onAppear {
                 adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
                 adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
@@ -64,7 +64,7 @@ struct StatsView: View {
 
     private var overviewSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Overview")
+            Text("stats.overview")
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -81,7 +81,7 @@ struct StatsView: View {
 
     private var streaksSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Streaks")
+            Text("stats.streaks")
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -98,13 +98,13 @@ struct StatsView: View {
 
     private var ratioSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Keep vs Delete")
+            Text("stats.keepDelete")
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 12) {
                 HStack {
-                    Text("Keep Rate")
+                    Text("stats.keepRate")
                     Spacer()
                     Text("\(Int(viewModel.getKeepRatio(from: stats) * 100))%")
                         .fontWeight(.semibold)
@@ -130,7 +130,7 @@ struct StatsView: View {
                 .frame(height: 24)
 
                 HStack {
-                    Text("Delete Rate")
+                    Text("stats.deleteRate")
                     Spacer()
                     Text("\(Int(viewModel.getDeleteRatio(from: stats) * 100))%")
                         .fontWeight(.semibold)
@@ -146,7 +146,7 @@ struct StatsView: View {
     private var achievementsPreviewSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Achievements")
+                Text("stats.achievements")
                     .font(.headline)
                     .foregroundStyle(.secondary)
 
@@ -178,7 +178,7 @@ struct StatsView: View {
                                 .tint(.blue)
                         }
 
-                        Text("\(Int(progressValue * 100))%")
+                        Text(String(localized: "achievements.progress", defaultValue: "\(Int(progressValue * 100))% Complete"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(width: 40)
@@ -193,7 +193,7 @@ struct StatsView: View {
 
     private var adFreeSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Ad-Free Unlock")
+            Text("stats.adFreeUnlock")
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -204,7 +204,7 @@ struct StatsView: View {
 
                     Spacer()
 
-                    Button("Details") {
+                    Button("adfree.details") {
                         analyticsService.track(.paywallOpened(source: "stats_card"))
                         isShowingAdFreeSheet = true
                     }
@@ -222,7 +222,7 @@ struct StatsView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("Loyalty progress")
+                        Text("adfree.loyalty.progress")
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
 
@@ -263,7 +263,7 @@ struct StatsView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(adRemovalPurchaseService.hasAdRemovalEntitlement || adRemovalPurchaseService.isLoading || adRemovalPurchaseService.product == nil)
 
-                    Button("Restore") {
+                    Button("adfree.restore") {
                         Task {
                             await adRemovalPurchaseService.restorePurchases()
                         }
@@ -273,7 +273,7 @@ struct StatsView: View {
                 }
 
                 if adRemovalPurchaseService.product == nil && !adRemovalPurchaseService.hasAdRemovalEntitlement {
-                    Text("Purchase option will appear when the App Store product is available.")
+                    Text("adfree.productUnavailable")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -286,16 +286,16 @@ struct StatsView: View {
 
     private var analyticsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Privacy")
+            Text("stats.privacy")
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 14) {
                 Toggle(isOn: analyticsToggleBinding) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Share Anonymous Usage Analytics")
+                        Text("stats.privacy.shareAnalytics")
                             .font(.subheadline.weight(.semibold))
-                        Text("Optional usage analytics help improve PhotoSoap and stay off by default. They never include photo contents, asset IDs, or location data.")
+                        Text("stats.privacy.analyticsDescription")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -303,11 +303,11 @@ struct StatsView: View {
                 .tint(.blue)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("PhotoSoap always keeps anonymous community totals for installs, photos reviewed, photos deleted, and storage freed so you can see the app's overall impact later.")
+                    Text("stats.privacy.communityTotals")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Text(analyticsService.isEnabled ? "Optional usage analytics are currently on." : "Optional usage analytics are currently off. You can keep using the app without enabling them.")
+                    Text(analyticsService.isEnabled ? "stats.analyticsOn" : "stats.analyticsOff")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -328,13 +328,13 @@ struct StatsView: View {
     private var adFreeTitle: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "Ad-free unlocked by purchase"
+            return "adfree.purchased"
         case .earned:
-            return "Ad-free unlocked by loyalty"
+            return "adfree.loyalty"
         case .coupon:
-            return "Ad-free unlocked by coupon"
+            return "adfree.coupon"
         case .none:
-            return "Remove ads forever"
+            return "adfree.hero.title"
         }
     }
 
@@ -350,29 +350,29 @@ struct StatsView: View {
     private var adFreeMessage: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "Your purchase hides the review banner on this account."
+            return "adfree.hero.purchased"
         case .earned:
-            return "You earned permanent ad-free access by deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos."
+            return "adfree.earned"
         case .coupon:
-            return "Your coupon code unlocked permanent ad-free access."
+            return "adfree.hero.coupon"
         case .none:
-            return "Buy ad-free now for \(adRemovalPurchaseService.displayPrice), or unlock it free after deleting \(AdRemovalConfig.freeUnlockDeletedCount) photos. Until then, one non-personalized banner appears below the photo you are reviewing."
+            return "adfree.hero.purchase"
         }
     }
 
     private var progressMessage: String {
         if adRemovalPurchaseService.hasEarnedEntitlement {
-            return "Your loyalty unlock is active."
+            return "adfree.loyalty.active"
         }
 
         let remainingDeletes = adRemovalPurchaseService.remainingDeletesForUnlock
         return remainingDeletes == 1
-            ? "Delete 1 more photo to earn ad-free access for free."
-            : "Delete \(remainingDeletes) more photos to earn ad-free access for free."
+            ? "adfree.loyalty.oneMore"
+            : "adfree.loyalty.deleteMore"
     }
 
     private var primaryButtonTitle: String {
-        adRemovalPurchaseService.hasAdRemovalEntitlement ? "Unlocked" : "Buy for \(adRemovalPurchaseService.displayPrice)"
+        adRemovalPurchaseService.hasAdRemovalEntitlement ? "adfree.unlocked" : "adfree.buyFor"
     }
 
 }

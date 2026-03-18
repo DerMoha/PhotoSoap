@@ -108,7 +108,7 @@ struct PhotoCard: View {
     private var keepOverlay: some View {
         VStack {
             HStack {
-                Label("KEEP", systemImage: "checkmark")
+                Label("review.swipe.keep", systemImage: "checkmark")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(.green)
@@ -130,7 +130,7 @@ struct PhotoCard: View {
             HStack {
                 Spacer()
 
-                Label("DELETE", systemImage: "trash")
+                Label("review.swipe.delete", systemImage: "trash")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(.red)

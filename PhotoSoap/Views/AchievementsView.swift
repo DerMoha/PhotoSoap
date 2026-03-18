@@ -16,7 +16,7 @@ struct AchievementsView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Achievements")
+            .navigationTitle("achievements.title")
             .sheet(item: $selectedAchievement) { achievement in
                 AchievementDetailSheet(
                     achievement: achievement,
@@ -50,13 +50,14 @@ struct AchievementsView: View {
                     Text("\(unlockedCount)")
                         .font(.title)
                         .fontWeight(.bold)
-                    Text("of \(totalCount)")
+                    Text(String(localized: "achievements.of", defaultValue: "of \(totalCount)"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
 
-            Text("Achievements Unlocked")
+            Text(String(localized: "achievements.unlocked"))
+                .font(.headline)
                 .font(.headline)
         }
         .padding()
@@ -121,7 +122,7 @@ struct AchievementCard: View {
                 .lineLimit(2)
 
             if !isUnlocked {
-                Text("\(Int(progress * 100))%")
+                Text(String(localized: "achievements.progress", defaultValue: "\(Int(progress * 100))% Complete"))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -173,7 +174,7 @@ struct AchievementDetailSheet: View {
             }
 
             if isUnlocked {
-                Label("Unlocked", systemImage: "checkmark.circle.fill")
+                Label("achievements.unlocked.status", systemImage: "checkmark.circle.fill")
                     .font(.headline)
                     .foregroundStyle(.green)
             } else {
@@ -181,7 +182,7 @@ struct AchievementDetailSheet: View {
                     ProgressView(value: progress)
                         .tint(.blue)
 
-                    Text("\(Int(progress * 100))% Complete")
+                    Text(String(localized: "achievements.progress", defaultValue: "\(Int(progress * 100))% Complete"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -190,7 +191,7 @@ struct AchievementDetailSheet: View {
 
             Spacer()
 
-            Button("Close") {
+            Button("achievements.close") {
                 dismiss()
             }
             .font(.headline)

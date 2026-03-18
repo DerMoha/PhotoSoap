@@ -18,7 +18,7 @@ struct FilterSheet: View {
                 if isLoading {
                     VStack(spacing: 12) {
                         ProgressView()
-                        Text("Loading filters...")
+                        Text("filter.loading")
                             .foregroundStyle(.secondary)
                     }
                 } else {
@@ -33,11 +33,11 @@ struct FilterSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Text("Select Photos")
+                    Text("filter.title")
                         .font(.headline)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button("common.done") {
                         dismiss()
                     }
                 }
@@ -54,8 +54,8 @@ struct FilterSheet: View {
                 selectFilter(.all)
             } label: {
                 FilterRow(
-                    title: "All Photos",
-                    subtitle: "Entire library",
+                    title: String(localized: "filter.allPhotos"),
+                    subtitle: String(localized: "filter.entireLibrary"),
                     count: nil,
                     isSelected: currentFilter.isAll
                 )
@@ -64,9 +64,9 @@ struct FilterSheet: View {
     }
 
     private var yearsSection: some View {
-        Section("By Year") {
+        Section("filter.byYear") {
             if availableYears.isEmpty {
-                emptyRow(text: "No years available")
+                emptyRow(text: String(localized: "filter.noYears"))
             } else {
                 ForEach(availableYears, id: \.self) { year in
                     Button {
@@ -85,9 +85,9 @@ struct FilterSheet: View {
     }
 
     private var monthsSection: some View {
-        Section("By Month") {
+        Section("filter.byMonth") {
             if availableYears.isEmpty {
-                emptyRow(text: "No months available")
+                emptyRow(text: "filter.noMonths")
             } else {
                 Picker("Year", selection: $selectedYear) {
                     ForEach(availableYears, id: \.self) { year in
@@ -100,7 +100,7 @@ struct FilterSheet: View {
                 }
 
                 if availableMonths.isEmpty {
-                    emptyRow(text: "No months found")
+                    emptyRow(text: String(localized: "filter.noMonths"))
                 } else {
                     ForEach(availableMonths, id: \.self) { month in
                         let filter = PhotoFilter.month(year: selectedYear, month: month)
@@ -123,9 +123,9 @@ struct FilterSheet: View {
     private var albumsSection: some View {
         let albums = albums.filter { !$0.isSmartAlbum }
 
-        return Section("Albums") {
+        return Section("filter.albums") {
             if albums.isEmpty {
-                emptyRow(text: "No albums found")
+                emptyRow(text: String(localized: "filter.noAlbums"))
             } else {
                 ForEach(albums) { album in
                     let filter = PhotoFilter.album(identifier: album.id, title: album.title)
@@ -147,9 +147,9 @@ struct FilterSheet: View {
     private var smartAlbumsSection: some View {
         let smartAlbums = albums.filter { $0.isSmartAlbum }
 
-        return Section("Smart Albums") {
+        return Section("filter.smartAlbums") {
             if smartAlbums.isEmpty {
-                emptyRow(text: "No smart albums found")
+                emptyRow(text: String(localized: "filter.noAlbums"))
             } else {
                 ForEach(smartAlbums) { album in
                     let filter = PhotoFilter.album(identifier: album.id, title: album.title)
