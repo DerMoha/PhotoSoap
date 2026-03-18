@@ -51,6 +51,14 @@ class GameificationService: ObservableObject {
         return (try? context.fetchCount(descriptor)) ?? 0 > 0
     }
 
+    func deleteAllReviewedPhotos(context: ModelContext) throws {
+        let descriptor = FetchDescriptor<ReviewedPhoto>()
+        let allReviewed = try context.fetch(descriptor)
+        for review in allReviewed {
+            context.delete(review)
+        }
+    }
+
     private func checkStreakMilestone(currentStreak: Int) {
         if streakMilestones.contains(currentStreak) {
             streakMilestoneReached = currentStreak

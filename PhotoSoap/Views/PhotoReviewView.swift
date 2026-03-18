@@ -29,6 +29,7 @@ struct PhotoReviewView: View {
     @State private var persistedReviewedIDs: Set<String> = []
     @State private var knownUnreviewedIDs: Set<String> = []
     @State private var hasTrackedReviewStart = false
+    @State private var showStartOverConfirmation = false
     private let swipeActionThreshold: CGFloat = 100
     private let swipeFeedbackDistance: CGFloat = 140
     private let swipeOverlayThreshold: CGFloat = 12
@@ -86,6 +87,14 @@ struct PhotoReviewView: View {
                 Button("OK") {}
             } message: {
                 Text(error ?? "error.unknown")
+            }
+            .alert("Start Over?", isPresented: $showStartOverConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Start Over", role: .destructive) {
+                    startOverWithClearing()
+                }
+            } message: {
+                Text("review.startOver.confirmation")
             }
             .sheet(isPresented: $showFilterSheet) {
                 FilterSheet(
@@ -210,7 +219,7 @@ struct PhotoReviewView: View {
             .padding(.top)
 
             Button {
-                refreshLibrary()
+                showStartOverConfirmation = true
             } label: {
                 Label("review.startOver", systemImage: "arrow.counterclockwise")
                     .font(.headline)
@@ -289,6 +298,27 @@ struct PhotoReviewView: View {
     }
 
     // MARK: - Actions
+
+    private func startOverWithClearing() {
+        do {
+            try gameificationService.deleteAllReviewedPhotos(context: modelContext)
+            try modelContext.save()
+        } catch {
+            self.error = "Failed to clear review history: \(error.localizedDescription)"
+            showError = true
+            return
+        }
+
+        photoLibraryService.refreshLibrary()
+        noMorePhotos = false
+        persistedReviewedIDs.removeAll()
+        knownUnreviewedIDs.removeAll()
+        photoLibraryService.setSessionReviewedIDs(Set<String>())
+
+        Task {
+            await loadInitialPhoto()
+        }
+    }
 
     private func loadInitialPhoto() async {
         isLoading = true
