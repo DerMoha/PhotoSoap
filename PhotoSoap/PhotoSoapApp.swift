@@ -6,6 +6,7 @@ import GoogleMobileAds
 struct PhotoSoapApp: App {
     let modelContainer: ModelContainer
     let bootstrapErrorMessage: String?
+    let migrationErrorMessage: String?
 
     init() {
         MobileAds.shared.start(completionHandler: nil)
@@ -15,8 +16,29 @@ struct PhotoSoapApp: App {
         bootstrapErrorMessage = bootstrap.bootstrapErrorMessage
 
         if bootstrap.bootstrapErrorMessage == nil {
-            migrateReviewedPhotosIfNeeded()
-            migrateUnlockedAchievementsIfNeeded()
+            migrationErrorMessage = Self.runMigrations(modelContainer: bootstrap.modelContainer)
+        } else {
+            migrationErrorMessage = nil
+        }
+    }
+
+    private static func runMigrations(modelContainer: ModelContainer) -> String? {
+        var errors: [String] = []
+
+        if let photoMigrationError = Self.migrateReviewedPhotosIfNeeded(container: modelContainer) {
+            errors.append(photoMigrationError)
+        }
+
+        if let achievementMigrationError = Self.migrateUnlockedAchievementsIfNeeded(container: modelContainer) {
+            errors.append(achievementMigrationError)
+        }
+
+        if errors.isEmpty {
+            return nil
+        } else if errors.count == 1 {
+            return errors[0]
+        } else {
+            return "Some data migrations failed. Your stats may be incomplete."
         }
     }
 
@@ -34,7 +56,7 @@ struct PhotoSoapApp: App {
                 bootstrapErrorMessage: nil
             )
         } catch {
-            print("PhotoSoap: Falling back to in-memory store after persistent store failure: \(error)")
+            print("PhotoSoap: Falling back to in-memory store after persistent store failure")
 
             let schema = appSchema
             let fallbackConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
@@ -52,9 +74,8 @@ struct PhotoSoapApp: App {
 
     private nonisolated static let appSchema = Schema([UserStats.self, ReviewedPhoto.self, UnlockedAchievement.self])
     
-    /// Migrates IDs from UserStats array to ReviewedPhoto entities
-    private func migrateReviewedPhotosIfNeeded() {
-        let context = modelContainer.mainContext
+    private static func migrateReviewedPhotosIfNeeded(container: ModelContainer) -> String? {
+        let context = container.mainContext
         
         do {
             let descriptor = FetchDescriptor<UserStats>()
@@ -85,14 +106,15 @@ struct PhotoSoapApp: App {
                     try context.save()
                 }
             }
+            return nil
         } catch {
-            print("PhotoSoap: Migration failed: \(error)")
+            print("PhotoSoap: Migration failed")
+            return "Photo review migration failed. Some photos may be re-reviewed."
         }
     }
 
-    /// Migrates achievement IDs from UserStats array to UnlockedAchievement entities with dates
-    private func migrateUnlockedAchievementsIfNeeded() {
-        let context = modelContainer.mainContext
+    private static func migrateUnlockedAchievementsIfNeeded(container: ModelContainer) -> String? {
+        let context = container.mainContext
 
         do {
             let descriptor = FetchDescriptor<UserStats>()
@@ -116,14 +138,16 @@ struct PhotoSoapApp: App {
                     print("PhotoSoap: Successfully migrated \(stats.unlockedAchievements.count) unlocked achievements")
                 }
             }
+            return nil
         } catch {
-            print("PhotoSoap: Unlocked achievements migration failed: \(error)")
+            print("PhotoSoap: Achievement migration failed")
+            return "Achievement migration failed. Some achievements may need to be re-earned."
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView(bootstrapErrorMessage: bootstrapErrorMessage)
+            ContentView(bootstrapErrorMessage: bootstrapErrorMessage, migrationErrorMessage: migrationErrorMessage)
         }
         .modelContainer(modelContainer)
     }

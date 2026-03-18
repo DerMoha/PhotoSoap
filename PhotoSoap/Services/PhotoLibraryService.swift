@@ -341,7 +341,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 totalBytes += Int64(data.count)
             } completionHandler: { error in
                 if let error {
-                    print("PhotoSoap: Failed to fetch file size for \(asset.localIdentifier): \(error.localizedDescription)")
+                    print("PhotoSoap: Failed to fetch file size for asset: \(error.localizedDescription)")
                     continuation.resume(returning: 0)
                     return
                 }

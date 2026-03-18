@@ -9,17 +9,6 @@ struct DeveloperOptionsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Ad-Free Override") {
-                    Toggle("Spoof Ad-Free Purchase", isOn: Binding(
-                        get: { adRemovalPurchaseService.devOverrideAdFree },
-                        set: { adRemovalPurchaseService.setDevOverrideAdFree($0) }
-                    ))
-
-                    Text("Hides the ad banner without an actual purchase. Useful for taking App Store screenshots.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
                 Section("Reset Actions") {
                     Button("Reset Onboarding") {
                         UserDefaults.standard.set(false, forKey: "hasSeenQuickStartInfo")
@@ -30,7 +19,6 @@ struct DeveloperOptionsView: View {
                     }
 
                     Button("Reset All Dev Overrides", role: .destructive) {
-                        adRemovalPurchaseService.setDevOverrideAdFree(false)
                         adRemovalPurchaseService.applyCouponEntitlement(false)
                         UserDefaults.standard.set(false, forKey: "hasSeenQuickStartInfo")
                     }
@@ -40,7 +28,6 @@ struct DeveloperOptionsView: View {
                     StateRow(label: "hasPurchasedEntitlement", value: adRemovalPurchaseService.hasPurchasedEntitlement)
                     StateRow(label: "hasEarnedEntitlement", value: adRemovalPurchaseService.hasEarnedEntitlement)
                     StateRow(label: "hasCouponEntitlement", value: adRemovalPurchaseService.hasCouponEntitlement)
-                    StateRow(label: "devOverrideAdFree", value: adRemovalPurchaseService.devOverrideAdFree)
                     StateRow(label: "hasAdRemovalEntitlement", value: adRemovalPurchaseService.hasAdRemovalEntitlement)
                     StateRow(label: "adsEnabled", value: adCoordinator.adsEnabled)
 

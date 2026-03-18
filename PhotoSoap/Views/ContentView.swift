@@ -4,6 +4,7 @@ import UIKit
 
 struct ContentView: View {
     let bootstrapErrorMessage: String?
+    let migrationErrorMessage: String?
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
@@ -20,8 +21,9 @@ struct ContentView: View {
     @State private var showQuickStartSheet = false
     @State private var hasTrackedAppOpen = false
 
-    init(bootstrapErrorMessage: String?, analyticsService: AnalyticsService = AnalyticsService()) {
+    init(bootstrapErrorMessage: String?, migrationErrorMessage: String? = nil, analyticsService: AnalyticsService = AnalyticsService()) {
         self.bootstrapErrorMessage = bootstrapErrorMessage
+        self.migrationErrorMessage = migrationErrorMessage
         _analyticsService = StateObject(wrappedValue: analyticsService)
         _adRemovalPurchaseService = StateObject(
             wrappedValue: AdRemovalPurchaseService(analyticsService: analyticsService)
@@ -39,7 +41,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
             if photoLibraryService.authorizationStatus == .notDetermined {
                 PermissionRequestView(
                     photoLibraryService: photoLibraryService,
@@ -111,6 +113,12 @@ struct ContentView: View {
                 RecoveryModeBanner(message: bootstrapErrorMessage)
                     .padding(.horizontal)
                     .padding(.top, 8)
+            }
+
+            if let migrationErrorMessage {
+                MigrationWarningBanner(message: migrationErrorMessage)
+                    .padding(.horizontal)
+                    .padding(.top, bootstrapErrorMessage == nil ? 8 : 0)
             }
 
             if photoLibraryService.authorizationStatus == .limited {
@@ -283,6 +291,24 @@ private struct RecoveryModeBanner: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Color.orange.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+private struct MigrationWarningBanner: View {
+    let message: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label("migrationWarning.title", systemImage: "exclamationmark.triangle")
+                .font(.headline)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.yellow.opacity(0.12))
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }

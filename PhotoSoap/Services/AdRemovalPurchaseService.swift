@@ -25,11 +25,6 @@ final class AdRemovalPurchaseService: ObservableObject {
     @Published private(set) var currentDeletedCount = 0
     @Published var errorMessage: String?
 
-    #if DEBUG
-    @Published private(set) var devOverrideAdFree = false
-    private static let devOverrideKey = "devOverrideAdFree"
-    #endif
-
     @AppStorage("hasPurchasedRemoveAds") private var hasPurchasedRemoveAds = false
     private static let couponKey = "hasCouponAdFree"
     private var updatesTask: Task<Void, Never>?
@@ -39,9 +34,6 @@ final class AdRemovalPurchaseService: ObservableObject {
         self.analyticsService = analyticsService
         hasPurchasedEntitlement = hasPurchasedRemoveAds
         hasCouponEntitlement = UserDefaults.standard.bool(forKey: Self.couponKey)
-        #if DEBUG
-        devOverrideAdFree = UserDefaults.standard.bool(forKey: Self.devOverrideKey)
-        #endif
 
         guard shouldObserveTransactions else {
             return
@@ -63,10 +55,7 @@ final class AdRemovalPurchaseService: ObservableObject {
     }
 
     var hasAdRemovalEntitlement: Bool {
-        #if DEBUG
-        if devOverrideAdFree { return true }
-        #endif
-        return hasPurchasedEntitlement || hasEarnedEntitlement || hasCouponEntitlement
+        hasPurchasedEntitlement || hasEarnedEntitlement || hasCouponEntitlement
     }
 
     var unlockSource: AdRemovalUnlockSource {
@@ -159,13 +148,6 @@ final class AdRemovalPurchaseService: ObservableObject {
         hasCouponEntitlement = hasEntitlement
         UserDefaults.standard.set(hasEntitlement, forKey: Self.couponKey)
     }
-
-    #if DEBUG
-    func setDevOverrideAdFree(_ enabled: Bool) {
-        devOverrideAdFree = enabled
-        UserDefaults.standard.set(enabled, forKey: Self.devOverrideKey)
-    }
-    #endif
 
     private func loadProduct() async {
         do {
