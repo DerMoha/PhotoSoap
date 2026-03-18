@@ -438,22 +438,31 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     private func buildYearMonthCacheIfNeeded() {
         guard cachedYears.isEmpty else { return }
 
-        let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
-        let assets = PHAsset.fetchAssets(with: .image, options: options)
-        let calendar = Calendar.current
-        var years = Set<Int>()
-        var monthsByYear: [Int: Set<Int>] = [:]
+        Task.detached(priority: .userInitiated) { [weak self] in
+            guard let self = self else { return }
 
-        assets.enumerateObjects { asset, _, _ in
-            guard let date = asset.creationDate else { return }
-            let year = calendar.component(.year, from: date)
-            let month = calendar.component(.month, from: date)
-            years.insert(year)
-            monthsByYear[year, default: []].insert(month)
+            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
+            let assets = PHAsset.fetchAssets(with: .image, options: options)
+            let calendar = Calendar.current
+            var years = Set<Int>()
+            var monthsByYear: [Int: Set<Int>] = [:]
+
+            assets.enumerateObjects { asset, _, _ in
+                guard let date = asset.creationDate else { return }
+                let year = calendar.component(.year, from: date)
+                let month = calendar.component(.month, from: date)
+                years.insert(year)
+                monthsByYear[year, default: []].insert(month)
+            }
+
+            let sortedYears = years.sorted(by: >)
+            let sortedMonths = monthsByYear.mapValues { $0.sorted() }
+
+            await MainActor.run {
+                self.cachedYears = sortedYears
+                self.cachedMonthsByYear = sortedMonths
+            }
         }
-
-        cachedYears = years.sorted(by: >)
-        cachedMonthsByYear = monthsByYear.mapValues { $0.sorted() }
     }
 
     private nonisolated static func buildFilterData(excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> FilterData {
