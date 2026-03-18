@@ -10,24 +10,20 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("hasSeenQuickStartInfo") private var hasSeenQuickStartInfo = false
     @Query private var statsArray: [UserStats]
-    @StateObject private var analyticsService: AnalyticsService
-    @StateObject private var aggregateMetricsService = AggregateMetricsService()
-    @StateObject private var photoLibraryService = PhotoLibraryService()
-    @StateObject private var gameificationService = GameificationService()
-    @StateObject private var adRemovalPurchaseService: AdRemovalPurchaseService
-    @StateObject private var adCoordinator = AdCoordinator()
+    @EnvironmentObject private var analyticsService: AnalyticsService
+    @EnvironmentObject private var aggregateMetricsService: AggregateMetricsService
+    @EnvironmentObject private var photoLibraryService: PhotoLibraryService
+    @EnvironmentObject private var gameificationService: GameificationService
+    @EnvironmentObject private var adRemovalPurchaseService: AdRemovalPurchaseService
+    @EnvironmentObject private var adCoordinator: AdCoordinator
     @State private var selectedTab = 0
     @State private var showBootstrapAlert = false
     @State private var showQuickStartSheet = false
     @State private var hasTrackedAppOpen = false
 
-    init(bootstrapErrorMessage: String?, migrationErrorMessage: String? = nil, analyticsService: AnalyticsService = AnalyticsService()) {
+    init(bootstrapErrorMessage: String?, migrationErrorMessage: String? = nil) {
         self.bootstrapErrorMessage = bootstrapErrorMessage
         self.migrationErrorMessage = migrationErrorMessage
-        _analyticsService = StateObject(wrappedValue: analyticsService)
-        _adRemovalPurchaseService = StateObject(
-            wrappedValue: AdRemovalPurchaseService(analyticsService: analyticsService)
-        )
     }
 
     private var stats: UserStats {
@@ -426,6 +422,16 @@ private struct QuickStartCard: View {
 }
 
 #Preview {
-    ContentView(bootstrapErrorMessage: nil)
-        .modelContainer(for: UserStats.self, inMemory: true)
+    let container = try! ModelContainer(for: UserStats.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let context = container.mainContext
+    context.insert(UserStats())
+
+    return ContentView(bootstrapErrorMessage: nil)
+        .modelContainer(container)
+        .environmentObject(AnalyticsService())
+        .environmentObject(AggregateMetricsService())
+        .environmentObject(PhotoLibraryService())
+        .environmentObject(GameificationService())
+        .environmentObject(AdRemovalPurchaseService(analyticsService: AnalyticsService(), shouldObserveTransactions: false))
+        .environmentObject(AdCoordinator())
 }

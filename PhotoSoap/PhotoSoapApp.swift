@@ -7,6 +7,7 @@ struct PhotoSoapApp: App {
     let modelContainer: ModelContainer
     let bootstrapErrorMessage: String?
     let migrationErrorMessage: String?
+    let serviceContainer: ServiceContainer
 
     init() {
         MobileAds.shared.start(completionHandler: nil)
@@ -20,6 +21,8 @@ struct PhotoSoapApp: App {
         } else {
             migrationErrorMessage = nil
         }
+
+        serviceContainer = ServiceContainer(modelContext: bootstrap.modelContainer.mainContext)
     }
 
     private static func runMigrations(modelContainer: ModelContainer) -> String? {
@@ -148,6 +151,13 @@ struct PhotoSoapApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(bootstrapErrorMessage: bootstrapErrorMessage, migrationErrorMessage: migrationErrorMessage)
+                .environmentObject(serviceContainer)
+                .environmentObject(serviceContainer.photoLibraryService)
+                .environmentObject(serviceContainer.gamificationService)
+                .environmentObject(serviceContainer.adRemovalPurchaseService)
+                .environmentObject(serviceContainer.adCoordinator)
+                .environmentObject(serviceContainer.aggregateMetricsService)
+                .environmentObject(serviceContainer.analyticsService)
         }
         .modelContainer(modelContainer)
     }
