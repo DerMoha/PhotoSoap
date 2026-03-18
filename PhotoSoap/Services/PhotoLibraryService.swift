@@ -75,6 +75,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     // Cache for file sizes keyed by asset ID
     private let fileSizeCache = NSCache<NSString, NSNumber>()
 
+    // Track currently cached photos for PHImageManager caching cleanup
+    private var cachedPreloadPhotos: [Photo] = []
+
     override init() {
         super.init()
         fileSizeCache.countLimit = 1000
@@ -263,6 +266,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
 
     func preloadPhotos(count: Int = 3) async -> [Photo] {
+        stopCachingAssets(for: cachedPreloadPhotos)
+
         var photos: [Photo] = []
         var temporaryExcluded = Set<String>()
         var attempts = 0
@@ -281,8 +286,25 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 break
             }
         }
+
+        cachedPreloadPhotos = photos
+        startCachingAssets(for: photos)
         
         return photos
+    }
+
+    private func startCachingAssets(for photos: [Photo]) {
+        guard !photos.isEmpty else { return }
+        let assets = photos.map { $0.asset }
+        let targetSize = CGSize(width: 400, height: 400)
+        imageManager.startCachingImages(for: assets, targetSize: targetSize, contentMode: .aspectFit, options: nil)
+    }
+
+    private func stopCachingAssets(for photos: [Photo]) {
+        guard !photos.isEmpty else { return }
+        let assets = photos.map { $0.asset }
+        let targetSize = CGSize(width: 400, height: 400)
+        imageManager.stopCachingImages(for: assets, targetSize: targetSize, contentMode: .aspectFit, options: nil)
     }
 
     private func loadPhoto(from asset: PHAsset) async throws -> Photo {

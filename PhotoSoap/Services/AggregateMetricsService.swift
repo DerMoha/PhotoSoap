@@ -61,6 +61,7 @@ struct RemoteAggregateMetricsSink: AggregateMetricsSink {
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
         request.setValue(anonKey, forHTTPHeaderField: "apikey")
         request.setValue(anonKey, forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONEncoder().encode(payload)
@@ -68,6 +69,8 @@ struct RemoteAggregateMetricsSink: AggregateMetricsSink {
         let (_, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            print("PhotoSoap: metrics flush failed with HTTP status \(statusCode)")
             throw MetricsError.invalidResponse
         }
     }
@@ -206,11 +209,24 @@ final class AggregateMetricsService: ObservableObject {
             metrics: snapshot
         )
 
-        do {
-            try await sink.send(payload)
-            pendingMetrics.subtract(snapshot)
-            persistPendingMetrics()
-        } catch {
+        var lastError: Error?
+        for attempt in 0..<3 {
+            do {
+                try await sink.send(payload)
+                pendingMetrics.subtract(snapshot)
+                persistPendingMetrics()
+                lastError = nil
+                break
+            } catch {
+                lastError = error
+                if attempt < 2 {
+                    let delay = UInt64(pow(2.0, Double(attempt)) * 1_000_000_000)
+                    try? await Task.sleep(nanoseconds: delay)
+                }
+            }
+        }
+
+        if let error = lastError {
             print("PhotoSoap: metrics flush failed: \(error.localizedDescription)")
         }
 
