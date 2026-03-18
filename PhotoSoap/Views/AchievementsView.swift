@@ -65,7 +65,6 @@ struct AchievementsView: View {
 
             Text(String(localized: "achievements.unlocked"))
                 .font(.headline)
-                .font(.headline)
         }
         .padding()
         .frame(maxWidth: .infinity)

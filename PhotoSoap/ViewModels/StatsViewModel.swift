@@ -1,9 +1,8 @@
 import Foundation
 import SwiftUI
-import Combine
 
 @MainActor
-class StatsViewModel: ObservableObject {
+final class StatsViewModel {
 
     struct StatItem: Identifiable {
         let id = UUID()

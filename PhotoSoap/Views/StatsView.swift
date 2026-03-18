@@ -8,7 +8,7 @@ struct StatsView: View {
     @ObservedObject var adCoordinator: AdCoordinator
     @ObservedObject var analyticsService: AnalyticsService
     @Query private var unlockedAchievements: [UnlockedAchievement]
-    @StateObject private var viewModel = StatsViewModel()
+    @State private var viewModel = StatsViewModel()
     @State private var isShowingAdFreeSheet = false
     #if DEBUG
     @State private var isShowingDevOptions = false
