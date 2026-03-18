@@ -35,7 +35,7 @@ struct StreakBanner: View {
                 .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isAnimating)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Current Streak")
+                Text("streak.current")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -55,7 +55,7 @@ struct StreakBanner: View {
                 .foregroundStyle(.yellow)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Best")
+                Text("streak.best")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -243,7 +243,7 @@ struct StreakMilestoneView: View {
                 .opacity(isShowing ? 1 : 0)
                 .animation(.spring().delay(0.2), value: isShowing)
 
-            Text("You're on fire!")
+            Text("streak.fire")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .opacity(isShowing ? 1 : 0)
