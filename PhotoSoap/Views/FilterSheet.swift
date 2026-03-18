@@ -196,7 +196,7 @@ struct FilterSheet: View {
         components.year = 2000
         components.month = clampedMonth
         if let date = Calendar.current.date(from: components) {
-            return monthNameFormatter.string(from: date)
+            return Self.monthNameFormatter.string(from: date)
         }
         return "Month \(month)"
     }
@@ -211,10 +211,6 @@ struct FilterSheet: View {
         formatter.dateFormat = "LLLL"
         return formatter
     }()
-
-    private var monthNameFormatter: DateFormatter {
-        Self.monthNameFormatter
-    }
 }
 
 private struct FilterRow: View {
