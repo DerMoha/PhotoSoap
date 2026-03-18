@@ -71,6 +71,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     // Session cache for O(1) filtering of items already seen during this run.
     private var sessionReviewedIDs: Set<String> = []
 
+    // Cache for file sizes keyed by asset ID
+    private var fileSizeCache: [String: Int64] = [:]
+
     override init() {
         super.init()
         checkAuthorizationStatus()
@@ -302,6 +305,12 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     func fetchFileSize(for asset: PHAsset, allowNetworkAccess: Bool = false) async -> Int64 {
+        let assetID = asset.localIdentifier
+
+        if let cachedSize = fileSizeCache[assetID] {
+            return cachedSize
+        }
+
         let resources = PHAssetResource.assetResources(for: asset)
         guard let resource = preferredResource(from: resources) else {
             return 0
@@ -310,7 +319,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         let options = PHAssetResourceRequestOptions()
         options.isNetworkAccessAllowed = allowNetworkAccess
 
-        return await withCheckedContinuation { continuation in
+        let fileSize: Int64 = await withCheckedContinuation { (continuation: CheckedContinuation<Int64, Never>) in
             var totalBytes: Int64 = 0
 
             PHAssetResourceManager.default().requestData(
@@ -328,6 +337,12 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 continuation.resume(returning: totalBytes)
             }
         }
+
+        if fileSize > 0 {
+            fileSizeCache[assetID] = fileSize
+        }
+
+        return fileSize
     }
 
     func deletePhoto(_ photo: Photo) async throws {
