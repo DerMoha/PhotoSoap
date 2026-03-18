@@ -31,7 +31,7 @@ struct RedeemCouponSheet: View {
 
                 if result != .success {
                     VStack(spacing: 12) {
-                        TextField("Enter your code", text: $code)
+                        TextField("coupon.enter", text: $code)
                             .textFieldStyle(.roundedBorder)
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
@@ -41,7 +41,7 @@ struct RedeemCouponSheet: View {
                         Button {
                             redeemCode()
                         } label: {
-                            Text("Redeem")
+                            Text("coupon.submit")
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
@@ -50,7 +50,7 @@ struct RedeemCouponSheet: View {
                     .padding(.horizontal)
 
                     if result == .invalidCode {
-                        Text("That code is not recognized. Please check and try again.")
+                        Text("coupon.invalid.description")
                             .font(.caption)
                             .foregroundStyle(.red)
                             .multilineTextAlignment(.center)
@@ -61,11 +61,11 @@ struct RedeemCouponSheet: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Redeem Code")
+            .navigationTitle("coupon.title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(result == .success ? "Done" : "Cancel") {
+                    Button(result == .success ? "common.done" : "common.cancel") {
                         dismiss()
                     }
                 }
@@ -100,11 +100,11 @@ struct RedeemCouponSheet: View {
     private var titleText: String {
         switch result {
         case .success:
-            return "Code Redeemed"
+            return "coupon.success"
         case .alreadyRedeemed:
-            return "Already Redeemed"
+            return "coupon.alreadyRedeemed"
         case .invalidCode:
-            return "Invalid Code"
+            return "coupon.invalid"
         case nil:
             return "Redeem a Code"
         }
@@ -113,13 +113,13 @@ struct RedeemCouponSheet: View {
     private var descriptionText: String {
         switch result {
         case .success:
-            return "Ad-free access has been activated. Thank you for testing PhotoSoap!"
+            return "coupon.success.description"
         case .alreadyRedeemed:
-            return "You have already redeemed a code. Ad-free access is active."
+            return "coupon.alreadyRedeemed.description"
         case .invalidCode:
-            return "The code you entered is not valid."
+            return "coupon.invalid.description"
         case nil:
-            return "Enter a coupon code to unlock ad-free access."
+            return "coupon.description"
         }
     }
 

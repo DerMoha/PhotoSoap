@@ -23,14 +23,14 @@ struct AdFreeUpgradeSheet: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Ad-Free")
+            .navigationTitle("adfree.title")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 analyticsService.track(.paywallOpened(source: "ad_free_sheet"))
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button("common.done") {
                         dismiss()
                     }
                 }
@@ -72,7 +72,7 @@ struct AdFreeUpgradeSheet: View {
                     adRemovalPurchaseService.product == nil
                 )
 
-                Button("Restore Purchases") {
+                Button("adfree.restore") {
                     Task {
                         await adRemovalPurchaseService.restorePurchases()
                     }
@@ -88,7 +88,7 @@ struct AdFreeUpgradeSheet: View {
             }
 
             if adRemovalPurchaseService.product == nil && !adRemovalPurchaseService.hasAdRemovalEntitlement {
-                Text("The App Store product is not available yet, so buying is disabled for now.")
+                Text("adfree.productUnavailable")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -100,11 +100,11 @@ struct AdFreeUpgradeSheet: View {
 
     private var loyaltySection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Loyalty Unlock")
+            Text("adfree.loyalty.title")
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            Text("Delete \(AdRemovalConfig.freeUnlockDeletedCount) photos to earn permanent ad-free access without paying.")
+            Text("adfree.loyalty.deleteMore")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -127,7 +127,7 @@ struct AdFreeUpgradeSheet: View {
 
     private var bannerSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Review Banner")
+            Text("adfree.banner.title")
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -137,9 +137,9 @@ struct AdFreeUpgradeSheet: View {
                     .frame(width: 24)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("One banner, only while reviewing")
+                    Text("adfree.banner.title")
                         .font(.subheadline.weight(.semibold))
-                    Text("PhotoSoap shows a single non-personalized banner directly below the current photo. It never appears on the Stats or Achievements tabs.")
+                    Text("adfree.banner.description")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -161,7 +161,7 @@ struct AdFreeUpgradeSheet: View {
                 isShowingRedeemSheet = true
             } label: {
                 HStack {
-                    Label("Have a code?", systemImage: "ticket")
+                    Label("adfree.coupon.haveCode", systemImage: "ticket")
                         .font(.subheadline.weight(.medium))
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -179,13 +179,13 @@ struct AdFreeUpgradeSheet: View {
     private var heroTitle: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "You already unlocked ad-free access"
+            return "adfree.alreadyUnlocked"
         case .earned:
-            return "Your loyalty unlocked ad-free access"
+            return "adfree.loyalty"
         case .coupon:
-            return "Your coupon unlocked ad-free access"
+            return "adfree.coupon"
         case .none:
-            return "Keep PhotoSoap ad-free forever"
+            return "adfree.hero.title"
         }
     }
 
@@ -196,23 +196,23 @@ struct AdFreeUpgradeSheet: View {
     private var heroMessage: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "Your StoreKit purchase hides the review banner everywhere on this account."
+            return "adfree.hero.purchased"
         case .earned:
-            return "Your cleanup streak earned permanent ad-free access, so the review banner stays hidden."
+            return "adfree.hero.loyalty"
         case .coupon:
-            return "A redeemed coupon code keeps the review banner hidden. Thank you for testing PhotoSoap!"
+            return "adfree.hero.coupon"
         case .none:
-            return "Pay once to remove the non-personalized banner below your current photo, or keep deleting photos until you hit the free loyalty unlock."
+            return "adfree.hero.purchase"
         }
     }
 
     private var primaryButtonTitle: String {
-        adRemovalPurchaseService.hasAdRemovalEntitlement ? "Unlocked" : "Buy for \(adRemovalPurchaseService.displayPrice)"
+        adRemovalPurchaseService.hasAdRemovalEntitlement ? "adfree.unlocked" : "adfree.buyFor"
     }
 
     private var progressMessage: String {
         if adRemovalPurchaseService.hasEarnedEntitlement {
-            return "Unlocked"
+            return "adfree.unlocked"
         }
 
         let remainingDeletes = adRemovalPurchaseService.remainingDeletesForUnlock
