@@ -4,7 +4,13 @@ import SwiftData
 struct AchievementsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var gameificationService: GameificationService
+    @Query private var unlockedAchievements: [UnlockedAchievement]
     @State private var selectedAchievement: Achievement?
+
+    init(stats: UserStats, gameificationService: GameificationService) {
+        self.stats = stats
+        self.gameificationService = gameificationService
+    }
 
     var body: some View {
         NavigationStack {
@@ -21,7 +27,8 @@ struct AchievementsView: View {
                 AchievementDetailSheet(
                     achievement: achievement,
                     isUnlocked: stats.hasUnlockedAchievement(achievement.id),
-                    progress: getProgress(for: achievement)
+                    progress: getProgress(for: achievement),
+                    unlockDate: getUnlockDate(for: achievement.id)
                 )
                 .presentationDetents([.medium])
             }
@@ -30,7 +37,7 @@ struct AchievementsView: View {
 
     private var progressHeader: some View {
         VStack(spacing: 16) {
-            let unlockedCount = stats.unlockedAchievements.count
+            let unlockedCount = unlockedAchievements.count
             let totalCount = Achievement.allAchievements.count
             let progress = Double(unlockedCount) / Double(totalCount)
 
@@ -75,7 +82,8 @@ struct AchievementsView: View {
                 AchievementCard(
                     achievement: achievement,
                     isUnlocked: stats.hasUnlockedAchievement(achievement.id),
-                    progress: getProgress(for: achievement)
+                    progress: getProgress(for: achievement),
+                    unlockDate: getUnlockDate(for: achievement.id)
                 )
                 .onTapGesture {
                     selectedAchievement = achievement
@@ -88,12 +96,17 @@ struct AchievementsView: View {
         let progressData = gameificationService.getAchievementProgress(stats: stats)
         return progressData.first { $0.0.id == achievement.id }?.2 ?? 0
     }
+
+    private func getUnlockDate(for achievementId: String) -> Date? {
+        unlockedAchievements.first { $0.achievementId == achievementId }?.unlockDate
+    }
 }
 
 struct AchievementCard: View {
     let achievement: Achievement
     let isUnlocked: Bool
     let progress: Double
+    let unlockDate: Date?
 
     var body: some View {
         VStack(spacing: 12) {
@@ -121,14 +134,18 @@ struct AchievementCard: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
 
-            if !isUnlocked {
+            if isUnlocked, let date = unlockDate {
+                Text("Completed on \(date.formatted(.dateTime.month(.abbreviated).day()))")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            } else if !isUnlocked {
                 Text(String(localized: "achievements.progress", defaultValue: "\(Int(progress * 100))% Complete"))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
         }
         .padding()
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: 140)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .opacity(isUnlocked ? 1 : 0.7)
@@ -139,6 +156,7 @@ struct AchievementDetailSheet: View {
     let achievement: Achievement
     let isUnlocked: Bool
     let progress: Double
+    let unlockDate: Date?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -174,9 +192,17 @@ struct AchievementDetailSheet: View {
             }
 
             if isUnlocked {
-                Label("achievements.unlocked.status", systemImage: "checkmark.circle.fill")
-                    .font(.headline)
-                    .foregroundStyle(.green)
+                VStack(spacing: 4) {
+                    Label("achievements.unlocked.status", systemImage: "checkmark.circle.fill")
+                        .font(.headline)
+                        .foregroundStyle(.green)
+
+                    if let date = unlockDate {
+                        Text("Completed on \(date.formatted(date: .abbreviated, time: .omitted))")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             } else {
                 VStack(spacing: 8) {
                     ProgressView(value: progress)

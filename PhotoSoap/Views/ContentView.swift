@@ -158,7 +158,7 @@ struct ContentView: View {
     }
 
     private func initializeStats() {
-        gameificationService.updateDailyStreak(stats: stats)
+        gameificationService.updateDailyStreak(stats: stats, context: modelContext)
         gameificationService.ensureDailyChallengeIsSet(stats: stats)
     }
 

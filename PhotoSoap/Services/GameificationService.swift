@@ -15,7 +15,8 @@ class GameificationService: ObservableObject {
         action: ReviewAction,
         fileSize: Int64,
         stats: UserStats,
-        challengeType: DailyChallengeType
+        challengeType: DailyChallengeType,
+        context: ModelContext
     ) {
         stats.incrementReviewed()
 
@@ -29,7 +30,7 @@ class GameificationService: ObservableObject {
         stats.updateDailyChallengeProgress(for: challengeType)
 
         checkStreakMilestone(currentStreak: stats.currentStreak)
-        checkAchievements(stats: stats)
+        checkAchievements(stats: stats, context: context)
     }
 
     func processSkip(stats: UserStats) {
@@ -71,11 +72,13 @@ class GameificationService: ObservableObject {
         }
     }
 
-    private func checkAchievements(stats: UserStats) {
+    private func checkAchievements(stats: UserStats, context: ModelContext) {
         let newAchievements = Achievement.checkNewAchievements(for: stats)
 
         for achievement in newAchievements {
             stats.unlockAchievement(achievement.id)
+            let unlocked = UnlockedAchievement(achievementId: achievement.id)
+            context.insert(unlocked)
         }
 
         if let firstNew = newAchievements.first {
@@ -89,9 +92,9 @@ class GameificationService: ObservableObject {
         }
     }
 
-    func updateDailyStreak(stats: UserStats) {
+    func updateDailyStreak(stats: UserStats, context: ModelContext) {
         stats.updateDailyStreak()
-        checkAchievements(stats: stats)
+        checkAchievements(stats: stats, context: context)
     }
 
     func resetSessionStats(stats: UserStats) {

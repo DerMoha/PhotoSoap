@@ -7,6 +7,7 @@ struct StatsView: View {
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
     @ObservedObject var adCoordinator: AdCoordinator
     @ObservedObject var analyticsService: AnalyticsService
+    @Query private var unlockedAchievements: [UnlockedAchievement]
     @StateObject private var viewModel = StatsViewModel()
     @State private var isShowingAdFreeSheet = false
     #if DEBUG
@@ -152,7 +153,7 @@ struct StatsView: View {
 
                 Spacer()
 
-                let count = viewModel.getAchievementCount(from: stats)
+                let count = (unlocked: unlockedAchievements.count, total: Achievement.allAchievements.count)
                 Text("\(count.unlocked)/\(count.total)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

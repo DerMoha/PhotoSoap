@@ -388,7 +388,8 @@ struct PhotoReviewView: View {
                 action: .keep,
                 fileSize: 0,
                 stats: stats,
-                challengeType: challengeType
+                challengeType: challengeType,
+                context: modelContext
             )
         } catch {
             self.error = "Failed to update review history: \(error.localizedDescription)"
@@ -431,7 +432,8 @@ struct PhotoReviewView: View {
                     action: .delete,
                     fileSize: resolvedFileSize,
                     stats: stats,
-                    challengeType: challengeType
+                    challengeType: challengeType,
+                    context: modelContext
                 )
             } catch {
                 self.error = "Failed to update review history: \(error.localizedDescription)"

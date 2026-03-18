@@ -15,8 +15,8 @@ struct PhotoSoapApp: App {
         bootstrapErrorMessage = bootstrap.bootstrapErrorMessage
 
         if bootstrap.bootstrapErrorMessage == nil {
-            // Migrate existing reviewed IDs to ReviewedPhoto entity
             migrateReviewedPhotosIfNeeded()
+            migrateUnlockedAchievementsIfNeeded()
         }
     }
 
@@ -50,7 +50,7 @@ struct PhotoSoapApp: App {
         }
     }
 
-    private nonisolated static let appSchema = Schema([UserStats.self, ReviewedPhoto.self])
+    private nonisolated static let appSchema = Schema([UserStats.self, ReviewedPhoto.self, UnlockedAchievement.self])
     
     /// Migrates IDs from UserStats array to ReviewedPhoto entities
     private func migrateReviewedPhotosIfNeeded() {
@@ -87,6 +87,37 @@ struct PhotoSoapApp: App {
             }
         } catch {
             print("PhotoSoap: Migration failed: \(error)")
+        }
+    }
+
+    /// Migrates achievement IDs from UserStats array to UnlockedAchievement entities with dates
+    private func migrateUnlockedAchievementsIfNeeded() {
+        let context = modelContainer.mainContext
+
+        do {
+            let descriptor = FetchDescriptor<UserStats>()
+            let allStats = try context.fetch(descriptor)
+
+            for stats in allStats {
+                if !stats.unlockedAchievements.isEmpty {
+                    print("PhotoSoap: Migrating \(stats.unlockedAchievements.count) unlocked achievements...")
+
+                    for achievementId in stats.unlockedAchievements {
+                        let unlockDescriptor = FetchDescriptor<UnlockedAchievement>(
+                            predicate: #Predicate { $0.achievementId == achievementId }
+                        )
+                        if try context.fetchCount(unlockDescriptor) == 0 {
+                            let unlocked = UnlockedAchievement(achievementId: achievementId)
+                            context.insert(unlocked)
+                        }
+                    }
+
+                    try context.save()
+                    print("PhotoSoap: Successfully migrated \(stats.unlockedAchievements.count) unlocked achievements")
+                }
+            }
+        } catch {
+            print("PhotoSoap: Unlocked achievements migration failed: \(error)")
         }
     }
 

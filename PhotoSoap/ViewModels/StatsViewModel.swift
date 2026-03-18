@@ -81,10 +81,6 @@ class StatsViewModel: ObservableObject {
         return Double(stats.totalKept) / Double(stats.totalReviewed)
     }
 
-    func getAchievementCount(from stats: UserStats) -> (unlocked: Int, total: Int) {
-        (stats.unlockedAchievements.count, Achievement.allAchievements.count)
-    }
-
     func getFormattedLastReviewDate(from stats: UserStats) -> String {
         guard let date = stats.lastReviewDate else {
             return "Never"
