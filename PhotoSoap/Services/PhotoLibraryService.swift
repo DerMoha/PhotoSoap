@@ -70,12 +70,14 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     
     // Session cache for O(1) filtering of items already seen during this run.
     private var sessionReviewedIDs: Set<String> = []
+    private let sessionReviewedIDsLimit = 10000
 
     // Cache for file sizes keyed by asset ID
-    private var fileSizeCache: [String: Int64] = [:]
+    private let fileSizeCache = NSCache<NSString, NSNumber>()
 
     override init() {
         super.init()
+        fileSizeCache.countLimit = 1000
         checkAuthorizationStatus()
         PHPhotoLibrary.shared().register(self)
     }
@@ -85,6 +87,11 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
     
     func markReviewed(_ id: String) {
+        if sessionReviewedIDs.count >= sessionReviewedIDsLimit {
+            let excessCount = sessionReviewedIDsLimit / 2
+            let toRemove = Array(sessionReviewedIDs.prefix(excessCount))
+            toRemove.forEach { sessionReviewedIDs.remove($0) }
+        }
         sessionReviewedIDs.insert(id)
     }
     
@@ -319,8 +326,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     func fetchFileSize(for asset: PHAsset, allowNetworkAccess: Bool = false) async -> Int64 {
         let assetID = asset.localIdentifier
 
-        if let cachedSize = fileSizeCache[assetID] {
-            return cachedSize
+        if let cachedSize = fileSizeCache.object(forKey: assetID as NSString) {
+            return cachedSize.int64Value
         }
 
         let resources = PHAssetResource.assetResources(for: asset)
@@ -351,7 +358,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         if fileSize > 0 {
-            fileSizeCache[assetID] = fileSize
+            fileSizeCache.setObject(NSNumber(value: fileSize), forKey: assetID as NSString)
         }
 
         return fileSize

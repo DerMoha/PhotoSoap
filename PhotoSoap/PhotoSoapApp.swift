@@ -88,16 +88,17 @@ struct PhotoSoapApp: App {
                 if !stats.reviewedPhotoIDs.isEmpty {
                     print("PhotoSoap: Migrating \(stats.reviewedPhotoIDs.count) reviewed photos...")
 
-                    let idsToMigrate = Set(stats.reviewedPhotoIDs)
+                    let existingDescriptor = FetchDescriptor<ReviewedPhoto>()
+                    let existingReviews = try context.fetch(existingDescriptor)
+                    let existingIDs = Set(existingReviews.map(\.id))
+
+                    let idsToMigrate = stats.reviewedPhotoIDs.filter { !existingIDs.contains($0) }
                     var migrationCount = 0
 
                     for id in idsToMigrate {
-                        let reviewDescriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
-                        if try context.fetchCount(reviewDescriptor) == 0 {
-                            let review = ReviewedPhoto(id: id)
-                            context.insert(review)
-                            migrationCount += 1
-                        }
+                        let review = ReviewedPhoto(id: id)
+                        context.insert(review)
+                        migrationCount += 1
                     }
 
                     if migrationCount > 0 {
