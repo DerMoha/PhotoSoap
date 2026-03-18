@@ -342,6 +342,7 @@
       }
     },
     "achievement.unlocked" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -358,6 +359,7 @@
       }
     },
     "achievements.close" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -375,6 +377,7 @@
     },
     "achievements.of" : {
       "comment" : "X of Y achievements",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -392,6 +395,7 @@
     },
     "achievements.progress" : {
       "comment" : "Percentage complete",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -408,6 +412,7 @@
       }
     },
     "achievements.tab" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -424,6 +429,7 @@
       }
     },
     "achievements.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -440,6 +446,7 @@
       }
     },
     "achievements.unlocked" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -456,6 +463,7 @@
       }
     },
     "achievements.unlocked.status" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

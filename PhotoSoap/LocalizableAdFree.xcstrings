@@ -19,6 +19,7 @@
       }
     },
     "adfree.banner.description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -35,6 +36,7 @@
       }
     },
     "adfree.banner.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -86,6 +88,7 @@
       }
     },
     "adfree.coupon.haveCode" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -102,6 +105,7 @@
       }
     },
     "adfree.details" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -256,6 +260,7 @@
     },
     "adfree.loyalty.deleteMore" : {
       "comment" : "Number of photos remaining",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -289,6 +294,7 @@
       }
     },
     "adfree.loyalty.progress" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -305,6 +311,7 @@
       }
     },
     "adfree.loyalty.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -321,6 +328,7 @@
       }
     },
     "adfree.productUnavailable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -354,6 +362,7 @@
       }
     },
     "adfree.restore" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -370,6 +379,7 @@
       }
     },
     "adfree.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

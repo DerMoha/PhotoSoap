@@ -2,6 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "challenge.daily" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -19,6 +20,7 @@
     },
     "dailyGoal.changeApply" : {
       "comment" : "A description below the current daily goal that explains that changes apply only to the current challenge.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36,6 +38,7 @@
     },
     "dailyGoal.current" : {
       "comment" : "A label displaying the user's current daily review goal.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -53,6 +56,7 @@
     },
     "dailyGoal.title" : {
       "comment" : "The title of a sheet where a user can set their daily review goal.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -69,6 +73,7 @@
       }
     },
     "review.complete.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -85,6 +90,7 @@
       }
     },
     "review.complete.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -101,6 +107,7 @@
       }
     },
     "review.empty" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -117,6 +124,7 @@
       }
     },
     "review.empty.description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -133,6 +141,7 @@
       }
     },
     "review.loading" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -149,6 +158,7 @@
       }
     },
     "review.startOver" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -165,6 +175,7 @@
       }
     },
     "review.startOver.confirmation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -181,6 +192,7 @@
       }
     },
     "review.stats" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -197,6 +209,7 @@
       }
     },
     "review.statsDetail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -213,6 +226,7 @@
       }
     },
     "review.swipe.delete" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -229,6 +243,7 @@
       }
     },
     "review.swipe.keep" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -245,6 +260,7 @@
       }
     },
     "review.tab" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

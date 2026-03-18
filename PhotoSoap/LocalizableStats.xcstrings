@@ -2,6 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "stats.achievements" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18,6 +19,7 @@
       }
     },
     "stats.adFreeUnlock" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -34,6 +36,7 @@
       }
     },
     "stats.analyticsOff" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -50,6 +53,7 @@
       }
     },
     "stats.analyticsOn" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -117,6 +121,7 @@
       }
     },
     "stats.deleteRate" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -133,6 +138,7 @@
       }
     },
     "stats.keepDelete" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -149,6 +155,7 @@
       }
     },
     "stats.keepRate" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -165,6 +172,7 @@
       }
     },
     "stats.overview" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -232,6 +240,7 @@
       }
     },
     "stats.privacy" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -248,6 +257,7 @@
       }
     },
     "stats.privacy.analyticsDescription" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -264,6 +274,7 @@
       }
     },
     "stats.privacy.communityTotals" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -280,6 +291,7 @@
       }
     },
     "stats.privacy.shareAnalytics" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -330,6 +342,7 @@
       }
     },
     "stats.streaks" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -346,6 +359,7 @@
       }
     },
     "stats.tab" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -362,6 +376,7 @@
       }
     },
     "stats.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -378,6 +393,7 @@
       }
     },
     "streak.best" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -394,6 +410,7 @@
       }
     },
     "streak.current" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -410,6 +427,7 @@
       }
     },
     "streak.fire" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -426,6 +444,7 @@
       }
     },
     "streak.milestone" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
