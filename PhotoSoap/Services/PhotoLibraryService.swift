@@ -14,15 +14,15 @@ enum PhotoLibraryError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .accessDenied:
-            return "Photo library access was denied. Please enable access in Settings."
+            return String(localized: "error.accessDenied", defaultValue: "Photo library access was denied. Please enable access in Settings.")
         case .accessRestricted:
-            return "Photo library access is restricted."
+            return String(localized: "error.accessRestricted", defaultValue: "Photo library access is restricted.")
         case .noPhotosAvailable:
-            return "No photos available to review."
+            return String(localized: "error.noPhotosAvailable", defaultValue: "No photos available to review.")
         case .deletionFailed:
-            return "Failed to delete the photo."
+            return String(localized: "error.deletionFailed", defaultValue: "Failed to delete the photo.")
         case .loadingFailed:
-            return "Failed to load photo."
+            return String(localized: "error.loadingFailed", defaultValue: "Failed to load photo.")
         }
     }
 }

@@ -1,0 +1,172 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "coupon.alreadyRedeemed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereits eingelöst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Already Redeemed"
+          }
+        }
+      }
+    },
+    "coupon.alreadyRedeemed.description" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast bereits einen Code eingelöst. Werbefreier Zugang ist aktiv."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have already redeemed a code. Ad-free access is active."
+          }
+        }
+      }
+    },
+    "coupon.description" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib einen Coupon-Code ein, um werbfreien Zugang freizuschalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a coupon code to unlock ad-free access."
+          }
+        }
+      }
+    },
+    "coupon.enter" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code eingeben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter your code"
+          }
+        }
+      }
+    },
+    "coupon.invalid" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Code"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid Code"
+          }
+        }
+      }
+    },
+    "coupon.invalid.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der eingegebene Code ist ungültig. Bitte überprüfe ihn und versuche es erneut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The code you entered is not valid. Please check and try again."
+          }
+        }
+      }
+    },
+    "coupon.submit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einlösen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redeem"
+          }
+        }
+      }
+    },
+    "coupon.success" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code eingelöst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code Redeemed"
+          }
+        }
+      }
+    },
+    "coupon.success.description" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werbefreier Zugang wurde aktiviert. Danke fürs Testen von PhotoSoap!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad-free access has been activated. Thank you for testing PhotoSoap!"
+          }
+        }
+      }
+    },
+    "coupon.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code einlösen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redeem Code"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

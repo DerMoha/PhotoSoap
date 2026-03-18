@@ -94,7 +94,7 @@ struct ContentView: View {
         .onChange(of: selectedTab) { _, newTab in
             analyticsService.track(.tabSelected(tabName(for: newTab)))
         }
-        .alert("Recovery Mode", isPresented: $showBootstrapAlert) {
+        .alert(String(localized: "recoveryMode.title"), isPresented: $showBootstrapAlert) {
             Button("OK") {}
         } message: {
             Text(bootstrapErrorMessage ?? "")

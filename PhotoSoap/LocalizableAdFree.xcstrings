@@ -1,0 +1,407 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "adfree.alreadyUnlocked" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast bereits werbefreien Zugang freigeschaltet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You already unlocked ad-free access"
+          }
+        }
+      }
+    },
+    "adfree.banner.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Banner nur beim Überprüfen. Nicht auf Statistiken oder Erfolgen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One banner only while reviewing. Not on Stats or Achievements."
+          }
+        }
+      }
+    },
+    "adfree.banner.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überprüfungsbanner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review Banner"
+          }
+        }
+      }
+    },
+    "adfree.buyFor" : {
+      "comment" : "Price will be substituted",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaufen für %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buy for %@"
+          }
+        }
+      }
+    },
+    "adfree.coupon" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werbefrei durch Coupon freigeschaltet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad-free unlocked by coupon"
+          }
+        }
+      }
+    },
+    "adfree.coupon.haveCode" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einen Code haben?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Have a code?"
+          }
+        }
+      }
+    },
+    "adfree.details" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
+    "adfree.earned" : {
+      "comment" : "Number of deleted photos",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast dauerhaften werbefreien Zugang durch das Löschen von %d Fotos verdient."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You earned permanent ad-free access by deleting %d photos."
+          }
+        }
+      }
+    },
+    "adfree.hero.coupon" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein eingelöster Coupon-Code hält das Überprüfungsbanner verborgen. Danke fürs Testen von PhotoSoap!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A redeemed coupon code keeps the review banner hidden. Thank you for testing PhotoSoap!"
+          }
+        }
+      }
+    },
+    "adfree.hero.loyalty" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Aufräumen-Serie hat dauerhaften werbefreien Zugang verdient, also bleibt das Überprüfungsbanner verborgen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your cleanup streak earned permanent ad-free access, so the review banner stays hidden."
+          }
+        }
+      }
+    },
+    "adfree.hero.purchase" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahle einmal, um das Banner zu entfernen, oder lösche weiter für kostenlosen werbefreien Zugang."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pay once to remove the banner, or delete more photos for free ad-free access."
+          }
+        }
+      }
+    },
+    "adfree.hero.purchased" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein StoreKit-Kauf verbirgt das Überprüfungsbanner auf diesem Konto überall."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your StoreKit purchase hides the review banner on this account everywhere."
+          }
+        }
+      }
+    },
+    "adfree.hero.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap dauerhaft werbefrei halten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep PhotoSoap ad-free forever"
+          }
+        }
+      }
+    },
+    "adfree.loyalty" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werbefrei durch Treue freigeschaltet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad-free unlocked by loyalty"
+          }
+        }
+      }
+    },
+    "adfree.loyalty.active" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Treue-Prämie ist aktiv."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your loyalty unlock is active."
+          }
+        }
+      }
+    },
+    "adfree.loyalty.deleteMore" : {
+      "comment" : "Number of photos remaining",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lösche noch %d Fotos, um dauerhaft werbefrei zu werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete %d more photos to earn ad-free access for free."
+          }
+        }
+      }
+    },
+    "adfree.loyalty.oneMore" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lösche noch 1 Foto, um dauerhaft werbefrei zu werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete 1 more photo to earn ad-free access for free."
+          }
+        }
+      }
+    },
+    "adfree.loyalty.progress" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treue-Fortschritt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loyalty progress"
+          }
+        }
+      }
+    },
+    "adfree.loyalty.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treue-Prämie"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loyalty Unlock"
+          }
+        }
+      }
+    },
+    "adfree.productUnavailable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App Store-Produkt ist noch nicht verfügbar, also ist Kaufen vorübergehend deaktiviert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The App Store product is not available yet, so buying is disabled for now."
+          }
+        }
+      }
+    },
+    "adfree.purchased" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werbefrei durch Kauf freigeschaltet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad-free unlocked by purchase"
+          }
+        }
+      }
+    },
+    "adfree.restore" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Käufe wiederherstellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Purchases"
+          }
+        }
+      }
+    },
+    "adfree.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werbefrei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad-Free"
+          }
+        }
+      }
+    },
+    "adfree.unlocked" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freigeschaltet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlocked"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

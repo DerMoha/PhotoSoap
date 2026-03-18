@@ -1,0 +1,268 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "onboarding.card.anonymity.description" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap führt anonyme Gesamtzahlen. Analysen sind aus und enthalten keine Fotos, IDs oder Standort."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap keeps anonymous totals. Analytics are off and never include photos, IDs, or location."
+          }
+        }
+      }
+    },
+    "onboarding.card.anonymity.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community-Gesamtzahlen bleiben anonym"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community totals stay anonymous"
+          }
+        }
+      }
+    },
+    "onboarding.card.banner.description" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Banner unter dem Foto. Nicht auf Statistiken oder Erfolgen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One banner below your photo. Not on Stats or Achievements."
+          }
+        }
+      }
+    },
+    "onboarding.card.banner.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein nicht-personalisiertes Werbebanner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One non-personalized ad banner"
+          }
+        }
+      }
+    },
+    "onboarding.card.loyalty.description" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lösche 2000 Fotos und das Überprüfungsbanner verschwindet dauerhaft kostenlos. Du kannst auch jederzeit werbefrei kaufen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete 2000 photos and the review banner disappears permanently for free. You can also buy ad-free at any time."
+          }
+        }
+      }
+    },
+    "onboarding.card.loyalty.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treue-Prämie bei 2000 Löschungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loyalty unlock at 2000 deletes"
+          }
+        }
+      }
+    },
+    "onboarding.gotIt" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstanden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got it"
+          }
+        }
+      }
+    },
+    "onboarding.headsUp" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein kurzer Hinweis, bevor du beginnst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A quick heads-up before you start"
+          }
+        }
+      }
+    },
+    "onboarding.subtitle" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap hält Monetarisierung einfach und datenschutzorientiert während du deine Bibliothek überprüfst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap keeps monetization simple and privacy-focused while you review your library."
+          }
+        }
+      }
+    },
+    "onboarding.welcome" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome"
+          }
+        }
+      }
+    },
+    "permission.allow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugriff erlauben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Access"
+          }
+        }
+      }
+    },
+    "permission.denied.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap benötigt Fotobibliothek-Zugriff. Bitte aktiviere ihn in den Einstellungen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap needs photo library access to work. Please enable it in Settings."
+          }
+        }
+      }
+    },
+    "permission.denied.openSettings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        }
+      }
+    },
+    "permission.denied.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugriff verweigert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access Denied"
+          }
+        }
+      }
+    },
+    "permission.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap benötigt Zugriff auf deine Fotobibliothek, um dir beim Überprüfen und Organisieren deiner Fotos zu helfen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhotoSoap needs access to your photo library to help you review and organize your photos."
+          }
+        }
+      }
+    },
+    "permission.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotobibliothek-Zugriff"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo Library Access"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -64,7 +64,7 @@ struct FilterSheet: View {
     }
 
     private var yearsSection: some View {
-        Section("filter.byYear") {
+        Section(String(localized: "filter.byYear")) {
             if availableYears.isEmpty {
                 emptyRow(text: String(localized: "filter.noYears"))
             } else {
@@ -85,9 +85,9 @@ struct FilterSheet: View {
     }
 
     private var monthsSection: some View {
-        Section("filter.byMonth") {
+        Section(String(localized: "filter.byMonth")) {
             if availableYears.isEmpty {
-                emptyRow(text: "filter.noMonths")
+                emptyRow(text: String(localized: "filter.noMonths"))
             } else {
                 Picker("Year", selection: $selectedYear) {
                     ForEach(availableYears, id: \.self) { year in
@@ -123,7 +123,7 @@ struct FilterSheet: View {
     private var albumsSection: some View {
         let albums = albums.filter { !$0.isSmartAlbum }
 
-        return Section("filter.albums") {
+        return Section(String(localized: "filter.albums")) {
             if albums.isEmpty {
                 emptyRow(text: String(localized: "filter.noAlbums"))
             } else {
@@ -147,7 +147,7 @@ struct FilterSheet: View {
     private var smartAlbumsSection: some View {
         let smartAlbums = albums.filter { $0.isSmartAlbum }
 
-        return Section("filter.smartAlbums") {
+        return Section(String(localized: "filter.smartAlbums")) {
             if smartAlbums.isEmpty {
                 emptyRow(text: String(localized: "filter.noAlbums"))
             } else {

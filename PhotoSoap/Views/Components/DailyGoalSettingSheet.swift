@@ -11,7 +11,7 @@ struct DailyGoalSettingSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    Text("Set your daily review goal")
+                    Text(String(localized: "dailyGoal.title"))
                         .font(.headline)
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
@@ -35,11 +35,11 @@ struct DailyGoalSettingSheet: View {
                     .padding(.horizontal)
 
                     VStack(spacing: 8) {
-                        Text("Current goal: \(currentTarget) photos")
+                        Text(String(localized: "dailyGoal.current", defaultValue: "Current goal: \(currentTarget) photos").replacingOccurrences(of: "%d", with: "\(currentTarget)"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
 
-                        Text("Changes apply to today's challenge")
+                        Text(String(localized: "dailyGoal.changeApply"))
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
@@ -47,11 +47,11 @@ struct DailyGoalSettingSheet: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Daily Goal")
+            .navigationTitle(String(localized: "dailyGoal.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(String(localized: "common.cancel")) {
                         isPresented = false
                     }
                 }
