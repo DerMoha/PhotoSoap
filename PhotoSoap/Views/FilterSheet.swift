@@ -246,3 +246,11 @@ private struct FilterRow: View {
         .contentShape(Rectangle())
     }
 }
+
+#Preview {
+    FilterSheet(
+        photoLibraryService: PhotoLibraryService(),
+        currentFilter: .all,
+        onSelect: { _ in }
+    )
+}
