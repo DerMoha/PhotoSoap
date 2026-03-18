@@ -99,6 +99,7 @@ struct CompactHeader: View {
     let challengeTitle: String
     let isFilterActive: Bool
     let onFilterTap: () -> Void
+    let onGoalTap: () -> Void
 
     @State private var isAnimating = false
 
@@ -127,42 +128,47 @@ struct CompactHeader: View {
 
             Spacer()
 
-            // Daily challenge pill
-            HStack(spacing: 8) {
-                // Mini progress ring
-                ZStack {
-                    Circle()
-                        .stroke(Color(.systemGray4), lineWidth: 3)
-                        .frame(width: 24, height: 24)
+            // Daily challenge pill - tappable
+            Button(action: onGoalTap) {
+                HStack(spacing: 8) {
+                    // Mini progress ring
+                    ZStack {
+                        Circle()
+                            .stroke(Color(.systemGray4), lineWidth: 3)
+                            .frame(width: 24, height: 24)
 
-                    Circle()
-                        .trim(from: 0, to: min(progress, 1.0))
-                        .stroke(progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                        .frame(width: 24, height: 24)
-                        .rotationEffect(.degrees(-90))
+                        Circle()
+                            .trim(from: 0, to: min(progress, 1.0))
+                            .stroke(progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            .frame(width: 24, height: 24)
+                            .rotationEffect(.degrees(-90))
+
+                        if progress >= 1.0 {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.green)
+                        }
+                    }
+
+                    if progress < 1.0 {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(challengeTitle)
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .lineLimit(1)
+
+                            Text("\(current)/\(target)")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
-
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(challengeTitle)
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                        .lineLimit(1)
-
-                    Text("\(current)/\(target)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-
-                if progress >= 1.0 {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.subheadline)
-                        .foregroundStyle(.green)
-                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(Capsule())
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(Capsule())
+            .buttonStyle(.plain)
         }
         .onChange(of: currentStreak) { oldValue, newValue in
             if newValue > oldValue {

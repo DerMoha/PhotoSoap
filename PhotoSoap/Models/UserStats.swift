@@ -141,6 +141,10 @@ class UserStats {
         dailyChallengeProgress >= dailyChallengeTarget
     }
 
+    func updateDailyChallengeTarget(_ target: Int) {
+        dailyChallengeTarget = target
+    }
+
     var storageFreedFormatted: String {
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useKB, .useMB, .useGB]

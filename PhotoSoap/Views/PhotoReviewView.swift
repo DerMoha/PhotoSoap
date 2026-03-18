@@ -25,6 +25,7 @@ struct PhotoReviewView: View {
     @State private var isProcessingAction = false  // Prevents concurrent button presses
     @State private var currentFilter: PhotoFilter = .all
     @State private var showFilterSheet = false
+    @State private var showGoalSheet = false
     @State private var persistedReviewedIDs: Set<String> = []
     @State private var knownUnreviewedIDs: Set<String> = []
     @State private var hasTrackedReviewStart = false
@@ -95,6 +96,15 @@ struct PhotoReviewView: View {
                     }
                 )
             }
+            .sheet(isPresented: $showGoalSheet) {
+                DailyGoalSettingSheet(
+                    isPresented: $showGoalSheet,
+                    currentTarget: stats.dailyChallengeTarget,
+                    onSelect: { newTarget in
+                        stats.updateDailyChallengeTarget(newTarget)
+                    }
+                )
+            }
         }
     }
 
@@ -111,6 +121,9 @@ struct PhotoReviewView: View {
             isFilterActive: !currentFilter.isAll,
             onFilterTap: {
                 showFilterSheet = true
+            },
+            onGoalTap: {
+                showGoalSheet = true
             }
         )
     }
