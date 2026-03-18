@@ -22,9 +22,6 @@ enum AdPlacementKind {
 enum AdMobConfig {
     static let appIDInfoKey = "GADApplicationIdentifier"
     static let reviewBannerUnitIDInfoKey = "PhotoSoapAdMobReviewBannerUnitID"
-
-    static let productionAppID = "ca-app-pub-2843751619926314~5457248604"
-    static let productionReviewBannerUnitID = "ca-app-pub-2843751619926314/7851807225"
 }
 
 struct AdMobRuntimeConfiguration {
