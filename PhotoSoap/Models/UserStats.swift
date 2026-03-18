@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-class UserStats {
+class UserStats: DailyChallengeStats {
     var totalReviewed: Int
     var totalDeleted: Int
     var totalKept: Int

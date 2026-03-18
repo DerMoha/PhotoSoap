@@ -21,6 +21,12 @@ enum DailyChallengeType: String, CaseIterable {
     }
 }
 
+protocol DailyChallengeStats {
+    var dailyChallengeProgress: Int { get }
+    var dailyChallengeTarget: Int { get }
+    var currentStreak: Int { get }
+}
+
 struct DailyChallenge: Identifiable {
     let id: UUID
     let type: DailyChallengeType
@@ -79,7 +85,7 @@ struct DailyChallenge: Identifiable {
         )
     }
 
-    func progress(from stats: UserStats) -> Int {
+    func progress(from stats: DailyChallengeStats) -> Int {
         switch type {
         case .review:
             return stats.dailyChallengeProgress
@@ -90,11 +96,11 @@ struct DailyChallenge: Identifiable {
         }
     }
 
-    func isComplete(stats: UserStats) -> Bool {
+    func isComplete(stats: DailyChallengeStats) -> Bool {
         progress(from: stats) >= target
     }
 
-    var progressPercentage: (UserStats) -> Double {
+    var progressPercentage: (DailyChallengeStats) -> Double {
         { stats in
             min(1.0, Double(progress(from: stats)) / Double(target))
         }

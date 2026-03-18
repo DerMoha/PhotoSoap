@@ -73,22 +73,39 @@ class GameificationService: ObservableObject {
     }
 
     private func checkAchievements(stats: UserStats, context: ModelContext) {
-        let newAchievements = Achievement.checkNewAchievements(for: stats)
-
-        for achievement in newAchievements {
-            stats.unlockAchievement(achievement.id)
-            let unlocked = UnlockedAchievement(achievementId: achievement.id)
-            context.insert(unlocked)
-        }
-
-        if let firstNew = newAchievements.first {
-            newlyUnlockedAchievement = firstNew
-            showAchievementBanner = true
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                self.showAchievementBanner = false
-                self.newlyUnlockedAchievement = nil
+        for achievement in Achievement.allAchievements {
+            if !stats.hasUnlockedAchievement(achievement.id) && meetsRequirement(achievement, stats: stats) {
+                stats.unlockAchievement(achievement.id)
+                let unlocked = UnlockedAchievement(achievementId: achievement.id)
+                context.insert(unlocked)
             }
+        }
+    }
+
+    private func meetsRequirement(_ achievement: Achievement, stats: UserStats) -> Bool {
+        switch achievement.id {
+        case "first_steps":
+            return stats.totalReviewed >= 10
+        case "spring_cleaning":
+            return stats.totalDeleted >= 50
+        case "memory_keeper":
+            return stats.totalKept >= 100
+        case "streak_master":
+            return stats.bestStreak >= 25
+        case "daily_devotee":
+            return stats.dailyStreak >= 7
+        case "storage_saver":
+            return stats.storageFreed >= 1_073_741_824
+        case "century_club":
+            return stats.sessionReviewCount >= 100
+        case "photo_pro":
+            return stats.totalReviewed >= 1000
+        case "decisive":
+            return stats.bestStreak >= 50
+        case "cleanup_champion":
+            return stats.totalDeleted >= 500
+        default:
+            return false
         }
     }
 
