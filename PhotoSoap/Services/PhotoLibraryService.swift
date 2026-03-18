@@ -219,6 +219,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         // Cap retries at a reasonable limit (e.g. 500) to prevent freezing
         let retries = min(500, scaledRetries)
         
+        // Track failed assets to avoid retrying corrupt/unreadable photos
+        var failedAssetIDs = Set<String>()
+        
         // Random sampling with retry
         for _ in 0..<retries {
             let randomIndex = Int.random(in: 0..<totalAssetCount)
@@ -229,13 +232,22 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             // Get the asset at this index (single access, not iteration)
             let asset = assets.object(at: randomIndex)
             
-            // Check if excluded (reviewed) - O(1) Set lookup
-            if sessionReviewedIDs.contains(asset.localIdentifier) || excludedIDs.contains(asset.localIdentifier) {
+            // Check if excluded (reviewed or failed) - O(1) Set lookup
+            if sessionReviewedIDs.contains(asset.localIdentifier) 
+                || excludedIDs.contains(asset.localIdentifier)
+                || failedAssetIDs.contains(asset.localIdentifier) {
                 continue
             }
             
             // Found a valid photo - load and return it
-            return try await loadPhoto(from: asset)
+            do {
+                return try await loadPhoto(from: asset)
+            } catch {
+                // Photo data is corrupt/unreadable - mark as reviewed so we skip it
+                sessionReviewedIDs.insert(asset.localIdentifier)
+                failedAssetIDs.insert(asset.localIdentifier)
+                continue
+            }
         }
         
         // Couldn't find an unreviewed photo after max retries
