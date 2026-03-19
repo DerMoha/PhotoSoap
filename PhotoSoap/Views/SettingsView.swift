@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @EnvironmentObject private var hapticsService: HapticsService
+
     @ObservedObject var analyticsService: AnalyticsService
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
     @ObservedObject var adCoordinator: AdCoordinator
@@ -11,6 +13,7 @@ struct SettingsView: View {
 
     var body: some View {
         List {
+            feedbackSection
             privacySection
 
             #if DEBUG
@@ -27,6 +30,21 @@ struct SettingsView: View {
             )
         }
         #endif
+    }
+
+    private var feedbackSection: some View {
+        Section(String(localized: "settings.feedback", table: "LocalizableShared")) {
+            Toggle(isOn: hapticsToggleBinding) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: "settings.feedback.haptics", table: "LocalizableShared"))
+                        .font(.subheadline.weight(.semibold))
+                    Text(String(localized: "settings.feedback.hapticsDescription", table: "LocalizableShared"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(.blue)
+        }
     }
 
     private var privacySection: some View {
@@ -71,6 +89,13 @@ struct SettingsView: View {
             set: { analyticsService.setEnabled($0) }
         )
     }
+
+    private var hapticsToggleBinding: Binding<Bool> {
+        Binding(
+            get: { hapticsService.isEnabled },
+            set: { hapticsService.setEnabled($0) }
+        )
+    }
 }
 
 #Preview {
@@ -84,4 +109,5 @@ struct SettingsView: View {
             adCoordinator: AdCoordinator()
         )
     }
+    .environmentObject(HapticsService())
 }

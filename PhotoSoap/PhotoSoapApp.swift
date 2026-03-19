@@ -159,6 +159,7 @@ struct PhotoSoapApp: App {
                 .environmentObject(serviceContainer.adCoordinator)
                 .environmentObject(serviceContainer.aggregateMetricsService)
                 .environmentObject(serviceContainer.analyticsService)
+                .environmentObject(serviceContainer.hapticsService)
         }
         .modelContainer(modelContainer)
     }

@@ -59,6 +59,73 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
+    func testHapticsServiceIsEnabledByDefault() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+
+        let hapticsService = HapticsService(defaults: defaults, performer: .init(
+            impact: { _ in },
+            success: {},
+            error: {},
+            warning: {},
+            selection: {}
+        ))
+
+        XCTAssertTrue(hapticsService.isEnabled)
+    }
+
+    @MainActor
+    func testHapticsServiceSkipsFeedbackWhenDisabled() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+
+        var feedbackEvents: [String] = []
+        let performer = HapticsPerformer(
+            impact: { _ in feedbackEvents.append("impact") },
+            success: { feedbackEvents.append("success") },
+            error: { feedbackEvents.append("error") },
+            warning: { feedbackEvents.append("warning") },
+            selection: { feedbackEvents.append("selection") }
+        )
+        let hapticsService = HapticsService(defaults: defaults, performer: performer)
+
+        hapticsService.setEnabled(false)
+        hapticsService.impact(.heavy)
+        hapticsService.success()
+        hapticsService.error()
+        hapticsService.warning()
+        hapticsService.selection()
+
+        XCTAssertFalse(hapticsService.isEnabled)
+        XCTAssertTrue(feedbackEvents.isEmpty)
+    }
+
+    @MainActor
+    func testHapticsPreferencePersistsAcrossInstances() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+
+        let hapticsService = HapticsService(defaults: defaults, performer: .init(
+            impact: { _ in },
+            success: {},
+            error: {},
+            warning: {},
+            selection: {}
+        ))
+        hapticsService.setEnabled(false)
+
+        let restoredService = HapticsService(defaults: defaults, performer: .init(
+            impact: { _ in },
+            success: {},
+            error: {},
+            warning: {},
+            selection: {}
+        ))
+
+        XCTAssertFalse(restoredService.isEnabled)
+    }
+
+    @MainActor
     func testAggregateMetricsRegistersInstallOnlyOnce() {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)

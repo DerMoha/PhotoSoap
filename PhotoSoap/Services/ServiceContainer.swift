@@ -10,9 +10,11 @@ final class ServiceContainer: ObservableObject {
     let adCoordinator: AdCoordinator
     let aggregateMetricsService: AggregateMetricsService
     let analyticsService: AnalyticsService
+    let hapticsService: HapticsService
 
     init(modelContext: ModelContext) {
         self.analyticsService = AnalyticsService()
+        self.hapticsService = HapticsService()
         self.aggregateMetricsService = AggregateMetricsService()
         self.photoLibraryService = PhotoLibraryService()
         self.gamificationService = GameificationService()
