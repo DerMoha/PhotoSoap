@@ -30,6 +30,8 @@ struct PhotoReviewView: View {
     @State private var persistedReviewedIDs: Set<String> = []
     @State private var knownUnreviewedIDs: Set<String> = []
     @State private var hasTrackedReviewStart = false
+    @State private var cycleKeptCount = 0
+    @State private var cycleDeletedCount = 0
     @State private var showStartOverConfirmation = false
     @State private var showDailyGoalToast = false
     @State private var hasTriggeredSwipeThresholdFeedback = false
@@ -164,7 +166,7 @@ struct PhotoReviewView: View {
 
     private var reviewProgressView: some View {
         let total = photoLibraryService.getTotalPhotoCount()
-        let reviewed = stats.totalReviewed
+        let reviewed = persistedReviewedIDs.count
 
         return HStack {
             Spacer()
@@ -314,8 +316,8 @@ struct PhotoReviewView: View {
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 8) {
-                Text(String(localized: "review.stats", defaultValue: "\(stats.totalReviewed) photos reviewed", table: "LocalizableReview"))
-                Text(String(localized: "review.statsDetail", defaultValue: "\(stats.totalDeleted) deleted • \(stats.totalKept) kept", table: "LocalizableReview"))
+                Text("\(persistedReviewedIDs.count) photos reviewed")
+                Text("\(cycleDeletedCount) deleted • \(cycleKeptCount) kept")
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -443,6 +445,12 @@ struct PhotoReviewView: View {
     // MARK: - Actions
 
     private func startOverWithClearing() {
+        isLoading = true
+        currentPhoto = nil
+        nextPhoto = nil
+        cycleKeptCount = 0
+        cycleDeletedCount = 0
+
         do {
             try gameificationService.deleteAllReviewedPhotos(context: modelContext)
             try modelContext.save()
@@ -466,6 +474,10 @@ struct PhotoReviewView: View {
         isLoading = true
         error = nil
         noMorePhotos = false
+        currentPhoto = nil
+        nextPhoto = nil
+        cycleKeptCount = 0
+        cycleDeletedCount = 0
         persistedReviewedIDs.removeAll()
         knownUnreviewedIDs.removeAll()
 
@@ -541,6 +553,7 @@ struct PhotoReviewView: View {
             return
         }
 
+        cycleKeptCount += 1
         analyticsService.track(.photoKept(filter: currentFilter))
         aggregateMetricsService.recordReview()
         hapticsService.impact(.medium)
@@ -585,6 +598,7 @@ struct PhotoReviewView: View {
                 return
             }
 
+            cycleDeletedCount += 1
             analyticsService.track(.photoDeleted(filter: currentFilter))
             aggregateMetricsService.recordDeletion(bytesFreed: resolvedFileSize)
             hapticsService.impact(.rigid)
