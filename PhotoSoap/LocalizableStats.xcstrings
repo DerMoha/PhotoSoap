@@ -35,6 +35,7 @@
       }
     },
     "stats.achievements" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
