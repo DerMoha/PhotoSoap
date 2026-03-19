@@ -217,28 +217,26 @@ struct StatsView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Label(adCoordinator.statusSummary, systemImage: adCoordinator.adsEnabled ? "rectangle.bottomthird.inset.filled" : "checkmark.seal.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if adRemovalPurchaseService.unlockSource != .coupon {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(String(localized: "adfree.loyalty.progress", table: "LocalizableAdFree"))
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(String(localized: "adfree.loyalty.progress", table: "LocalizableAdFree"))
-                            .font(.caption.weight(.medium))
+                            Spacer()
+
+                            Text("\(stats.totalDeleted)/\(AdRemovalConfig.freeUnlockDeletedCount)")
+                                .font(.caption.weight(.semibold))
+                        }
+
+                        ProgressView(value: adRemovalPurchaseService.deleteProgress)
+                            .tint(.orange)
+
+                        Text(progressMessage)
+                            .font(.caption)
                             .foregroundStyle(.secondary)
-
-                        Spacer()
-
-                        Text("\(stats.totalDeleted)/\(AdRemovalConfig.freeUnlockDeletedCount)")
-                            .font(.caption.weight(.semibold))
                     }
-
-                    ProgressView(value: adRemovalPurchaseService.deleteProgress)
-                        .tint(.orange)
-
-                    Text(progressMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
 
                 if let errorMessage = adRemovalPurchaseService.errorMessage, !errorMessage.isEmpty {

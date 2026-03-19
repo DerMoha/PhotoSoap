@@ -16,9 +16,10 @@ struct AdFreeUpgradeSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     heroSection
-                    loyaltySection
+                    if adRemovalPurchaseService.unlockSource != .coupon {
+                        loyaltySection
+                    }
                     couponSection
-                    bannerSection
                 }
                 .padding()
             }
