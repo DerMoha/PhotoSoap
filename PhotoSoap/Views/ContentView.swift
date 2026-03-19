@@ -18,7 +18,6 @@ struct ContentView: View {
     @EnvironmentObject private var adCoordinator: AdCoordinator
     @State private var selectedTab = 0
     @State private var showBootstrapAlert = false
-    @State private var showQuickStartSheet = false
     @State private var hasTrackedAppOpen = false
 
     init(bootstrapErrorMessage: String?, migrationErrorMessage: String? = nil) {
@@ -46,6 +45,8 @@ struct ContentView: View {
             } else if photoLibraryService.authorizationStatus == .denied ||
                       photoLibraryService.authorizationStatus == .restricted {
                 PermissionDeniedView(analyticsService: analyticsService)
+            } else if shouldShowQuickStart {
+                QuickStartInfoView()
             } else {
                 mainTabView
             }
@@ -62,7 +63,6 @@ struct ContentView: View {
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
             adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
             showBootstrapAlert = bootstrapErrorMessage != nil
-            updateQuickStartPresentation()
             analyticsService.track(.permissionStatusChanged(photoLibraryService.authorizationStatus))
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -86,7 +86,6 @@ struct ContentView: View {
             adCoordinator.updateEntitlement(hasAdRemovalEntitlement: hasEntitlement)
         }
         .onChange(of: photoLibraryService.authorizationStatus) { _, status in
-            updateQuickStartPresentation(for: status)
             analyticsService.track(.permissionStatusChanged(status))
         }
         .onChange(of: selectedTab) { _, newTab in
@@ -97,10 +96,12 @@ struct ContentView: View {
         } message: {
             Text(bootstrapErrorMessage ?? "")
         }
-        .sheet(isPresented: $showQuickStartSheet) {
-            QuickStartInfoSheet()
-                .presentationDetents([.medium, .large])
-        }
+    }
+
+    private var shouldShowQuickStart: Bool {
+        let status = photoLibraryService.authorizationStatus
+        let canShowMainExperience = status == .authorized || status == .limited
+        return canShowMainExperience && !hasSeenQuickStartInfo
     }
 
     private var mainTabView: some View {
@@ -177,12 +178,6 @@ struct ContentView: View {
         default:
             return "unknown"
         }
-    }
-
-    private func updateQuickStartPresentation(for status: PhotoLibraryAuthorizationStatus? = nil) {
-        let currentStatus = status ?? photoLibraryService.authorizationStatus
-        let canShowMainExperience = currentStatus == .authorized || currentStatus == .limited
-        showQuickStartSheet = canShowMainExperience && !hasSeenQuickStartInfo
     }
 }
 
@@ -336,52 +331,41 @@ private struct LimitedAccessBanner: View {
     }
 }
 
-private struct QuickStartInfoSheet: View {
-    @Environment(\.dismiss) private var dismiss
+private struct QuickStartInfoView: View {
     @AppStorage("hasSeenQuickStartInfo") private var hasSeenQuickStartInfo = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "onboarding.headsUp", table: "LocalizableOnboarding"))
-                            .font(.title2.weight(.bold))
-                        Text(String(localized: "onboarding.subtitle", table: "LocalizableOnboarding"))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 22) {
+                    onboardingHero
+
+                    SwipeTutorialDemoCard()
+
+                    VStack(spacing: 14) {
+                        QuickStartCard(
+                            title: String(localized: "onboarding.card.privacy.title", table: "LocalizableOnboarding"),
+                            systemImage: "lock.shield.fill",
+                            tint: .blue,
+                            message: String(localized: "onboarding.card.privacy.description", table: "LocalizableOnboarding")
+                        )
+
+                        QuickStartCard(
+                            title: String(localized: "onboarding.card.reward.title", table: "LocalizableOnboarding"),
+                            systemImage: "sparkles",
+                            tint: .green,
+                            message: String(localized: "onboarding.card.reward.description", table: "LocalizableOnboarding")
+                        )
                     }
-
-                    QuickStartCard(
-                        title: String(localized: "onboarding.card.anonymity.title", table: "LocalizableOnboarding"),
-                        systemImage: "chart.bar.xaxis",
-                        tint: .blue,
-                        message: String(localized: "onboarding.card.anonymity.description", table: "LocalizableOnboarding")
-                    )
-
-                    QuickStartCard(
-                        title: String(localized: "onboarding.card.banner.title", table: "LocalizableOnboarding"),
-                        systemImage: "rectangle.bottomthird.inset.filled",
-                        tint: .orange,
-                        message: String(localized: "onboarding.card.banner.description", table: "LocalizableOnboarding")
-                    )
-
-                    QuickStartCard(
-                        title: String(localized: "onboarding.card.loyalty.title", table: "LocalizableOnboarding"),
-                        systemImage: "sparkles",
-                        tint: .green,
-                        message: String(localized: "onboarding.card.loyalty.description", table: "LocalizableOnboarding")
-                    )
                 }
-                .padding()
+                .padding(20)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(backgroundGradient)
             .navigationTitle(String(localized: "onboarding.welcome", table: "LocalizableOnboarding"))
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
-                Button(String(localized: "onboarding.gotIt", table: "LocalizableOnboarding")) {
+                Button(String(localized: "onboarding.cta", table: "LocalizableOnboarding")) {
                     hasSeenQuickStartInfo = true
-                    dismiss()
                 }
                 .buttonStyle(.borderedProminent)
                 .padding()
@@ -389,7 +373,43 @@ private struct QuickStartInfoSheet: View {
                 .background(.ultraThinMaterial)
             }
         }
-        .interactiveDismissDisabled()
+    }
+
+    private var backgroundGradient: some View {
+        LinearGradient(
+            colors: [
+                Color.blue.opacity(0.10),
+                Color(.systemGroupedBackground),
+                Color.green.opacity(0.06)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+    }
+
+    private var onboardingHero: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(String(localized: "onboarding.hero.eyebrow", table: "LocalizableOnboarding"))
+                .font(.caption.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.8)
+                .foregroundStyle(.blue)
+
+            Text(String(localized: "onboarding.hero.title", table: "LocalizableOnboarding"))
+                .font(.system(.largeTitle, design: .rounded).weight(.bold))
+
+            Text(String(localized: "onboarding.hero.subtitle", table: "LocalizableOnboarding"))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding(22)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(Color.white.opacity(0.35), lineWidth: 1)
+        }
     }
 }
 
@@ -401,10 +421,15 @@ private struct QuickStartCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            Image(systemName: systemImage)
-                .font(.headline)
-                .foregroundStyle(tint)
-                .frame(width: 24)
+            ZStack {
+                Circle()
+                    .fill(tint.opacity(0.14))
+                    .frame(width: 38, height: 38)
+
+                Image(systemName: systemImage)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(tint)
+            }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -415,9 +440,190 @@ private struct QuickStartCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .padding(18)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.28), lineWidth: 1)
+        }
+    }
+}
+
+private struct SwipeTutorialDemoCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(String(localized: "onboarding.demo.title", table: "LocalizableOnboarding"))
+                    .font(.headline)
+
+                Text(String(localized: "onboarding.demo.description", table: "LocalizableOnboarding"))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(Color.red.opacity(0.08))
+                    .rotationEffect(.degrees(-8))
+                    .offset(x: -26, y: 14)
+
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(Color.green.opacity(0.08))
+                    .rotationEffect(.degrees(8))
+                    .offset(x: 26, y: 14)
+
+                mockPhotoCard
+            }
+            .frame(height: 310)
+
+            HStack(spacing: 12) {
+                SwipeHintBadge(
+                    direction: String(localized: "onboarding.demo.swipeLeft", table: "LocalizableOnboarding"),
+                    outcome: String(localized: "onboarding.demo.delete", table: "LocalizableOnboarding"),
+                    systemImage: "trash.fill",
+                    tint: .red
+                )
+
+                SwipeHintBadge(
+                    direction: String(localized: "onboarding.demo.swipeRight", table: "LocalizableOnboarding"),
+                    outcome: String(localized: "onboarding.demo.keep", table: "LocalizableOnboarding"),
+                    systemImage: "checkmark",
+                    tint: .green
+                )
+            }
+        }
+        .padding(20)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(Color.white.opacity(0.32), lineWidth: 1)
+        }
+    }
+
+    private var mockPhotoCard: some View {
+        VStack(spacing: 0) {
+            ZStack(alignment: .top) {
+                LinearGradient(
+                    colors: [
+                        Color.indigo.opacity(0.88),
+                        Color.blue.opacity(0.72),
+                        Color.cyan.opacity(0.62)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                VStack(spacing: 12) {
+                    Spacer()
+
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 54, weight: .semibold))
+                        .foregroundStyle(.white)
+
+                    HStack(spacing: 8) {
+                        Capsule()
+                            .fill(Color.white.opacity(0.86))
+                            .frame(width: 62, height: 8)
+
+                        Capsule()
+                            .fill(Color.white.opacity(0.40))
+                            .frame(width: 42, height: 8)
+                    }
+                    .padding(.bottom, 26)
+                }
+
+                HStack {
+                    DemoOverlayBadge(
+                        title: String(localized: "onboarding.demo.delete", table: "LocalizableOnboarding"),
+                        systemImage: "trash.fill",
+                        tint: .red
+                    )
+
+                    Spacer()
+
+                    DemoOverlayBadge(
+                        title: String(localized: "onboarding.demo.keep", table: "LocalizableOnboarding"),
+                        systemImage: "checkmark",
+                        tint: .green
+                    )
+                }
+                .padding(16)
+            }
+            .frame(height: 228)
+
+            HStack(spacing: 12) {
+                Label("Jun 24", systemImage: "calendar")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text("3.2 MB")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text("4Kx3K")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemGroupedBackground))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 12)
+    }
+}
+
+private struct DemoOverlayBadge: View {
+    let title: String
+    let systemImage: String
+    let tint: Color
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.ultraThinMaterial)
+            .clipShape(Capsule())
+    }
+}
+
+private struct SwipeHintBadge: View {
+    let direction: String
+    let outcome: String
+    let systemImage: String
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(tint.opacity(0.14))
+                    .frame(width: 34, height: 34)
+
+                Image(systemName: systemImage)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(tint)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(direction)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text(outcome)
+                    .font(.subheadline.weight(.semibold))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color(.secondarySystemGroupedBackground).opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
 

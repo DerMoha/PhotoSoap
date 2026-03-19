@@ -2,6 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "onboarding.card.anonymity.description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18,6 +19,7 @@
       }
     },
     "onboarding.card.anonymity.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -34,6 +36,7 @@
       }
     },
     "onboarding.card.banner.description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -50,6 +53,7 @@
       }
     },
     "onboarding.card.banner.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -66,6 +70,7 @@
       }
     },
     "onboarding.card.loyalty.description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -82,6 +87,7 @@
       }
     },
     "onboarding.card.loyalty.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -97,7 +103,184 @@
         }
       }
     },
+    "onboarding.card.privacy.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Mediathek wird nicht hochgeladen. Optionale Analysen sind standardmaessig aus, und PhotoSoap speichert nur anonyme Gesamtzahlen wie Installationen und geloeschte Fotos - niemals Fotoinhalte, Asset-IDs oder Standortdaten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your library is not uploaded anywhere. Optional analytics are off by default, and PhotoSoap only keeps anonymous totals like installs and deleted photos - never photo contents, asset IDs, or location."
+          }
+        }
+      }
+    },
+    "onboarding.card.privacy.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Fotos bleiben bei dir"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your photos stay yours"
+          }
+        }
+      }
+    },
+    "onboarding.card.reward.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loesche 2000 Fotos und das Banner in der Review-Ansicht verschwindet dauerhaft kostenlos."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete 2000 photos and the review banner disappears permanently for free."
+          }
+        }
+      }
+    },
+    "onboarding.card.reward.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werbefrei schaltet sich frei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad-free unlocks itself"
+          }
+        }
+      }
+    },
+    "onboarding.cta" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit dem Pruefen starten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start reviewing"
+          }
+        }
+      }
+    },
+    "onboarding.demo.delete" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loeschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
+    "onboarding.demo.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du pruefst immer nur ein Foto. Gehoert es in deine Mediathek, behalte es. Wenn nicht, wische es weg."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review one photo at a time. If it belongs in your library, keep it. If not, swipe it away."
+          }
+        }
+      }
+    },
+    "onboarding.demo.keep" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep"
+          }
+        }
+      }
+    },
+    "onboarding.demo.swipeLeft" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach links wischen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe left"
+          }
+        }
+      }
+    },
+    "onboarding.demo.swipeRight" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach rechts wischen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe right"
+          }
+        }
+      }
+    },
+    "onboarding.demo.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Foto nach dem anderen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One photo at a time"
+          }
+        }
+      }
+    },
     "onboarding.gotIt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -114,6 +297,7 @@
       }
     },
     "onboarding.headsUp" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -129,7 +313,56 @@
         }
       }
     },
+    "onboarding.hero.eyebrow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schnellstart"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick start"
+          }
+        }
+      }
+    },
+    "onboarding.hero.subtitle" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wische nach rechts, um ein Foto zu behalten, und nach links, um es zu loeschen. Der Ablauf ist bewusst schnell und unkompliziert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe right to keep a photo and left to delete it. The flow is designed to feel fast and effortless."
+          }
+        }
+      }
+    },
+    "onboarding.hero.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raeume deine Mediathek mit einem Wisch auf"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clean up your library with a swipe"
+          }
+        }
+      }
+    },
     "onboarding.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
