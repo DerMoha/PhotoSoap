@@ -7,7 +7,6 @@ struct StatsView: View {
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
     @ObservedObject var adCoordinator: AdCoordinator
     @ObservedObject var analyticsService: AnalyticsService
-    @Query private var unlockedAchievements: [UnlockedAchievement]
     @State private var viewModel = StatsViewModel()
     @State private var isShowingAdFreeSheet = false
     #if DEBUG
@@ -23,7 +22,6 @@ struct StatsView: View {
                     ratioSection
                     analyticsSection
                     adFreeSection
-                    achievementsPreviewSection
                 }
                 .padding()
             }
@@ -136,54 +134,6 @@ struct StatsView: View {
                     Text("\(Int(viewModel.getDeleteRatio(from: stats) * 100))%")
                         .fontWeight(.semibold)
                         .foregroundStyle(.red)
-                }
-            }
-            .padding()
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-    }
-
-    private var achievementsPreviewSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text(String(localized: "stats.achievements", table: "LocalizableStats"))
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                let count = (unlocked: unlockedAchievements.count, total: Achievement.allAchievements.count)
-                Text("\(count.unlocked)/\(count.total)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            let progress = gameificationService.getAchievementProgress(stats: stats)
-            let nextToUnlock = progress.filter { !$0.1 }.prefix(3)
-
-            VStack(spacing: 12) {
-                ForEach(Array(nextToUnlock), id: \.0.id) { achievement, _, progressValue in
-                    HStack(spacing: 12) {
-                        Image(systemName: achievement.iconName)
-                            .font(.title2)
-                            .foregroundStyle(.secondary)
-                            .frame(width: 40)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(achievement.title)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-
-                            ProgressView(value: progressValue)
-                                .tint(.blue)
-                        }
-
-                        Text(String(localized: "achievements.progress", defaultValue: "\(Int(progressValue * 100))% Complete", table: "LocalizableAchievements"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .frame(width: 40)
-                    }
                 }
             }
             .padding()
