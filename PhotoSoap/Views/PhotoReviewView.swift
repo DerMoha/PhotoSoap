@@ -34,6 +34,7 @@ struct PhotoReviewView: View {
     private let swipeActionThreshold: CGFloat = 100
     private let swipeFeedbackDistance: CGFloat = 140
     private let swipeOverlayThreshold: CGFloat = 12
+    private let cardCornerRadius: CGFloat = 16
 
     var body: some View {
         NavigationStack {
@@ -73,22 +74,6 @@ struct PhotoReviewView: View {
                     }
 
                 }
-
-                // Delete/Keep edge indicators
-                HStack(spacing: 0) {
-                    Rectangle()
-                        .fill(.red.opacity(0.25))
-                        .frame(width: 4)
-                        .frame(maxHeight: .infinity)
-                        .ignoresSafeArea()
-                    Spacer()
-                    Rectangle()
-                        .fill(.green.opacity(0.25))
-                        .frame(width: 4)
-                        .frame(maxHeight: .infinity)
-                        .ignoresSafeArea()
-                }
-
                 achievementBanner
                 streakCelebration
                 dailyGoalToast
@@ -178,14 +163,21 @@ struct PhotoReviewView: View {
     }
 
     private func photoCardSection(photo: Photo) -> some View {
-        PhotoCardDisplay(
-            photo: photo,
-            photoLibraryService: photoLibraryService,
-            offset: cardOffset,
-            rotation: cardRotation,
-            swipeProgress: swipeProgress,
-            swipeDirection: swipeDirection
-        )
+        GeometryReader { geometry in
+            ZStack {
+                swipeDecisionBackdrop(cardWidth: geometry.size.width)
+
+                PhotoCardDisplay(
+                    photo: photo,
+                    photoLibraryService: photoLibraryService,
+                    offset: cardOffset,
+                    rotation: cardRotation,
+                    swipeProgress: swipeProgress,
+                    swipeDirection: swipeDirection
+                )
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
         .gesture(
             DragGesture()
                 .onChanged { value in
@@ -197,6 +189,60 @@ struct PhotoReviewView: View {
                     }
                 }
         )
+    }
+
+    private func swipeDecisionBackdrop(cardWidth: CGFloat) -> some View {
+        Group {
+            if let direction = swipeDirection {
+                decisionIcon(direction: direction, cardWidth: cardWidth)
+            }
+        }
+        .animation(.easeOut(duration: 0.18), value: swipeDirection)
+        .allowsHitTesting(false)
+    }
+
+    private func decisionIcon(direction: SwipeDirection, cardWidth: CGFloat) -> some View {
+        // The icon (86pt) is centered. It starts peeking out when the card edge
+        // passes the center, i.e. offset > cardWidth/2 - iconRadius.
+        // Color fill ramps from that reveal point to the action threshold.
+        let iconRadius: CGFloat = 43
+        let revealStart = cardWidth / 2
+        let revealEnd = cardWidth / 2 + iconRadius * 2
+        let absOffset = abs(cardOffset.width)
+        let p = Double(min(max((absOffset - revealStart) / (revealEnd - revealStart), 0), 1))
+
+        let actionColor = color(for: direction)
+        let circleFillOpacity = p * 0.18
+        let strokeOpacity = p * 0.45 + 0.1
+        let iconBrightness = (1 - p) * 0.35
+        let iconOpacity = 0.45 + p * 0.55
+        let shadowOpacity = p * 0.25
+        let shadowRadius: CGFloat = 12 + CGFloat(p) * 6
+
+        return ZStack {
+            // Circle that tints from gray toward the action color
+            Circle()
+                .fill(actionColor.opacity(circleFillOpacity))
+                .background {
+                    Circle().fill(Color(.systemGray5).opacity(0.94))
+                }
+                .overlay {
+                    Circle()
+                        .stroke(actionColor.opacity(strokeOpacity), lineWidth: 1.5)
+                }
+
+            // Single icon: starts desaturated/washed-out, fills with saturated color
+            Image(systemName: symbolName(for: direction))
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundStyle(actionColor)
+                .saturation(p)
+                .brightness(iconBrightness)
+                .opacity(iconOpacity)
+        }
+        .frame(width: 86, height: 86)
+        .scaleEffect(decisionIconScale)
+        .opacity(decisionIconOpacity)
+        .shadow(color: actionColor.opacity(shadowOpacity), radius: shadowRadius, x: 0, y: 6)
     }
 
     @ViewBuilder
@@ -610,7 +656,7 @@ struct PhotoReviewView: View {
     private func handleDragGesture(_ value: DragGesture.Value) {
         guard !isProcessingAction else { return }
         
-        cardOffset = value.translation
+        cardOffset = CGSize(width: value.translation.width, height: 0)
         cardRotation = Double(value.translation.width / 18)
 
         let translation = value.translation.width
@@ -670,6 +716,38 @@ struct PhotoReviewView: View {
 
         Task {
             await loadInitialPhoto()
+        }
+    }
+
+    private var normalizedSwipeProgress: CGFloat {
+        min(max(swipeProgress, 0), 1)
+    }
+
+    private var decisionIconOpacity: Double {
+        0.78 + (Double(normalizedSwipeProgress) * 0.22)
+    }
+
+    private var decisionIconScale: CGFloat {
+        0.82 + (normalizedSwipeProgress * 0.18)
+    }
+
+    private func color(for direction: SwipeDirection?) -> Color {
+        switch direction {
+        case .keep:
+            return .green
+        case .delete:
+            return .red
+        case .none:
+            return .clear
+        }
+    }
+
+    private func symbolName(for direction: SwipeDirection) -> String {
+        switch direction {
+        case .keep:
+            return "checkmark"
+        case .delete:
+            return "trash"
         }
     }
 }
