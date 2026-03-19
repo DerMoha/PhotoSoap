@@ -655,9 +655,13 @@ struct PhotoReviewView: View {
     
     private func handleDragGesture(_ value: DragGesture.Value) {
         guard !isProcessingAction else { return }
-        
-        cardOffset = CGSize(width: value.translation.width, height: 0)
-        cardRotation = Double(value.translation.width / 18)
+
+        var t = Transaction(animation: nil)
+        t.disablesAnimations = true
+        withTransaction(t) {
+            cardOffset = CGSize(width: value.translation.width, height: 0)
+        }
+        cardRotation = 0
 
         let translation = value.translation.width
         let distance = abs(translation)

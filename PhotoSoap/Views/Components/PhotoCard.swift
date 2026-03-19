@@ -15,15 +15,17 @@ struct PhotoCard: View {
                 overlays
             }
         }
-        .offset(offset)
-        .rotationEffect(.degrees(rotation))
+        .offset(x: offset.width, y: 0)
     }
 
     private func cardContent(size: CGSize) -> some View {
-        VStack(spacing: 0) {
-            photoImage(size: size)
+        let metadataHeight: CGFloat = 40
+        let imageHeight = size.height - metadataHeight
+        return VStack(spacing: 0) {
+            photoImage(size: CGSize(width: size.width, height: imageHeight))
             compactMetadata
         }
+        .frame(width: size.width, height: size.height)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
@@ -31,17 +33,16 @@ struct PhotoCard: View {
 
     @ViewBuilder
     private func photoImage(size: CGSize) -> some View {
-        let imageHeight = size.height - 44 // Reserve space for compact metadata
         if let image = photo.image {
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: size.width, height: imageHeight)
+                .frame(width: size.width, height: size.height)
                 .clipped()
         } else {
             Rectangle()
                 .fill(Color(.systemGray4))
-                .frame(width: size.width, height: imageHeight)
+                .frame(width: size.width, height: size.height)
                 .overlay {
                     ProgressView()
                 }
