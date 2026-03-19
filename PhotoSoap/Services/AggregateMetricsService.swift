@@ -21,6 +21,35 @@ struct AggregateMetrics: Codable, Equatable {
     }
 }
 
+struct DailyMetricsRow: Codable, Equatable {
+    let date: String
+    let installs: Int
+    let reviewedPhotos: Int
+    let deletedPhotos: Int
+    let keptPhotos: Int
+    let bytesFreed: Int64
+
+    init(from snapshot: AggregateMetrics) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        self.date = formatter.string(from: Date())
+        self.installs = snapshot.installs
+        self.reviewedPhotos = snapshot.reviewedPhotos
+        self.deletedPhotos = snapshot.deletedPhotos
+        self.keptPhotos = snapshot.keptPhotos
+        self.bytesFreed = snapshot.bytesFreed
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case date
+        case installs
+        case reviewedPhotos = "reviewed_photos"
+        case deletedPhotos = "deleted_photos"
+        case keptPhotos = "kept_photos"
+        case bytesFreed = "bytes_freed"
+    }
+}
+
 struct AggregateMetricsPayload: Codable, Equatable {
     let installID: String
     let appVersion: String
@@ -28,6 +57,10 @@ struct AggregateMetricsPayload: Codable, Equatable {
     let platform: String
     let submittedAt: Date
     let metrics: AggregateMetrics
+
+    func toRow() -> DailyMetricsRow {
+        DailyMetricsRow(from: metrics)
+    }
 }
 
 protocol AggregateMetricsSink {
@@ -58,13 +91,14 @@ struct RemoteAggregateMetricsSink: AggregateMetricsSink {
     var isConfigured: Bool { true }
 
     func send(_ payload: AggregateMetricsPayload) async throws {
+        let row = payload.toRow()
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
         request.setValue(anonKey, forHTTPHeaderField: "apikey")
         request.setValue(anonKey, forHTTPHeaderField: "Authorization")
-        request.httpBody = try JSONEncoder().encode(payload)
+        request.httpBody = try JSONEncoder().encode(row)
 
         let (_, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse,
