@@ -361,8 +361,6 @@ private struct QuickStartInfoView: View {
                 .padding(20)
             }
             .background(backgroundGradient)
-            .navigationTitle(String(localized: "onboarding.welcome", table: "LocalizableOnboarding"))
-            .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
                 Button(String(localized: "onboarding.cta", table: "LocalizableOnboarding")) {
                     hasSeenQuickStartInfo = true
