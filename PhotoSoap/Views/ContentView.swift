@@ -16,7 +16,7 @@ struct ContentView: View {
     @EnvironmentObject private var gameificationService: GameificationService
     @EnvironmentObject private var adRemovalPurchaseService: AdRemovalPurchaseService
     @EnvironmentObject private var adCoordinator: AdCoordinator
-    @State private var selectedTab = 0
+    @State private var selectedTab: MainTab = .review
     @State private var showBootstrapAlert = false
     @State private var hasTrackedAppOpen = false
 
@@ -128,6 +128,18 @@ struct ContentView: View {
             }
 
             TabView(selection: $selectedTab) {
+                StatsView(
+                    stats: stats,
+                    gameificationService: gameificationService,
+                    adRemovalPurchaseService: adRemovalPurchaseService,
+                    adCoordinator: adCoordinator,
+                    analyticsService: analyticsService
+                )
+                .tabItem {
+                    Label(String(localized: "stats.tab", table: "LocalizableStats"), systemImage: "chart.bar")
+                }
+                .tag(MainTab.stats)
+
                 PhotoReviewView(
                     photoLibraryService: photoLibraryService,
                     gameificationService: gameificationService,
@@ -139,25 +151,13 @@ struct ContentView: View {
                 .tabItem {
                     Label(String(localized: "review.tab", table: "LocalizableReview"), systemImage: "photo.stack")
                 }
-                .tag(0)
-
-                StatsView(
-                    stats: stats,
-                    gameificationService: gameificationService,
-                    adRemovalPurchaseService: adRemovalPurchaseService,
-                    adCoordinator: adCoordinator,
-                    analyticsService: analyticsService
-                )
-                    .tabItem {
-                        Label(String(localized: "stats.tab", table: "LocalizableStats"), systemImage: "chart.bar")
-                    }
-                    .tag(1)
+                .tag(MainTab.review)
 
                 AchievementsView(stats: stats, gameificationService: gameificationService)
-                    .tabItem {
-                        Label(String(localized: "achievements.tab", table: "LocalizableAchievements"), systemImage: "trophy")
-                    }
-                    .tag(2)
+                .tabItem {
+                    Label(String(localized: "achievements.tab", table: "LocalizableAchievements"), systemImage: "trophy")
+                }
+                .tag(MainTab.achievements)
             }
         }
     }
@@ -167,16 +167,24 @@ struct ContentView: View {
         gameificationService.ensureDailyChallengeIsSet(stats: stats)
     }
 
-    private func tabName(for selection: Int) -> String {
-        switch selection {
-        case 0:
-            return "review"
-        case 1:
+    private func tabName(for selection: MainTab) -> String {
+        selection.analyticsName
+    }
+}
+
+private enum MainTab: Hashable {
+    case stats
+    case review
+    case achievements
+
+    var analyticsName: String {
+        switch self {
+        case .stats:
             return "stats"
-        case 2:
+        case .review:
+            return "review"
+        case .achievements:
             return "achievements"
-        default:
-            return "unknown"
         }
     }
 }
