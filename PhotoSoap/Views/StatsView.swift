@@ -9,9 +9,7 @@ struct StatsView: View {
     @ObservedObject var analyticsService: AnalyticsService
     @State private var viewModel = StatsViewModel()
     @State private var isShowingAdFreeSheet = false
-    #if DEBUG
-    @State private var isShowingDevOptions = false
-    #endif
+    @State private var isShowingSettings = false
 
     var body: some View {
         NavigationStack {
@@ -20,17 +18,33 @@ struct StatsView: View {
                     overviewSection
                     streaksSection
                     ratioSection
-                    analyticsSection
                     adFreeSection
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle(String(localized: "stats.title", table: "LocalizableStats"))
+            .navigationDestination(isPresented: $isShowingSettings) {
+                SettingsView(
+                    analyticsService: analyticsService,
+                    adRemovalPurchaseService: adRemovalPurchaseService,
+                    adCoordinator: adCoordinator
+                )
+            }
             .onAppear {
                 adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
                 adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
                 analyticsService.track(.statsViewed())
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        analyticsService.track(.settingsOpened())
+                        isShowingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
             }
             .sheet(isPresented: $isShowingAdFreeSheet) {
                 AdFreeUpgradeSheet(
@@ -41,23 +55,6 @@ struct StatsView: View {
                 )
                 .presentationDetents([.medium, .large])
             }
-            #if DEBUG
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        isShowingDevOptions = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                    }
-                }
-            }
-            .sheet(isPresented: $isShowingDevOptions) {
-                DeveloperOptionsView(
-                    adRemovalPurchaseService: adRemovalPurchaseService,
-                    adCoordinator: adCoordinator
-                )
-            }
-            #endif
         }
     }
 
@@ -231,47 +228,6 @@ struct StatsView: View {
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
-    }
-
-    private var analyticsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(String(localized: "stats.privacy", table: "LocalizableStats"))
-                .font(.headline)
-                .foregroundStyle(.secondary)
-
-            VStack(alignment: .leading, spacing: 14) {
-                Toggle(isOn: analyticsToggleBinding) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(String(localized: "stats.privacy.shareAnalytics", table: "LocalizableStats"))
-                            .font(.subheadline.weight(.semibold))
-                        Text(String(localized: "stats.privacy.analyticsDescription", table: "LocalizableStats"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .tint(.blue)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(String(localized: "stats.privacy.communityTotals", table: "LocalizableStats"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Text(analyticsService.isEnabled ? String(localized: "stats.analyticsOn", table: "LocalizableStats") : String(localized: "stats.analyticsOff", table: "LocalizableStats"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding()
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-    }
-
-    private var analyticsToggleBinding: Binding<Bool> {
-        Binding(
-            get: { analyticsService.isEnabled },
-            set: { analyticsService.setEnabled($0) }
-        )
     }
 
     private var adFreeTitle: String {
