@@ -220,7 +220,7 @@ struct StatsView: View {
                 if adRemovalPurchaseService.unlockSource != .coupon {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text(String(localized: "adfree.loyalty.progress", table: "LocalizableAdFree"))
+                            Text(String(localized: "adfree.loyalty.progress", table: "LocalizableAdFree").replacingOccurrences(of: "%d", with: "\(AdRemovalConfig.freeUnlockDeletedCount)"))
                                 .font(.caption.weight(.medium))
                                 .foregroundStyle(.secondary)
 
@@ -367,7 +367,7 @@ struct StatsView: View {
         let remainingDeletes = adRemovalPurchaseService.remainingDeletesForUnlock
         return remainingDeletes == 1
             ? String(localized: "adfree.loyalty.oneMore", table: "LocalizableAdFree")
-            : String(localized: "adfree.loyalty.deleteMore", table: "LocalizableAdFree")
+            : String(localized: "adfree.loyalty.deleteMore", table: "LocalizableAdFree").replacingOccurrences(of: "%d", with: "\(remainingDeletes)")
     }
 
     private var primaryButtonTitle: String {

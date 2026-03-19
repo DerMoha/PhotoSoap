@@ -105,7 +105,7 @@ struct AdFreeUpgradeSheet: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            Text(String(localized: "adfree.loyalty.deleteMore", table: "LocalizableAdFree"))
+            Text(String(localized: "adfree.loyalty.deleteMore", table: "LocalizableAdFree").replacingOccurrences(of: "%d", with: "\(adRemovalPurchaseService.remainingDeletesForUnlock)"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
