@@ -379,6 +379,7 @@
       }
     },
     "onboarding.welcome" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
