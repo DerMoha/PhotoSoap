@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct FilterSheet: View {
+    @EnvironmentObject private var hapticsService: HapticsService
     @ObservedObject var photoLibraryService: PhotoLibraryService
     let currentFilter: PhotoFilter
     let onSelect: (PhotoFilter) -> Void
@@ -169,6 +170,7 @@ struct FilterSheet: View {
     }
 
     private func selectFilter(_ filter: PhotoFilter) {
+        hapticsService.selection()
         onSelect(filter)
         dismiss()
     }

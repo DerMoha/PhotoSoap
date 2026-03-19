@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DailyGoalSettingSheet: View {
+    @EnvironmentObject private var hapticsService: HapticsService
     @Binding var isPresented: Bool
     let currentTarget: Int
     let onSelect: (Int) -> Void
@@ -26,6 +27,7 @@ struct DailyGoalSettingSheet: View {
                                 goal: goal,
                                 isSelected: goal == currentTarget,
                                 action: {
+                                    hapticsService.selection()
                                     onSelect(goal)
                                     isPresented = false
                                 }
@@ -101,4 +103,5 @@ private struct GoalOptionButton: View {
         currentTarget: 30,
         onSelect: { _ in }
     )
+    .environmentObject(HapticsService())
 }

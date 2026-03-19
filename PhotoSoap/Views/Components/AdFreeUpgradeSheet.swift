@@ -3,6 +3,7 @@ import SwiftData
 
 struct AdFreeUpgradeSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var hapticsService: HapticsService
 
     @Bindable var stats: UserStats
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
@@ -10,6 +11,8 @@ struct AdFreeUpgradeSheet: View {
     @ObservedObject var analyticsService: AnalyticsService
 
     @State private var isShowingRedeemSheet = false
+    @State private var previousUnlockSource: AdRemovalUnlockSource?
+    @State private var previousErrorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -28,6 +31,29 @@ struct AdFreeUpgradeSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 analyticsService.track(.paywallOpened(source: "ad_free_sheet"))
+                previousUnlockSource = adRemovalPurchaseService.unlockSource
+                previousErrorMessage = adRemovalPurchaseService.errorMessage
+            }
+            .onChange(of: adRemovalPurchaseService.unlockSource) { _, newValue in
+                defer { previousUnlockSource = newValue }
+
+                guard let previousUnlockSource else { return }
+                guard newValue != previousUnlockSource, newValue != .none else { return }
+
+                switch newValue {
+                case .purchased, .earned:
+                    hapticsService.success()
+                case .coupon, .none:
+                    break
+                }
+            }
+            .onChange(of: adRemovalPurchaseService.errorMessage) { _, newValue in
+                defer { previousErrorMessage = newValue }
+
+                guard newValue != previousErrorMessage else { return }
+                guard let errorMessage = newValue, !errorMessage.isEmpty else { return }
+
+                hapticsService.error()
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -231,4 +257,5 @@ struct AdFreeUpgradeSheet: View {
         adCoordinator: AdCoordinator(),
         analyticsService: AnalyticsService()
     )
+    .environmentObject(HapticsService())
 }

@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct PhotoReviewView: View {
+    @EnvironmentObject private var hapticsService: HapticsService
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
     @Bindable var stats: UserStats
@@ -15,7 +16,7 @@ struct PhotoReviewView: View {
     @State private var nextPhoto: Photo?
     @State private var isLoading = false
     @State private var error: String?
-    @State private var showError = false
+    @State private var isShowingError = false
     @State private var noMorePhotos = false
     @State private var cardOffset: CGSize = .zero
     @State private var cardRotation: Double = 0
@@ -31,10 +32,13 @@ struct PhotoReviewView: View {
     @State private var hasTrackedReviewStart = false
     @State private var showStartOverConfirmation = false
     @State private var showDailyGoalToast = false
+    @State private var hasTriggeredSwipeThresholdFeedback = false
+    @State private var lastCelebrationFeedbackDate = Date.distantPast
     private let swipeActionThreshold: CGFloat = 100
     private let swipeFeedbackDistance: CGFloat = 140
     private let swipeOverlayThreshold: CGFloat = 12
     private let cardCornerRadius: CGFloat = 16
+    private let celebrationFeedbackCooldown: TimeInterval = 0.75
 
     var body: some View {
         NavigationStack {
@@ -89,7 +93,19 @@ struct PhotoReviewView: View {
                     await loadInitialPhoto()
                 }
             }
-            .alert("Error", isPresented: $showError) {
+            .onChange(of: gameificationService.showAchievementBanner) { _, isShowing in
+                guard isShowing else { return }
+                triggerCelebrationFeedbackIfNeeded()
+            }
+            .onChange(of: gameificationService.showStreakCelebration) { _, isShowing in
+                guard isShowing else { return }
+                triggerCelebrationFeedbackIfNeeded()
+            }
+            .onChange(of: showDailyGoalToast) { _, isShowing in
+                guard isShowing else { return }
+                triggerCelebrationFeedbackIfNeeded()
+            }
+            .alert("Error", isPresented: $isShowingError) {
                 Button("OK") {}
             } message: {
                 Text(error ?? String(localized: "error.unknown", table: "LocalizableShared"))
@@ -431,8 +447,7 @@ struct PhotoReviewView: View {
             try gameificationService.deleteAllReviewedPhotos(context: modelContext)
             try modelContext.save()
         } catch {
-            self.error = "Failed to clear review history: \(error.localizedDescription)"
-            showError = true
+            presentError("Failed to clear review history: \(error.localizedDescription)")
             return
         }
 
@@ -464,8 +479,7 @@ struct PhotoReviewView: View {
                 noMorePhotos = true
             }
         } catch {
-            self.error = error.localizedDescription
-            showError = true
+            presentError(error.localizedDescription)
         }
 
         isLoading = false
@@ -519,8 +533,7 @@ struct PhotoReviewView: View {
                 context: modelContext
             )
         } catch {
-            self.error = "Failed to update review history: \(error.localizedDescription)"
-            showError = true
+            presentError("Failed to update review history: \(error.localizedDescription)")
             return
         }
 
@@ -530,6 +543,7 @@ struct PhotoReviewView: View {
 
         analyticsService.track(.photoKept(filter: currentFilter))
         aggregateMetricsService.recordReview()
+        hapticsService.impact(.medium)
 
         await advanceToNextPhoto()
     }
@@ -563,8 +577,7 @@ struct PhotoReviewView: View {
                     context: modelContext
                 )
             } catch {
-                self.error = "Failed to update review history: \(error.localizedDescription)"
-                showError = true
+                presentError("Failed to update review history: \(error.localizedDescription)")
                 return
             }
 
@@ -574,6 +587,7 @@ struct PhotoReviewView: View {
 
             analyticsService.track(.photoDeleted(filter: currentFilter))
             aggregateMetricsService.recordDeletion(bytesFreed: resolvedFileSize)
+            hapticsService.impact(.rigid)
 
             await advanceToNextPhoto()
         } catch let error as NSError {
@@ -581,8 +595,7 @@ struct PhotoReviewView: View {
                 aggregateMetricsService.recordReview()
                 await advanceToNextPhoto()
             } else {
-                self.error = "Failed to delete photo: \(error.localizedDescription)"
-                showError = true
+                presentError("Failed to delete photo: \(error.localizedDescription)")
             }
         }
     }
@@ -600,8 +613,7 @@ struct PhotoReviewView: View {
             return true
         } catch {
             modelContext.rollback()
-            self.error = "Failed to save your progress: \(error.localizedDescription)"
-            showError = true
+            presentError("Failed to save your progress: \(error.localizedDescription)")
             return false
         }
     }
@@ -627,10 +639,7 @@ struct PhotoReviewView: View {
 
     private func advanceToNextPhoto() async {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            cardOffset = .zero
-            cardRotation = 0
-            swipeProgress = 0
-            swipeDirection = nil
+            resetSwipeState()
         }
 
         if let next = nextPhoto {
@@ -670,9 +679,19 @@ struct PhotoReviewView: View {
         if distance < swipeOverlayThreshold {
             swipeProgress = 0
             swipeDirection = nil
+            hasTriggeredSwipeThresholdFeedback = false
         } else {
             swipeProgress = progress
             swipeDirection = translation > 0 ? .keep : .delete
+
+            if distance >= swipeActionThreshold {
+                if !hasTriggeredSwipeThresholdFeedback {
+                    hapticsService.selection()
+                    hasTriggeredSwipeThresholdFeedback = true
+                }
+            } else {
+                hasTriggeredSwipeThresholdFeedback = false
+            }
         }
     }
 
@@ -693,10 +712,7 @@ struct PhotoReviewView: View {
             await deletePhoto()
         } else {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                cardOffset = .zero
-                cardRotation = 0
-                swipeProgress = 0
-                swipeDirection = nil
+                resetSwipeState()
             }
         }
     }
@@ -721,6 +737,28 @@ struct PhotoReviewView: View {
         Task {
             await loadInitialPhoto()
         }
+    }
+
+    private func presentError(_ message: String) {
+        error = message
+        isShowingError = true
+        hapticsService.error()
+    }
+
+    private func resetSwipeState() {
+        cardOffset = .zero
+        cardRotation = 0
+        swipeProgress = 0
+        swipeDirection = nil
+        hasTriggeredSwipeThresholdFeedback = false
+    }
+
+    private func triggerCelebrationFeedbackIfNeeded() {
+        let now = Date()
+        guard now.timeIntervalSince(lastCelebrationFeedbackDate) > celebrationFeedbackCooldown else { return }
+
+        lastCelebrationFeedbackDate = now
+        hapticsService.success()
     }
 
     private var normalizedSwipeProgress: CGFloat {
@@ -765,4 +803,5 @@ struct PhotoReviewView: View {
         aggregateMetricsService: AggregateMetricsService(),
         adCoordinator: AdCoordinator()
     )
+    .environmentObject(HapticsService())
 }

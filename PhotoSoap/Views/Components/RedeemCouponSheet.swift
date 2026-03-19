@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RedeemCouponSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var hapticsService: HapticsService
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
 
     @State private var code = ""
@@ -132,6 +133,7 @@ struct RedeemCouponSheet: View {
     private func redeemCode() {
         if adRemovalPurchaseService.hasCouponEntitlement {
             result = .alreadyRedeemed
+            hapticsService.warning()
             return
         }
 
@@ -141,12 +143,16 @@ struct RedeemCouponSheet: View {
             adRemovalPurchaseService.applyCouponEntitlement(true)
             result = .success
             isAnimatingSuccess = true
+            hapticsService.success()
         case .alreadyRedeemed:
             result = .alreadyRedeemed
+            hapticsService.warning()
         case .invalidCode:
             result = .invalidCode
+            hapticsService.error()
         case .expiredCode:
             result = .expiredCode
+            hapticsService.error()
         }
     }
 }
@@ -158,4 +164,5 @@ struct RedeemCouponSheet: View {
             shouldObserveTransactions: false
         )
     )
+    .environmentObject(HapticsService())
 }
