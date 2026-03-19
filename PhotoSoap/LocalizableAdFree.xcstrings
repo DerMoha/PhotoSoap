@@ -2,7 +2,6 @@
   "sourceLanguage" : "en",
   "strings" : {
     "adfree.alreadyUnlocked" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -19,7 +18,6 @@
       }
     },
     "adfree.banner.description" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36,7 +34,6 @@
       }
     },
     "adfree.banner.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -52,9 +49,56 @@
         }
       }
     },
+    "adfree.bannerActive" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werbefrei ist aktiv, das Review-Banner bleibt verborgen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad-free is active, so the review banner stays hidden."
+          }
+        }
+      }
+    },
+    "adfree.bannerDescription" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Banner kann unter dem aktuellen Foto erscheinen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One banner can appear below the current photo while you review."
+          }
+        }
+      }
+    },
+    "adfree.bannerNotConfigured" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Banner-Werbung ist noch nicht konfiguriert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Banner ads are not configured yet."
+          }
+        }
+      }
+    },
     "adfree.buyFor" : {
       "comment" : "Price will be substituted",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -71,7 +115,6 @@
       }
     },
     "adfree.coupon" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -88,7 +131,6 @@
       }
     },
     "adfree.coupon.haveCode" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -105,7 +147,6 @@
       }
     },
     "adfree.details" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -123,7 +164,6 @@
     },
     "adfree.earned" : {
       "comment" : "Number of deleted photos",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -140,7 +180,6 @@
       }
     },
     "adfree.hero.coupon" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -157,7 +196,6 @@
       }
     },
     "adfree.hero.loyalty" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -174,7 +212,6 @@
       }
     },
     "adfree.hero.purchase" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -191,7 +228,6 @@
       }
     },
     "adfree.hero.purchased" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -208,7 +244,6 @@
       }
     },
     "adfree.hero.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -225,7 +260,6 @@
       }
     },
     "adfree.loyalty" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -242,7 +276,6 @@
       }
     },
     "adfree.loyalty.active" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -260,7 +293,6 @@
     },
     "adfree.loyalty.deleteMore" : {
       "comment" : "Number of photos remaining",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -277,7 +309,6 @@
       }
     },
     "adfree.loyalty.oneMore" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -294,7 +325,6 @@
       }
     },
     "adfree.loyalty.progress" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -311,7 +341,6 @@
       }
     },
     "adfree.loyalty.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -328,7 +357,6 @@
       }
     },
     "adfree.productUnavailable" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -345,7 +373,6 @@
       }
     },
     "adfree.purchased" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -362,7 +389,6 @@
       }
     },
     "adfree.restore" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -379,7 +405,6 @@
       }
     },
     "adfree.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -395,8 +420,23 @@
         }
       }
     },
+    "adfree.toGo" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch %d"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d to go"
+          }
+        }
+      }
+    },
     "adfree.unlocked" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

@@ -13,7 +13,7 @@ struct ProgressRing: View {
             ringView
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("challenge.daily")
+                Text(String(localized: "challenge.daily", table: "LocalizableReview"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

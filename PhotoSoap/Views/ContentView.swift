@@ -92,7 +92,7 @@ struct ContentView: View {
         .onChange(of: selectedTab) { _, newTab in
             analyticsService.track(.tabSelected(tabName(for: newTab)))
         }
-        .alert(String(localized: "recoveryMode.title"), isPresented: $showBootstrapAlert) {
+        .alert(String(localized: "recoveryMode.title", table: "LocalizableShared"), isPresented: $showBootstrapAlert) {
             Button("OK") {}
         } message: {
             Text(bootstrapErrorMessage ?? "")
@@ -136,7 +136,7 @@ struct ContentView: View {
                     adCoordinator: adCoordinator
                 )
                 .tabItem {
-                    Label("review.tab", systemImage: "photo.stack")
+                    Label(String(localized: "review.tab", table: "LocalizableReview"), systemImage: "photo.stack")
                 }
                 .tag(0)
 
@@ -148,13 +148,13 @@ struct ContentView: View {
                     analyticsService: analyticsService
                 )
                     .tabItem {
-                        Label("stats.tab", systemImage: "chart.bar")
+                        Label(String(localized: "stats.tab", table: "LocalizableStats"), systemImage: "chart.bar")
                     }
                     .tag(1)
 
                 AchievementsView(stats: stats, gameificationService: gameificationService)
                     .tabItem {
-                        Label("achievements.tab", systemImage: "trophy")
+                        Label(String(localized: "achievements.tab", table: "LocalizableAchievements"), systemImage: "trophy")
                     }
                     .tag(2)
             }
@@ -198,11 +198,11 @@ struct PermissionRequestView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.blue)
 
-            Text("permission.title")
+            Text(String(localized: "permission.title", table: "LocalizableOnboarding"))
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("permission.description")
+            Text(String(localized: "permission.description", table: "LocalizableOnboarding"))
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -214,7 +214,7 @@ struct PermissionRequestView: View {
                     await photoLibraryService.requestAuthorization()
                 }
             } label: {
-                Text("permission.allow")
+                Text(String(localized: "permission.allow", table: "LocalizableOnboarding"))
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -241,11 +241,11 @@ struct PermissionDeniedView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.orange)
 
-            Text("permission.denied.title")
+            Text(String(localized: "permission.denied.title", table: "LocalizableOnboarding"))
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("permission.denied.description")
+            Text(String(localized: "permission.denied.description", table: "LocalizableOnboarding"))
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -257,7 +257,7 @@ struct PermissionDeniedView: View {
                     UIApplication.shared.open(settingsURL)
                 }
             } label: {
-                Text("permission.denied.openSettings")
+                Text(String(localized: "permission.denied.openSettings", table: "LocalizableOnboarding"))
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -278,7 +278,7 @@ private struct RecoveryModeBanner: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("recoveryMode.title", systemImage: "externaldrive.badge.exclamationmark")
+            Label(String(localized: "recoveryMode.title", table: "LocalizableShared"), systemImage: "externaldrive.badge.exclamationmark")
                 .font(.headline)
             Text(message)
                 .font(.caption)
@@ -296,7 +296,7 @@ private struct MigrationWarningBanner: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("migrationWarning.title", systemImage: "exclamationmark.triangle")
+            Label(String(localized: "migrationWarning.title", table: "LocalizableShared"), systemImage: "exclamationmark.triangle")
                 .font(.headline)
             Text(message)
                 .font(.caption)
@@ -315,16 +315,16 @@ private struct LimitedAccessBanner: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("limitedAccess.title")
+                Text(String(localized: "limitedAccess.title", table: "LocalizableShared"))
                     .font(.subheadline.weight(.semibold))
-                Text("limitedAccess.description")
+                Text(String(localized: "limitedAccess.description", table: "LocalizableShared"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Button("limitedAccess.chooseMore") {
+            Button(String(localized: "limitedAccess.chooseMore", table: "LocalizableShared")) {
                 onManage()
             }
             .buttonStyle(.borderedProminent)
@@ -345,41 +345,41 @@ private struct QuickStartInfoSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("onboarding.headsUp")
+                        Text(String(localized: "onboarding.headsUp", table: "LocalizableOnboarding"))
                             .font(.title2.weight(.bold))
-                        Text("onboarding.subtitle")
+                        Text(String(localized: "onboarding.subtitle", table: "LocalizableOnboarding"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
 
                     QuickStartCard(
-                        title: "onboarding.card.anonymity.title",
+                        title: String(localized: "onboarding.card.anonymity.title", table: "LocalizableOnboarding"),
                         systemImage: "chart.bar.xaxis",
                         tint: .blue,
-                        message: "onboarding.card.anonymity.description"
+                        message: String(localized: "onboarding.card.anonymity.description", table: "LocalizableOnboarding")
                     )
 
                     QuickStartCard(
-                        title: "onboarding.card.banner.title",
+                        title: String(localized: "onboarding.card.banner.title", table: "LocalizableOnboarding"),
                         systemImage: "rectangle.bottomthird.inset.filled",
                         tint: .orange,
-                        message: "onboarding.card.banner.description"
+                        message: String(localized: "onboarding.card.banner.description", table: "LocalizableOnboarding")
                     )
 
                     QuickStartCard(
-                        title: "onboarding.card.loyalty.title",
+                        title: String(localized: "onboarding.card.loyalty.title", table: "LocalizableOnboarding"),
                         systemImage: "sparkles",
                         tint: .green,
-                        message: "onboarding.card.loyalty.description"
+                        message: String(localized: "onboarding.card.loyalty.description", table: "LocalizableOnboarding")
                     )
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("onboarding.welcome")
+            .navigationTitle(String(localized: "onboarding.welcome", table: "LocalizableOnboarding"))
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
-                Button("onboarding.gotIt") {
+                Button(String(localized: "onboarding.gotIt", table: "LocalizableOnboarding")) {
                     hasSeenQuickStartInfo = true
                     dismiss()
                 }

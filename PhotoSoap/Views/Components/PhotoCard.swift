@@ -77,7 +77,7 @@ struct PhotoCard: View {
     }
 
     private func formatFileSize(_ bytes: Int64) -> String {
-        guard bytes > 0 else { return "Unknown size" }
+        guard bytes > 0 else { return String(localized: "photo.unknownSize", defaultValue: "Unknown size", table: "LocalizableShared") }
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useKB, .useMB]
         formatter.countStyle = .file
@@ -117,7 +117,7 @@ struct PhotoCard: View {
     private var keepOverlay: some View {
         VStack {
             HStack {
-                Label("review.swipe.keep", systemImage: "checkmark")
+                Label(String(localized: "review.swipe.keep", table: "LocalizableReview"), systemImage: "checkmark")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(.green)
@@ -139,7 +139,7 @@ struct PhotoCard: View {
             HStack {
                 Spacer()
 
-                Label("review.swipe.delete", systemImage: "trash")
+                Label(String(localized: "review.swipe.delete", table: "LocalizableReview"), systemImage: "trash")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(.red)

@@ -1,8 +1,40 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "stats.achievements" : {
+    "common.never" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never"
+          }
+        }
+      }
+    },
+    "common.unknown" : {
       "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
+    "stats.achievements" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -19,7 +51,6 @@
       }
     },
     "stats.adFreeUnlock" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36,7 +67,6 @@
       }
     },
     "stats.analyticsOff" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -53,7 +83,6 @@
       }
     },
     "stats.analyticsOn" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -70,7 +99,6 @@
       }
     },
     "stats.bestStreak" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -87,7 +115,6 @@
       }
     },
     "stats.currentStreak" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -98,13 +125,12 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Current Streak"
+            "value" : "Review Streak"
           }
         }
       }
     },
     "stats.dailyStreak" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -115,13 +141,12 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Daily Streak"
+            "value" : "Login Streak"
           }
         }
       }
     },
     "stats.deleteRate" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -138,7 +163,6 @@
       }
     },
     "stats.keepDelete" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -155,7 +179,6 @@
       }
     },
     "stats.keepRate" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -172,7 +195,6 @@
       }
     },
     "stats.overview" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -189,7 +211,6 @@
       }
     },
     "stats.photosDeleted" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -206,7 +227,6 @@
       }
     },
     "stats.photosKept" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -223,7 +243,6 @@
       }
     },
     "stats.photosReviewed" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -240,7 +259,6 @@
       }
     },
     "stats.privacy" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -257,7 +275,6 @@
       }
     },
     "stats.privacy.analyticsDescription" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -274,7 +291,6 @@
       }
     },
     "stats.privacy.communityTotals" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -291,7 +307,6 @@
       }
     },
     "stats.privacy.shareAnalytics" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -308,12 +323,11 @@
       }
     },
     "stats.sessionReviews" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sitzungs-Überprüfungen"
+            "value" : "Sitzungsbewertungen"
           }
         },
         "en" : {
@@ -325,7 +339,6 @@
       }
     },
     "stats.storageFreed" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -342,7 +355,6 @@
       }
     },
     "stats.streaks" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -359,7 +371,6 @@
       }
     },
     "stats.tab" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -376,7 +387,6 @@
       }
     },
     "stats.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -388,74 +398,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Statistics"
-          }
-        }
-      }
-    },
-    "streak.best" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beste"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Best"
-          }
-        }
-      }
-    },
-    "streak.current" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktuelle Serie"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Current Streak"
-          }
-        }
-      }
-    },
-    "streak.fire" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Du bist in Flammen!"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You're on fire!"
-          }
-        }
-      }
-    },
-    "streak.milestone" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d Serie!"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d Streak!"
           }
         }
       }

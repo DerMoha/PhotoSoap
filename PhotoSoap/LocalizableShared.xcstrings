@@ -2,7 +2,6 @@
   "sourceLanguage" : "en",
   "strings" : {
     "common.cancel" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36,7 +35,6 @@
       }
     },
     "common.done" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -70,7 +68,6 @@
       }
     },
     "common.photos" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -86,9 +83,24 @@
         }
       }
     },
+    "common.unknown" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
     "error.accessDenied" : {
       "comment" : "Error message when photo library access is denied.",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -106,7 +118,6 @@
     },
     "error.accessRestricted" : {
       "comment" : "Error message when photo library access is restricted.",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -141,7 +152,6 @@
     },
     "error.deletionFailed" : {
       "comment" : "Error message when photo deletion fails.",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -159,7 +169,6 @@
     },
     "error.loadingFailed" : {
       "comment" : "Error message when photo loading fails.",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -175,9 +184,88 @@
         }
       }
     },
+    "error.metrics.invalidResponse" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Metrik-Endpunkt hat eine ungültige Antwort zurückgegeben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metrics endpoint returned an invalid response."
+          }
+        }
+      }
+    },
+    "error.metrics.notConfigured" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Metrik-Endpunkt ist nicht konfiguriert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metrics endpoint is not configured."
+          }
+        }
+      }
+    },
+    "error.migration.achievementFailed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Errungenschafts-Migration ist fehlgeschlagen. Einige Errungenschaften müssen möglicherweise erneut freigeschaltet werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achievement migration failed. Some achievements may need to be re-earned."
+          }
+        }
+      }
+    },
+    "error.migration.dataFailed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Datenmigrationen sind fehlgeschlagen. Deine Statistiken sind möglicherweise unvollständig."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some data migrations failed. Your stats may be incomplete."
+          }
+        }
+      }
+    },
+    "error.migration.reviewFailed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Foto-Bewertungs-Migration ist fehlgeschlagen. Einige Fotos müssen möglicherweise erneut überprüft werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo review migration failed. Some photos may be re-reviewed."
+          }
+        }
+      }
+    },
     "error.noPhotosAvailable" : {
       "comment" : "Error message when there are no photos to review.",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -228,7 +316,6 @@
       }
     },
     "error.unknown" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -262,7 +349,6 @@
       }
     },
     "limitedAccess.chooseMore" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -279,7 +365,6 @@
       }
     },
     "limitedAccess.description" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -296,7 +381,6 @@
       }
     },
     "limitedAccess.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -312,8 +396,55 @@
         }
       }
     },
+    "migrationWarning.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenmigration"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data Migration"
+          }
+        }
+      }
+    },
+    "photo.unknownDate" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekanntes Datum"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown date"
+          }
+        }
+      }
+    },
+    "photo.unknownSize" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannte Größe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown size"
+          }
+        }
+      }
+    },
     "recoveryMode.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

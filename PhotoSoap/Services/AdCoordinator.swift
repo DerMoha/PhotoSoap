@@ -59,14 +59,14 @@ final class AdCoordinator: ObservableObject {
 
     var statusSummary: String {
         if hasAdRemovalEntitlement {
-            return "Ad-free is active, so the review banner stays hidden."
+            return String(localized: "adfree.bannerActive", defaultValue: "Ad-free is active, so the review banner stays hidden.", table: "LocalizableAdFree")
         }
 
         if !isConfigured {
-            return "Banner ads are not configured yet."
+            return String(localized: "adfree.bannerNotConfigured", defaultValue: "Banner ads are not configured yet.", table: "LocalizableAdFree")
         }
 
-        return "One banner can appear below the current photo while you review."
+        return String(localized: "adfree.bannerDescription", defaultValue: "One banner can appear below the current photo while you review.", table: "LocalizableAdFree")
     }
 
     func unitID(for placement: AdPlacement) -> String? {

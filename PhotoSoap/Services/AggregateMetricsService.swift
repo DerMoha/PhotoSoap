@@ -91,9 +91,9 @@ enum MetricsError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return "Metrics endpoint returned an invalid response."
+            return String(localized: "error.metrics.invalidResponse", defaultValue: "Metrics endpoint returned an invalid response.", table: "LocalizableShared")
         case .notConfigured:
-            return "Metrics endpoint is not configured."
+            return String(localized: "error.metrics.notConfigured", defaultValue: "Metrics endpoint is not configured.", table: "LocalizableShared")
         }
     }
 }

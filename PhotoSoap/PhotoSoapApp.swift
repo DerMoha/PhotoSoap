@@ -41,7 +41,7 @@ struct PhotoSoapApp: App {
         } else if errors.count == 1 {
             return errors[0]
         } else {
-            return "Some data migrations failed. Your stats may be incomplete."
+            return String(localized: "error.migration.dataFailed", defaultValue: "Some data migrations failed. Your stats may be incomplete.", table: "LocalizableShared")
         }
     }
 
@@ -113,7 +113,7 @@ struct PhotoSoapApp: App {
             return nil
         } catch {
             print("PhotoSoap: Migration failed")
-            return "Photo review migration failed. Some photos may be re-reviewed."
+            return String(localized: "error.migration.reviewFailed", defaultValue: "Photo review migration failed. Some photos may be re-reviewed.", table: "LocalizableShared")
         }
     }
 
@@ -145,7 +145,7 @@ struct PhotoSoapApp: App {
             return nil
         } catch {
             print("PhotoSoap: Achievement migration failed")
-            return "Achievement migration failed. Some achievements may need to be re-earned."
+            return String(localized: "error.migration.achievementFailed", defaultValue: "Achievement migration failed. Some achievements may need to be re-earned.", table: "LocalizableShared")
         }
     }
 

@@ -23,14 +23,14 @@ struct AdFreeUpgradeSheet: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("adfree.title")
+            .navigationTitle(String(localized: "adfree.title", table: "LocalizableAdFree"))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 analyticsService.track(.paywallOpened(source: "ad_free_sheet"))
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("common.done") {
+                    Button(String(localized: "common.done", table: "LocalizableShared")) {
                         dismiss()
                     }
                 }
@@ -72,7 +72,7 @@ struct AdFreeUpgradeSheet: View {
                     adRemovalPurchaseService.product == nil
                 )
 
-                Button("adfree.restore") {
+                Button(String(localized: "adfree.restore", table: "LocalizableAdFree")) {
                     Task {
                         await adRemovalPurchaseService.restorePurchases()
                     }
@@ -88,7 +88,7 @@ struct AdFreeUpgradeSheet: View {
             }
 
             if adRemovalPurchaseService.product == nil && !adRemovalPurchaseService.hasAdRemovalEntitlement {
-                Text("adfree.productUnavailable")
+                Text(String(localized: "adfree.productUnavailable", table: "LocalizableAdFree"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -100,11 +100,11 @@ struct AdFreeUpgradeSheet: View {
 
     private var loyaltySection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("adfree.loyalty.title")
+            Text(String(localized: "adfree.loyalty.title", table: "LocalizableAdFree"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            Text("adfree.loyalty.deleteMore")
+            Text(String(localized: "adfree.loyalty.deleteMore", table: "LocalizableAdFree"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -127,7 +127,7 @@ struct AdFreeUpgradeSheet: View {
 
     private var bannerSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("adfree.banner.title")
+            Text(String(localized: "adfree.banner.title", table: "LocalizableAdFree"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -137,9 +137,9 @@ struct AdFreeUpgradeSheet: View {
                     .frame(width: 24)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("adfree.banner.title")
+                    Text(String(localized: "adfree.banner.title", table: "LocalizableAdFree"))
                         .font(.subheadline.weight(.semibold))
-                    Text("adfree.banner.description")
+                    Text(String(localized: "adfree.banner.description", table: "LocalizableAdFree"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -161,7 +161,7 @@ struct AdFreeUpgradeSheet: View {
                 isShowingRedeemSheet = true
             } label: {
                 HStack {
-                    Label("adfree.coupon.haveCode", systemImage: "ticket")
+                    Label(String(localized: "adfree.coupon.haveCode", table: "LocalizableAdFree"), systemImage: "ticket")
                         .font(.subheadline.weight(.medium))
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -179,13 +179,13 @@ struct AdFreeUpgradeSheet: View {
     private var heroTitle: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "adfree.alreadyUnlocked"
+            return String(localized: "adfree.alreadyUnlocked", table: "LocalizableAdFree")
         case .earned:
-            return "adfree.loyalty"
+            return String(localized: "adfree.loyalty", table: "LocalizableAdFree")
         case .coupon:
-            return "adfree.coupon"
+            return String(localized: "adfree.coupon", table: "LocalizableAdFree")
         case .none:
-            return "adfree.hero.title"
+            return String(localized: "adfree.hero.title", table: "LocalizableAdFree")
         }
     }
 
@@ -196,27 +196,27 @@ struct AdFreeUpgradeSheet: View {
     private var heroMessage: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "adfree.hero.purchased"
+            return String(localized: "adfree.hero.purchased", table: "LocalizableAdFree")
         case .earned:
-            return "adfree.hero.loyalty"
+            return String(localized: "adfree.hero.loyalty", table: "LocalizableAdFree")
         case .coupon:
-            return "adfree.hero.coupon"
+            return String(localized: "adfree.hero.coupon", table: "LocalizableAdFree")
         case .none:
-            return "adfree.hero.purchase"
+            return String(localized: "adfree.hero.purchase", table: "LocalizableAdFree")
         }
     }
 
     private var primaryButtonTitle: String {
-        adRemovalPurchaseService.hasAdRemovalEntitlement ? "adfree.unlocked" : "adfree.buyFor"
+        adRemovalPurchaseService.hasAdRemovalEntitlement ? String(localized: "adfree.unlocked", table: "LocalizableAdFree") : String(localized: "adfree.buyFor", table: "LocalizableAdFree")
     }
 
     private var progressMessage: String {
         if adRemovalPurchaseService.hasEarnedEntitlement {
-            return "adfree.unlocked"
+            return String(localized: "adfree.unlocked", defaultValue: "Unlocked", table: "LocalizableAdFree")
         }
 
         let remainingDeletes = adRemovalPurchaseService.remainingDeletesForUnlock
-        return remainingDeletes == 1 ? "1 to go" : "\(remainingDeletes) to go"
+        return String(localized: "adfree.toGo", defaultValue: "\(remainingDeletes) to go", table: "LocalizableAdFree").replacingOccurrences(of: "%d", with: "\(remainingDeletes)")
     }
 }
 

@@ -14,15 +14,15 @@ enum PhotoLibraryError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .accessDenied:
-            return String(localized: "error.accessDenied", defaultValue: "Photo library access was denied. Please enable access in Settings.")
+            return String(localized: "error.accessDenied", defaultValue: "Photo library access was denied. Please enable access in Settings.", table: "LocalizableShared")
         case .accessRestricted:
-            return String(localized: "error.accessRestricted", defaultValue: "Photo library access is restricted.")
+            return String(localized: "error.accessRestricted", defaultValue: "Photo library access is restricted.", table: "LocalizableShared")
         case .noPhotosAvailable:
-            return String(localized: "error.noPhotosAvailable", defaultValue: "No photos available to review.")
+            return String(localized: "error.noPhotosAvailable", defaultValue: "No photos available to review.", table: "LocalizableShared")
         case .deletionFailed:
-            return String(localized: "error.deletionFailed", defaultValue: "Failed to delete the photo.")
+            return String(localized: "error.deletionFailed", defaultValue: "Failed to delete the photo.", table: "LocalizableShared")
         case .loadingFailed:
-            return String(localized: "error.loadingFailed", defaultValue: "Failed to load photo.")
+            return String(localized: "error.loadingFailed", defaultValue: "Failed to load photo.", table: "LocalizableShared")
         }
     }
 }
@@ -514,8 +514,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         var albums: [AlbumInfo] = []
         let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true)
 
-        let userAlbums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
-        userAlbums.enumerateObjects { collection, _, _ in
+        let userAlbumCollections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
+        userAlbumCollections.enumerateObjects { collection, _, _ in
             let assets = PHAsset.fetchAssets(in: collection, options: options)
             guard assets.count > 0 else { return }
             let title = collection.localizedTitle ?? "Untitled Album"
@@ -530,8 +530,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             )
         }
 
-        let smartAlbums = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: nil)
-        smartAlbums.enumerateObjects { collection, _, _ in
+        let smartAlbumCollections = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: nil)
+        smartAlbumCollections.enumerateObjects { collection, _, _ in
             guard !excludedSmartAlbumSubtypes.contains(collection.assetCollectionSubtype) else { return }
             let assets = PHAsset.fetchAssets(in: collection, options: options)
             guard assets.count > 0 else { return }
@@ -547,7 +547,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             )
         }
 
-        return albums.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        let smartAlbums = albums.filter { $0.collectionType == .smartAlbum }.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        let userAlbums = albums.filter { $0.collectionType == .album }.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        return smartAlbums + userAlbums
     }
 
     private func fetchAssetCollection(identifier: String) -> PHAssetCollection? {

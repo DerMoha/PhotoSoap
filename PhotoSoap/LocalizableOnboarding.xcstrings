@@ -2,7 +2,6 @@
   "sourceLanguage" : "en",
   "strings" : {
     "onboarding.card.anonymity.description" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -19,7 +18,6 @@
       }
     },
     "onboarding.card.anonymity.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36,7 +34,6 @@
       }
     },
     "onboarding.card.banner.description" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -53,7 +50,6 @@
       }
     },
     "onboarding.card.banner.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -70,7 +66,6 @@
       }
     },
     "onboarding.card.loyalty.description" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -87,7 +82,6 @@
       }
     },
     "onboarding.card.loyalty.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -104,7 +98,6 @@
       }
     },
     "onboarding.gotIt" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -121,7 +114,6 @@
       }
     },
     "onboarding.headsUp" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -138,7 +130,6 @@
       }
     },
     "onboarding.subtitle" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -155,7 +146,6 @@
       }
     },
     "onboarding.welcome" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -172,7 +162,6 @@
       }
     },
     "permission.allow" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -189,7 +178,6 @@
       }
     },
     "permission.denied.description" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -206,7 +194,6 @@
       }
     },
     "permission.denied.openSettings" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -223,7 +210,6 @@
       }
     },
     "permission.denied.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -240,7 +226,6 @@
       }
     },
     "permission.description" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -257,7 +242,6 @@
       }
     },
     "permission.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

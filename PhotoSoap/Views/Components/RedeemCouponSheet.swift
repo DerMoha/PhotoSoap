@@ -41,7 +41,7 @@ struct RedeemCouponSheet: View {
                         Button {
                             redeemCode()
                         } label: {
-                            Text("coupon.submit")
+                            Text(String(localized: "coupon.submit", table: "LocalizableCoupon"))
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
@@ -50,7 +50,7 @@ struct RedeemCouponSheet: View {
                     .padding(.horizontal)
 
                     if result == .invalidCode {
-                        Text("coupon.invalid.description")
+                        Text(String(localized: "coupon.invalid.description", table: "LocalizableCoupon"))
                             .font(.caption)
                             .foregroundStyle(.red)
                             .multilineTextAlignment(.center)
@@ -61,11 +61,11 @@ struct RedeemCouponSheet: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("coupon.title")
+            .navigationTitle(String(localized: "coupon.title", table: "LocalizableCoupon"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(result == .success ? "common.done" : "common.cancel") {
+                    Button(result == .success ? String(localized: "common.done", table: "LocalizableShared") : String(localized: "common.cancel", table: "LocalizableShared")) {
                         dismiss()
                     }
                 }
@@ -100,30 +100,30 @@ struct RedeemCouponSheet: View {
     private var titleText: String {
         switch result {
         case .success:
-            return "coupon.success"
+            return String(localized: "coupon.success", table: "LocalizableCoupon")
         case .alreadyRedeemed:
-            return "coupon.alreadyRedeemed"
+            return String(localized: "coupon.alreadyRedeemed", table: "LocalizableCoupon")
         case .invalidCode:
-            return "coupon.invalid"
+            return String(localized: "coupon.invalid", table: "LocalizableCoupon")
         case .expiredCode:
-            return "coupon.expired"
+            return String(localized: "coupon.expired", table: "LocalizableCoupon")
         case nil:
-            return "Redeem a Code"
+            return String(localized: "coupon.redeemTitle", table: "LocalizableCoupon")
         }
     }
 
     private var descriptionText: String {
         switch result {
         case .success:
-            return "coupon.success.description"
+            return String(localized: "coupon.success.description", table: "LocalizableCoupon")
         case .alreadyRedeemed:
-            return "coupon.alreadyRedeemed.description"
+            return String(localized: "coupon.alreadyRedeemed.description", table: "LocalizableCoupon")
         case .invalidCode:
-            return "coupon.invalid.description"
+            return String(localized: "coupon.invalid.description", table: "LocalizableCoupon")
         case .expiredCode:
-            return "coupon.expired.description"
+            return String(localized: "coupon.expired.description", table: "LocalizableCoupon")
         case nil:
-            return "coupon.description"
+            return String(localized: "coupon.description", table: "LocalizableCoupon")
         }
     }
 

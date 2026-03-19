@@ -15,25 +15,25 @@ final class StatsViewModel {
     func getMainStats(from stats: UserStats) -> [StatItem] {
         [
             StatItem(
-                title: "Photos Reviewed",
+                title: String(localized: "stats.photosReviewed", defaultValue: "Photos Reviewed", table: "LocalizableStats"),
                 value: "\(stats.totalReviewed)",
                 iconName: "photo.stack",
                 color: .blue
             ),
             StatItem(
-                title: "Photos Deleted",
+                title: String(localized: "stats.photosDeleted", defaultValue: "Photos Deleted", table: "LocalizableStats"),
                 value: "\(stats.totalDeleted)",
                 iconName: "trash",
                 color: .red
             ),
             StatItem(
-                title: "Photos Kept",
+                title: String(localized: "stats.photosKept", defaultValue: "Photos Kept", table: "LocalizableStats"),
                 value: "\(stats.totalKept)",
                 iconName: "heart.fill",
                 color: .green
             ),
             StatItem(
-                title: "Storage Freed",
+                title: String(localized: "stats.storageFreed", defaultValue: "Storage Freed", table: "LocalizableStats"),
                 value: stats.storageFreedFormatted,
                 iconName: "externaldrive.fill",
                 color: .orange
@@ -44,25 +44,25 @@ final class StatsViewModel {
     func getStreakStats(from stats: UserStats) -> [StatItem] {
         [
             StatItem(
-                title: "Current Streak",
+                title: String(localized: "stats.currentStreak", defaultValue: "Review Streak", table: "LocalizableStats"),
                 value: "\(stats.currentStreak)",
                 iconName: "flame",
                 color: .orange
             ),
             StatItem(
-                title: "Best Streak",
+                title: String(localized: "stats.bestStreak", defaultValue: "Best Streak", table: "LocalizableStats"),
                 value: "\(stats.bestStreak)",
                 iconName: "flame.fill",
                 color: .red
             ),
             StatItem(
-                title: "Daily Streak",
-                value: "\(stats.dailyStreak) days",
+                title: String(localized: "stats.dailyStreak", defaultValue: "Login Streak", table: "LocalizableStats"),
+                value: "\(stats.dailyStreak)",
                 iconName: "calendar",
                 color: .purple
             ),
             StatItem(
-                title: "Session Reviews",
+                title: String(localized: "stats.sessionReviews", defaultValue: "Session Reviews", table: "LocalizableStats"),
                 value: "\(stats.sessionReviewCount)",
                 iconName: "clock",
                 color: .blue
@@ -82,7 +82,7 @@ final class StatsViewModel {
 
     func getFormattedLastReviewDate(from stats: UserStats) -> String {
         guard let date = stats.lastReviewDate else {
-            return "Never"
+            return String(localized: "common.never", defaultValue: "Never", table: "LocalizableStats")
         }
 
         let formatter = RelativeDateTimeFormatter()

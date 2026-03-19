@@ -35,7 +35,7 @@ struct StreakBanner: View {
                 .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isAnimating)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("streak.current")
+                Text(String(localized: "streak.current", table: "LocalizableReview"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -55,7 +55,7 @@ struct StreakBanner: View {
                 .foregroundStyle(.yellow)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("streak.best")
+                Text(String(localized: "streak.best", table: "LocalizableReview"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -100,8 +100,10 @@ struct CompactHeader: View {
     let isFilterActive: Bool
     let onFilterTap: () -> Void
     let onGoalTap: () -> Void
+    let onDailyGoalComplete: () -> Void
 
     @State private var isAnimating = false
+    @State private var wasCompleted = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -142,13 +144,17 @@ struct CompactHeader: View {
                             .stroke(progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                             .frame(width: 24, height: 24)
                             .rotationEffect(.degrees(-90))
+                            .animation(.spring(duration: 0.5), value: progress)
 
                         if progress >= 1.0 {
                             Image(systemName: "checkmark")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(.green)
+                                .scaleEffect(isAnimating ? 1.3 : 1.0)
+                                .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isAnimating)
                         }
                     }
+                    .frame(width: 24, height: 24)
 
                     if progress < 1.0 {
                         VStack(alignment: .leading, spacing: 0) {
@@ -174,6 +180,16 @@ struct CompactHeader: View {
             if newValue > oldValue {
                 isAnimating = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isAnimating = false
+                }
+            }
+        }
+        .onChange(of: progress) { oldValue, newValue in
+            if oldValue < 1.0 && newValue >= 1.0 && !wasCompleted {
+                wasCompleted = true
+                isAnimating = true
+                onDailyGoalComplete()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     isAnimating = false
                 }
             }
@@ -242,14 +258,14 @@ struct StreakMilestoneView: View {
                     .animation(.spring(response: 0.5, dampingFraction: 0.6), value: isShowing)
             }
 
-            Text("\(milestone) Streak!")
+            Text(String(localized: "streak.milestone", defaultValue: "\(milestone) Streak!", table: "LocalizableReview"))
                 .font(.title)
                 .fontWeight(.bold)
                 .scaleEffect(isShowing ? 1 : 0.5)
                 .opacity(isShowing ? 1 : 0)
                 .animation(.spring().delay(0.2), value: isShowing)
 
-            Text("streak.fire")
+            Text(String(localized: "streak.fire", table: "LocalizableReview"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .opacity(isShowing ? 1 : 0)

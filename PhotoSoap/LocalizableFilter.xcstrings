@@ -2,7 +2,6 @@
   "sourceLanguage" : "en",
   "strings" : {
     "filter.albums" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -19,7 +18,6 @@
       }
     },
     "filter.allPhotos" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36,7 +34,6 @@
       }
     },
     "filter.byMonth" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -53,7 +50,6 @@
       }
     },
     "filter.byYear" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -70,7 +66,6 @@
       }
     },
     "filter.entireLibrary" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -87,7 +82,6 @@
       }
     },
     "filter.loading" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -103,8 +97,23 @@
         }
       }
     },
+    "filter.month" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monat %d"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Month %d"
+          }
+        }
+      }
+    },
     "filter.noAlbums" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -122,7 +131,6 @@
     },
     "filter.noMonths" : {
       "comment" : "A message displayed when there are no months to filter by.",
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -139,7 +147,6 @@
       }
     },
     "filter.noYears" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -156,7 +163,6 @@
       }
     },
     "filter.smartAlbums" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -173,7 +179,6 @@
       }
     },
     "filter.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

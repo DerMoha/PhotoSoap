@@ -7,16 +7,16 @@ enum DailyChallengeType: String, CaseIterable {
 
     var verb: String {
         switch self {
-        case .review: return "Review"
-        case .delete: return "Delete"
-        case .streak: return "Maintain a streak of"
+        case .review: return String(localized: "challenge.review", defaultValue: "Review", table: "LocalizableReview")
+        case .delete: return String(localized: "challenge.delete", defaultValue: "Delete", table: "LocalizableReview")
+        case .streak: return String(localized: "challenge.streak", defaultValue: "Maintain a streak of", table: "LocalizableReview")
         }
     }
 
     var unit: String {
         switch self {
-        case .review, .delete: return "photos"
-        case .streak: return "photos"
+        case .review, .delete: return String(localized: "common.photos", defaultValue: "photos", table: "LocalizableShared")
+        case .streak: return String(localized: "common.photos", defaultValue: "photos", table: "LocalizableShared")
         }
     }
 }
@@ -40,11 +40,11 @@ struct DailyChallenge: Identifiable {
     var description: String {
         switch type {
         case .review:
-            return "Review \(target) photos today to complete this challenge"
+            return String(localized: "challenge.description.review", defaultValue: "Review \(target) photos today to complete this challenge", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
         case .delete:
-            return "Delete \(target) photos today to free up space"
+            return String(localized: "challenge.description.delete", defaultValue: "Delete \(target) photos today to free up space", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
         case .streak:
-            return "Maintain a streak of \(target) consecutive photo reviews"
+            return String(localized: "challenge.description.streak", defaultValue: "Maintain a streak of \(target) consecutive photo reviews", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
         }
     }
 

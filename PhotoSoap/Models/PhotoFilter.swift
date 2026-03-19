@@ -9,7 +9,7 @@ enum PhotoFilter: Equatable, Hashable {
     var displayName: String {
         switch self {
         case .all:
-            return "All Photos"
+            return String(localized: "filter.allPhotos", defaultValue: "All Photos", table: "LocalizableFilter")
         case .album(_, let title):
             return title
         case .year(let year):
@@ -48,7 +48,7 @@ enum PhotoFilter: Equatable, Hashable {
         if let date = Calendar.current.date(from: components) {
             return monthNameFormatter.string(from: date)
         }
-        return "Month \(month)"
+        return String(localized: "filter.month", defaultValue: "Month \(month)", table: "LocalizableFilter").replacingOccurrences(of: "%d", with: "\(month)")
     }
 
     private static let monthNameFormatter: DateFormatter = {

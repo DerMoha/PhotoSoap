@@ -28,7 +28,7 @@ struct StatsView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("stats.title")
+            .navigationTitle(String(localized: "stats.title", table: "LocalizableStats"))
             .onAppear {
                 adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
                 adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
@@ -65,7 +65,7 @@ struct StatsView: View {
 
     private var overviewSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("stats.overview")
+            Text(String(localized: "stats.overview", table: "LocalizableStats"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -82,7 +82,7 @@ struct StatsView: View {
 
     private var streaksSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("stats.streaks")
+            Text(String(localized: "stats.streaks", table: "LocalizableStats"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -99,13 +99,13 @@ struct StatsView: View {
 
     private var ratioSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("stats.keepDelete")
+            Text(String(localized: "stats.keepDelete", table: "LocalizableStats"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 12) {
                 HStack {
-                    Text("stats.keepRate")
+                    Text(String(localized: "stats.keepRate", table: "LocalizableStats"))
                     Spacer()
                     Text("\(Int(viewModel.getKeepRatio(from: stats) * 100))%")
                         .fontWeight(.semibold)
@@ -131,7 +131,7 @@ struct StatsView: View {
                 .frame(height: 24)
 
                 HStack {
-                    Text("stats.deleteRate")
+                    Text(String(localized: "stats.deleteRate", table: "LocalizableStats"))
                     Spacer()
                     Text("\(Int(viewModel.getDeleteRatio(from: stats) * 100))%")
                         .fontWeight(.semibold)
@@ -147,7 +147,7 @@ struct StatsView: View {
     private var achievementsPreviewSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("stats.achievements")
+                Text(String(localized: "stats.achievements", table: "LocalizableStats"))
                     .font(.headline)
                     .foregroundStyle(.secondary)
 
@@ -179,7 +179,7 @@ struct StatsView: View {
                                 .tint(.blue)
                         }
 
-                        Text(String(localized: "achievements.progress", defaultValue: "\(Int(progressValue * 100))% Complete"))
+                        Text(String(localized: "achievements.progress", defaultValue: "\(Int(progressValue * 100))% Complete", table: "LocalizableAchievements"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(width: 40)
@@ -194,7 +194,7 @@ struct StatsView: View {
 
     private var adFreeSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("stats.adFreeUnlock")
+            Text(String(localized: "stats.adFreeUnlock", table: "LocalizableStats"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -205,7 +205,7 @@ struct StatsView: View {
 
                     Spacer()
 
-                    Button("adfree.details") {
+                    Button(String(localized: "adfree.details", table: "LocalizableAdFree")) {
                         analyticsService.track(.paywallOpened(source: "stats_card"))
                         isShowingAdFreeSheet = true
                     }
@@ -223,7 +223,7 @@ struct StatsView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("adfree.loyalty.progress")
+                        Text(String(localized: "adfree.loyalty.progress", table: "LocalizableAdFree"))
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
 
@@ -264,7 +264,7 @@ struct StatsView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(adRemovalPurchaseService.hasAdRemovalEntitlement || adRemovalPurchaseService.isLoading || adRemovalPurchaseService.product == nil)
 
-                    Button("adfree.restore") {
+                    Button(String(localized: "adfree.restore", table: "LocalizableAdFree")) {
                         Task {
                             await adRemovalPurchaseService.restorePurchases()
                         }
@@ -274,7 +274,7 @@ struct StatsView: View {
                 }
 
                 if adRemovalPurchaseService.product == nil && !adRemovalPurchaseService.hasAdRemovalEntitlement {
-                    Text("adfree.productUnavailable")
+                    Text(String(localized: "adfree.productUnavailable", table: "LocalizableAdFree"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -287,16 +287,16 @@ struct StatsView: View {
 
     private var analyticsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("stats.privacy")
+            Text(String(localized: "stats.privacy", table: "LocalizableStats"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 14) {
                 Toggle(isOn: analyticsToggleBinding) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("stats.privacy.shareAnalytics")
+                        Text(String(localized: "stats.privacy.shareAnalytics", table: "LocalizableStats"))
                             .font(.subheadline.weight(.semibold))
-                        Text("stats.privacy.analyticsDescription")
+                        Text(String(localized: "stats.privacy.analyticsDescription", table: "LocalizableStats"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -304,11 +304,11 @@ struct StatsView: View {
                 .tint(.blue)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("stats.privacy.communityTotals")
+                    Text(String(localized: "stats.privacy.communityTotals", table: "LocalizableStats"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Text(analyticsService.isEnabled ? "stats.analyticsOn" : "stats.analyticsOff")
+                    Text(analyticsService.isEnabled ? String(localized: "stats.analyticsOn", table: "LocalizableStats") : String(localized: "stats.analyticsOff", table: "LocalizableStats"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -329,13 +329,13 @@ struct StatsView: View {
     private var adFreeTitle: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "adfree.purchased"
+            return String(localized: "adfree.purchased", table: "LocalizableAdFree")
         case .earned:
-            return "adfree.loyalty"
+            return String(localized: "adfree.loyalty", table: "LocalizableAdFree")
         case .coupon:
-            return "adfree.coupon"
+            return String(localized: "adfree.coupon", table: "LocalizableAdFree")
         case .none:
-            return "adfree.hero.title"
+            return String(localized: "adfree.hero.title", table: "LocalizableAdFree")
         }
     }
 
@@ -351,29 +351,29 @@ struct StatsView: View {
     private var adFreeMessage: String {
         switch adRemovalPurchaseService.unlockSource {
         case .purchased:
-            return "adfree.hero.purchased"
+            return String(localized: "adfree.hero.purchased", table: "LocalizableAdFree")
         case .earned:
-            return "adfree.earned"
+            return String(localized: "adfree.earned", table: "LocalizableAdFree")
         case .coupon:
-            return "adfree.hero.coupon"
+            return String(localized: "adfree.hero.coupon", table: "LocalizableAdFree")
         case .none:
-            return "adfree.hero.purchase"
+            return String(localized: "adfree.hero.purchase", table: "LocalizableAdFree")
         }
     }
 
     private var progressMessage: String {
         if adRemovalPurchaseService.hasEarnedEntitlement {
-            return "adfree.loyalty.active"
+            return String(localized: "adfree.loyalty.active", table: "LocalizableAdFree")
         }
 
         let remainingDeletes = adRemovalPurchaseService.remainingDeletesForUnlock
         return remainingDeletes == 1
-            ? "adfree.loyalty.oneMore"
-            : "adfree.loyalty.deleteMore"
+            ? String(localized: "adfree.loyalty.oneMore", table: "LocalizableAdFree")
+            : String(localized: "adfree.loyalty.deleteMore", table: "LocalizableAdFree")
     }
 
     private var primaryButtonTitle: String {
-        adRemovalPurchaseService.hasAdRemovalEntitlement ? "adfree.unlocked" : "adfree.buyFor"
+        adRemovalPurchaseService.hasAdRemovalEntitlement ? String(localized: "adfree.unlocked", table: "LocalizableAdFree") : String(localized: "adfree.buyFor", table: "LocalizableAdFree")
     }
 
 }

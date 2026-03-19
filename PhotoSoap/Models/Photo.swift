@@ -34,12 +34,12 @@ struct Photo: Identifiable {
     }
 
     var formattedDate: String {
-        guard let date = creationDate else { return "Unknown date" }
+        guard let date = creationDate else { return String(localized: "photo.unknownDate", defaultValue: "Unknown date", table: "LocalizableShared") }
         return Self.dateFormatter.string(from: date)
     }
 
     var shortFormattedDate: String {
-        guard let date = creationDate else { return "Unknown" }
+        guard let date = creationDate else { return String(localized: "common.unknown", defaultValue: "Unknown", table: "LocalizableShared") }
         return Self.shortDateFormatter.string(from: date)
     }
 
@@ -62,7 +62,7 @@ struct Photo: Identifiable {
     }
 
     var fileSizeFormatted: String {
-        guard fileSize > 0 else { return "Unknown size" }
+        guard fileSize > 0 else { return String(localized: "photo.unknownSize", defaultValue: "Unknown size", table: "LocalizableShared") }
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useKB, .useMB]
         formatter.countStyle = .file

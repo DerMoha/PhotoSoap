@@ -30,6 +30,7 @@ struct PhotoReviewView: View {
     @State private var knownUnreviewedIDs: Set<String> = []
     @State private var hasTrackedReviewStart = false
     @State private var showStartOverConfirmation = false
+    @State private var showDailyGoalToast = false
     private let swipeActionThreshold: CGFloat = 100
     private let swipeFeedbackDistance: CGFloat = 140
     private let swipeOverlayThreshold: CGFloat = 12
@@ -45,6 +46,10 @@ struct PhotoReviewView: View {
                     compactHeaderSection
                         .padding(.horizontal)
                         .padding(.top, 8)
+
+                    // Review progress count
+                    reviewProgressView
+                        .padding(.top, 4)
 
                     // Photo card takes remaining space
                     if isLoading {
@@ -69,8 +74,24 @@ struct PhotoReviewView: View {
 
                 }
 
+                // Delete/Keep edge indicators
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(.red.opacity(0.25))
+                        .frame(width: 4)
+                        .frame(maxHeight: .infinity)
+                        .ignoresSafeArea()
+                    Spacer()
+                    Rectangle()
+                        .fill(.green.opacity(0.25))
+                        .frame(width: 4)
+                        .frame(maxHeight: .infinity)
+                        .ignoresSafeArea()
+                }
+
                 achievementBanner
                 streakCelebration
+                dailyGoalToast
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
@@ -86,7 +107,7 @@ struct PhotoReviewView: View {
             .alert("Error", isPresented: $showError) {
                 Button("OK") {}
             } message: {
-                Text(error ?? "error.unknown")
+                Text(error ?? String(localized: "error.unknown", table: "LocalizableShared"))
             }
             .alert("Start Over?", isPresented: $showStartOverConfirmation) {
                 Button("Cancel", role: .cancel) {}
@@ -94,7 +115,7 @@ struct PhotoReviewView: View {
                     startOverWithClearing()
                 }
             } message: {
-                Text("review.startOver.confirmation")
+                Text(String(localized: "review.startOver.confirmation", table: "LocalizableReview"))
             }
             .sheet(isPresented: $showFilterSheet) {
                 FilterSheet(
@@ -133,8 +154,27 @@ struct PhotoReviewView: View {
             },
             onGoalTap: {
                 showGoalSheet = true
+            },
+            onDailyGoalComplete: {
+                showDailyGoalToast = true
             }
         )
+    }
+
+    private var reviewProgressView: some View {
+        let total = photoLibraryService.getTotalPhotoCount()
+        let reviewed = stats.totalReviewed
+
+        return HStack {
+            Spacer()
+            Text("\(reviewed)/\(total)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(String(localized: "review.progress", defaultValue: "reviewed", table: "LocalizableReview"))
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+            Spacer()
+        }
     }
 
     private func photoCardSection(photo: Photo) -> some View {
@@ -179,7 +219,7 @@ struct PhotoReviewView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("review.loading")
+            Text(String(localized: "review.loading", table: "LocalizableReview"))
                 .foregroundStyle(.secondary)
         }
     }
@@ -189,10 +229,10 @@ struct PhotoReviewView: View {
             Image(systemName: "photo.badge.plus")
                 .font(.system(size: 60))
                 .foregroundStyle(.secondary)
-            Text("review.empty")
+            Text(String(localized: "review.empty", table: "LocalizableReview"))
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text("review.empty.description")
+            Text(String(localized: "review.empty.description", table: "LocalizableReview"))
                 .foregroundStyle(.secondary)
         }
     }
@@ -203,17 +243,17 @@ struct PhotoReviewView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.green)
 
-            Text("review.complete.title")
+            Text(String(localized: "review.complete.title", table: "LocalizableReview"))
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("review.complete.subtitle")
+            Text(String(localized: "review.complete.subtitle", table: "LocalizableReview"))
                 .font(.body)
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 8) {
-                Text(String(localized: "review.stats", defaultValue: "\(stats.totalReviewed) photos reviewed"))
-                Text(String(localized: "review.statsDetail", defaultValue: "\(stats.totalDeleted) deleted • \(stats.totalKept) kept"))
+                Text(String(localized: "review.stats", defaultValue: "\(stats.totalReviewed) photos reviewed", table: "LocalizableReview"))
+                Text(String(localized: "review.statsDetail", defaultValue: "\(stats.totalDeleted) deleted • \(stats.totalKept) kept", table: "LocalizableReview"))
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -221,7 +261,7 @@ struct PhotoReviewView: View {
             Button {
                 showStartOverConfirmation = true
             } label: {
-                Label("review.startOver", systemImage: "arrow.counterclockwise")
+                Label(String(localized: "review.startOver", table: "LocalizableReview"), systemImage: "arrow.counterclockwise")
                     .font(.headline)
                     .padding()
                     .background(.blue)
@@ -246,7 +286,7 @@ struct PhotoReviewView: View {
                         .foregroundStyle(.yellow)
 
                     VStack(alignment: .leading) {
-                        Text("achievement.unlocked")
+                        Text(String(localized: "achievement.unlocked", table: "LocalizableAchievements"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Text(achievement.title)
@@ -278,11 +318,11 @@ struct PhotoReviewView: View {
                         .font(.system(size: 50))
                         .foregroundStyle(.orange)
 
-                    Text(String(localized: "streak.milestone", defaultValue: "\(milestone) Streak!"))
+                    Text(String(localized: "streak.milestone", defaultValue: "\(milestone) Streak!", table: "LocalizableReview"))
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("streak.fire")
+                    Text(String(localized: "streak.fire", table: "LocalizableReview"))
                         .foregroundStyle(.secondary)
                 }
                 .padding(32)
@@ -294,6 +334,47 @@ struct PhotoReviewView: View {
                 Spacer()
             }
             .animation(.spring(), value: gameificationService.showStreakCelebration)
+        }
+    }
+
+    @ViewBuilder
+    private var dailyGoalToast: some View {
+        if showDailyGoalToast {
+            VStack {
+                Spacer()
+
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.green)
+
+                    VStack(alignment: .leading) {
+                        Text(String(localized: "dailyGoal.complete", defaultValue: "Daily Goal Complete!", table: "LocalizableReview"))
+                            .font(.headline)
+                        Text(String(localized: "dailyGoal.reward", defaultValue: "Great job!", table: "LocalizableReview"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+                }
+                .padding()
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(radius: 10)
+                .padding(.horizontal)
+                .transition(.move(edge: .top).combined(with: .opacity))
+
+                Spacer()
+            }
+            .animation(.spring(), value: showDailyGoalToast)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation {
+                        showDailyGoalToast = false
+                    }
+                }
+            }
         }
     }
 

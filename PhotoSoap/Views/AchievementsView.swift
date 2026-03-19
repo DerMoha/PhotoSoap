@@ -22,7 +22,7 @@ struct AchievementsView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("achievements.title")
+            .navigationTitle(String(localized: "achievements.title", table: "LocalizableAchievements"))
             .sheet(item: $selectedAchievement) { achievement in
                 AchievementDetailSheet(
                     achievement: achievement,
@@ -57,13 +57,13 @@ struct AchievementsView: View {
                     Text("\(unlockedCount)")
                         .font(.title)
                         .fontWeight(.bold)
-                    Text(String(localized: "achievements.of", defaultValue: "of \(totalCount)"))
+                    Text(String(localized: "achievements.of", defaultValue: "of \(totalCount)", table: "LocalizableAchievements"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
 
-            Text(String(localized: "achievements.unlocked"))
+            Text(String(localized: "achievements.unlocked", table: "LocalizableAchievements"))
                 .font(.headline)
         }
         .padding()
@@ -138,7 +138,7 @@ struct AchievementCard: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else if !isUnlocked {
-                Text(String(localized: "achievements.progress", defaultValue: "\(Int(progress * 100))% Complete"))
+                Text(String(localized: "achievements.progress", defaultValue: "\(Int(progress * 100))% Complete", table: "LocalizableAchievements"))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -192,7 +192,7 @@ struct AchievementDetailSheet: View {
 
             if isUnlocked {
                 VStack(spacing: 4) {
-                    Label("achievements.unlocked.status", systemImage: "checkmark.circle.fill")
+                    Label(String(localized: "achievements.unlocked.status", table: "LocalizableAchievements"), systemImage: "checkmark.circle.fill")
                         .font(.headline)
                         .foregroundStyle(.green)
 
@@ -207,7 +207,7 @@ struct AchievementDetailSheet: View {
                     ProgressView(value: progress)
                         .tint(.blue)
 
-                    Text(String(localized: "achievements.progress", defaultValue: "\(Int(progress * 100))% Complete"))
+                    Text(String(localized: "achievements.progress", defaultValue: "\(Int(progress * 100))% Complete", table: "LocalizableAchievements"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -216,7 +216,7 @@ struct AchievementDetailSheet: View {
 
             Spacer()
 
-            Button("achievements.close") {
+            Button(String(localized: "achievements.close", table: "LocalizableAchievements")) {
                 dismiss()
             }
             .font(.headline)

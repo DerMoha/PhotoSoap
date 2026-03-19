@@ -11,7 +11,7 @@ struct DailyGoalSettingSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    Text(String(localized: "dailyGoal.title"))
+                    Text(String(localized: "dailyGoal.title", table: "LocalizableReview"))
                         .font(.headline)
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
@@ -35,11 +35,11 @@ struct DailyGoalSettingSheet: View {
                     .padding(.horizontal)
 
                     VStack(spacing: 8) {
-                        Text(String(localized: "dailyGoal.current", defaultValue: "Current goal: \(currentTarget) photos").replacingOccurrences(of: "%d", with: "\(currentTarget)"))
+                        Text(String(localized: "dailyGoal.current", defaultValue: "Current goal: \(currentTarget) photos", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(currentTarget)"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
 
-                        Text(String(localized: "dailyGoal.changeApply"))
+                        Text(String(localized: "dailyGoal.changeApply", table: "LocalizableReview"))
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
@@ -47,11 +47,11 @@ struct DailyGoalSettingSheet: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle(String(localized: "dailyGoal.title"))
+            .navigationTitle(String(localized: "dailyGoal.title", table: "LocalizableReview"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "common.cancel")) {
+                    Button(String(localized: "common.cancel", table: "LocalizableShared")) {
                         isPresented = false
                     }
                 }
@@ -85,7 +85,7 @@ private struct GoalOptionButton: View {
                         .fontWeight(.semibold)
                         .foregroundStyle(isSelected ? .white : .primary)
 
-                    Text("photos")
+                    Text(String(localized: "common.photos", table: "LocalizableShared"))
                         .font(.caption2)
                         .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
                 }
