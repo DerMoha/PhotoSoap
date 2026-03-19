@@ -118,13 +118,17 @@ struct PhotoCard: View {
         VStack {
             HStack {
                 Label(String(localized: "review.swipe.keep", table: "LocalizableReview"), systemImage: "checkmark")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
                     .foregroundStyle(.green)
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .rotationEffect(.degrees(-15))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial)
+                    .clipShape(Capsule())
+                    .overlay {
+                        Capsule()
+                            .stroke(.green.opacity(0.2), lineWidth: 1)
+                    }
 
                 Spacer()
             }
@@ -140,13 +144,17 @@ struct PhotoCard: View {
                 Spacer()
 
                 Label(String(localized: "review.swipe.delete", table: "LocalizableReview"), systemImage: "trash")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
                     .foregroundStyle(.red)
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .rotationEffect(.degrees(15))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial)
+                    .clipShape(Capsule())
+                    .overlay {
+                        Capsule()
+                            .stroke(.red.opacity(0.2), lineWidth: 1)
+                    }
             }
             .padding()
 
