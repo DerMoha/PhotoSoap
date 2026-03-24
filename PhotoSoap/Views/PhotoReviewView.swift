@@ -54,10 +54,6 @@ struct PhotoReviewView: View {
                         .padding(.horizontal)
                         .padding(.top, 8)
 
-                    // Review progress count
-                    reviewProgressView
-                        .padding(.top, 4)
-
                     // Photo card takes remaining space
                     if isLoading {
                         Spacer()
@@ -162,22 +158,6 @@ struct PhotoReviewView: View {
                 showDailyGoalToast = true
             }
         )
-    }
-
-    private var reviewProgressView: some View {
-        let total = photoLibraryService.getTotalPhotoCount()
-        let reviewed = persistedReviewedIDs.count
-
-        return HStack {
-            Spacer()
-            Text("\(reviewed)/\(total)")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-            Text(String(localized: "review.progress", defaultValue: "reviewed", table: "LocalizableReview"))
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-            Spacer()
-        }
     }
 
     private func photoCardSection(photo: Photo) -> some View {

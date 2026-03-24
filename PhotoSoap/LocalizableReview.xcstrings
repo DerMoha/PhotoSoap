@@ -325,6 +325,7 @@
       }
     },
     "review.stats" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -341,6 +342,7 @@
       }
     },
     "review.statsDetail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
