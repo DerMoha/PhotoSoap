@@ -4,6 +4,8 @@ import PhotosUI
 import UIKit
 import Combine
 
+// MARK: - Error Types
+
 enum PhotoLibraryError: Error, LocalizedError {
     case accessDenied
     case accessRestricted
@@ -27,6 +29,8 @@ enum PhotoLibraryError: Error, LocalizedError {
     }
 }
 
+// MARK: - Authorization
+
 enum PhotoLibraryAuthorizationStatus {
     case notDetermined
     case authorized
@@ -39,25 +43,37 @@ enum PhotoLibraryAuthorizationStatus {
     }
 }
 
+// MARK: - Supporting Types
+
 struct FilterData {
     let albums: [AlbumInfo]
     let availableYears: [Int]
     let availableMonthsByYear: [Int: [Int]]
 }
 
+// MARK: - Constants
+
+private enum Constants {
+    static let baseMaxRetries = 50
+    static let sessionReviewedIDsLimit = 10000
+    static let maxPreviewDimension: CGFloat = 800
+    static let cachingThumbnailSize = CGSize(width: 400, height: 400)
+}
+
+// MARK: - PhotoLibraryService
+
 @MainActor
 class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObserver {
+    // MARK: - Published State
     @Published var authorizationStatus: PhotoLibraryAuthorizationStatus = .notDetermined
     @Published var isLoading = false
     @Published var error: PhotoLibraryError?
     @Published var currentFilter: PhotoFilter = .all
 
+    // MARK: - Private State
     private let imageManager = PHCachingImageManager()
     private var cachedAssets: PHFetchResult<PHAsset>?
-    
-    // Use lazy random sampling - don't pre-filter everything
     private var totalAssetCount: Int = 0
-    private let baseMaxRetries = 50  // Base attempts to find an unreviewed photo
 
     private var cachedAlbums: [AlbumInfo] = []
     private var cachedYears: [Int] = []
@@ -67,16 +83,12 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         .smartAlbumAllHidden,
         .smartAlbumUserLibrary
     ]
-    
-    // Session cache for O(1) filtering of items already seen during this run.
+
     private var sessionReviewedIDs: Set<String> = []
-    private let sessionReviewedIDsLimit = 10000
-
-    // Cache for file sizes keyed by asset ID
     private let fileSizeCache = NSCache<NSString, NSNumber>()
-
-    // Track currently cached photos for PHImageManager caching cleanup
     private var cachedPreloadPhotos: [Photo] = []
+
+    // MARK: - Initialization
 
     override init() {
         super.init()
@@ -84,26 +96,28 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         checkAuthorizationStatus()
         PHPhotoLibrary.shared().register(self)
     }
-    
+
+    deinit {
+        PHPhotoLibrary.shared().unregisterChangeObserver(self)
+    }
+
+    // MARK: - Session Review Tracking
+
     func setSessionReviewedIDs(_ ids: Set<String>) {
         sessionReviewedIDs = ids
     }
-    
+
     func markReviewed(_ id: String) {
-        if sessionReviewedIDs.count >= sessionReviewedIDsLimit {
-            let excessCount = sessionReviewedIDsLimit / 2
+        if sessionReviewedIDs.count >= Constants.sessionReviewedIDsLimit {
+            let excessCount = Constants.sessionReviewedIDsLimit / 2
             let toRemove = Array(sessionReviewedIDs.prefix(excessCount))
             toRemove.forEach { sessionReviewedIDs.remove($0) }
         }
         sessionReviewedIDs.insert(id)
     }
-    
+
     func isReviewed(_ id: String) -> Bool {
         sessionReviewedIDs.contains(id)
-    }
-
-    deinit {
-        PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
 
     // MARK: - PHPhotoLibraryChangeObserver
@@ -122,6 +136,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
     }
 
+    // MARK: - Authorization
+
     func checkAuthorizationStatus() {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         updateAuthorizationStatus(status)
@@ -129,18 +145,12 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     nonisolated static func mappedAuthorizationStatus(from status: PHAuthorizationStatus) -> PhotoLibraryAuthorizationStatus {
         switch status {
-        case .notDetermined:
-            return .notDetermined
-        case .authorized:
-            return .authorized
-        case .denied:
-            return .denied
-        case .restricted:
-            return .restricted
-        case .limited:
-            return .limited
-        @unknown default:
-            return .denied
+        case .notDetermined: return .notDetermined
+        case .authorized: return .authorized
+        case .denied: return .denied
+        case .restricted: return .restricted
+        case .limited: return .limited
+        @unknown default: return .denied
         }
     }
 
@@ -179,7 +189,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         UIApplication.shared.open(settingsURL)
     }
 
-    /// Fetches assets lazily - only gets the count, doesn't iterate
+    // MARK: - Photo Fetching
+
     private func ensureAssetsFetched() {
         guard cachedAssets == nil else { return }
 
@@ -208,62 +219,44 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         totalAssetCount = cachedAssets?.count ?? 0
     }
 
-    /// Gets next photo using random sampling - O(1) memory instead of O(n)
     func getNextPhoto(excluding excludedIDs: Set<String> = []) async throws -> Photo? {
         ensureAssetsFetched()
-        
+
         guard let assets = cachedAssets, totalAssetCount > 0 else {
             return nil
         }
-        
+
         let reviewedCount = sessionReviewedIDs.count
-        
-        // Completion check removed to support deleted photos logic.
-        // Even if reviewedCount >= totalAssetCount, some of those reviewedIDs might imply deleted photos.
-        // We rely on the retry loop to find any remaining unreviewed photos.
-        
-        // Scale retries based on how many photos are excluded (more excluded = harder to find unreviewed)
         let excludedRatio = Double(reviewedCount) / Double(totalAssetCount)
-        let scaledRetries = max(baseMaxRetries, Int(Double(baseMaxRetries) * (1.0 + excludedRatio * 4.0)))
-        
-        // Cap retries at a reasonable limit (e.g. 500) to prevent freezing
+        let scaledRetries = max(Constants.baseMaxRetries, Int(Double(Constants.baseMaxRetries) * (1.0 + excludedRatio * 4.0)))
         let retries = min(500, scaledRetries)
-        
-        // Track failed assets to avoid retrying corrupt/unreadable photos
+
         var failedAssetIDs = Set<String>()
-        
-        // Random sampling with retry
+
         for _ in 0..<retries {
             let randomIndex = Int.random(in: 0..<totalAssetCount)
-            
-            // Bounds check - totalAssetCount may briefly exceed actual count during observer update
+
             guard randomIndex < assets.count else { continue }
-            
-            // Get the asset at this index (single access, not iteration)
+
             let asset = assets.object(at: randomIndex)
-            
-            // Check if excluded (reviewed or failed) - O(1) Set lookup
-            if sessionReviewedIDs.contains(asset.localIdentifier) 
+
+            if sessionReviewedIDs.contains(asset.localIdentifier)
                 || excludedIDs.contains(asset.localIdentifier)
                 || failedAssetIDs.contains(asset.localIdentifier) {
                 continue
             }
-            
-            // Found a valid photo - load and return it
+
             do {
                 return try await loadPhoto(from: asset)
             } catch {
-                // Photo data is corrupt/unreadable - mark as reviewed so we skip it
                 sessionReviewedIDs.insert(asset.localIdentifier)
                 failedAssetIDs.insert(asset.localIdentifier)
                 continue
             }
         }
-        
-        // Couldn't find an unreviewed photo after max retries
+
         return nil
     }
-
 
     func preloadPhotos(count: Int = 3) async -> [Photo] {
         stopCachingAssets(for: cachedPreloadPhotos)
@@ -271,45 +264,40 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         var photos: [Photo] = []
         var temporaryExcluded = Set<String>()
         var attempts = 0
-        let maxAttempts = count * 3 // Prevent infinite loops if library is small
+        let maxAttempts = count * 3
 
         while photos.count < count && attempts < maxAttempts {
             attempts += 1
             if let photo = try? await getNextPhoto() {
-                // Avoid preloading the same photo twice in one batch
                 if !temporaryExcluded.contains(photo.id) {
                     photos.append(photo)
                     temporaryExcluded.insert(photo.id)
                 }
             } else {
-                // If getNextPhoto returns nil (no more photos), stop trying
                 break
             }
         }
 
         cachedPreloadPhotos = photos
         startCachingAssets(for: photos)
-        
+
         return photos
     }
 
     private func startCachingAssets(for photos: [Photo]) {
         guard !photos.isEmpty else { return }
         let assets = photos.map { $0.asset }
-        let targetSize = CGSize(width: 400, height: 400)
-        imageManager.startCachingImages(for: assets, targetSize: targetSize, contentMode: .aspectFit, options: nil)
+        imageManager.startCachingImages(for: assets, targetSize: Constants.cachingThumbnailSize, contentMode: .aspectFit, options: nil)
     }
 
     private func stopCachingAssets(for photos: [Photo]) {
         guard !photos.isEmpty else { return }
         let assets = photos.map { $0.asset }
-        let targetSize = CGSize(width: 400, height: 400)
-        imageManager.stopCachingImages(for: assets, targetSize: targetSize, contentMode: .aspectFit, options: nil)
+        imageManager.stopCachingImages(for: assets, targetSize: Constants.cachingThumbnailSize, contentMode: .aspectFit, options: nil)
     }
 
     private func loadPhoto(from asset: PHAsset) async throws -> Photo {
-        // Use a reasonable preview size to avoid memory issues
-        let maxDimension: CGFloat = 800
+        let maxDimension = Constants.maxPreviewDimension
         let scale = min(maxDimension / CGFloat(asset.pixelWidth), maxDimension / CGFloat(asset.pixelHeight), 1.0)
         let targetSize = CGSize(
             width: CGFloat(asset.pixelWidth) * scale,
@@ -317,7 +305,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         )
 
         let options = PHImageRequestOptions()
-        options.deliveryMode = .highQualityFormat  // Always get high quality, not thumbnail
+        options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
         options.isSynchronous = false
         options.resizeMode = .fast
@@ -344,6 +332,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             }
         }
     }
+
+    // MARK: - File Size
 
     func fetchFileSize(for asset: PHAsset, allowNetworkAccess: Bool = false) async -> Int64 {
         let assetID = asset.localIdentifier
@@ -386,13 +376,16 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return fileSize
     }
 
+    // MARK: - Deletion
+
     func deletePhoto(_ photo: Photo) async throws {
         try await PHPhotoLibrary.shared().performChanges {
             PHAssetChangeRequest.deleteAssets([photo.asset] as NSFastEnumeration)
         }
     }
 
-    /// Returns approximate count - doesn't iterate through all photos
+    // MARK: - Library Refresh
+
     func getTotalPhotoCount() -> Int {
         ensureAssetsFetched()
         return totalAssetCount
@@ -415,6 +408,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         cachedYears = []
         cachedMonthsByYear = [:]
     }
+
+    // MARK: - Filtering
 
     func setFilter(_ filter: PhotoFilter) {
         guard filter != currentFilter else { return }
@@ -487,6 +482,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
     }
 
+    // MARK: - Static Helpers
+
     private nonisolated static func buildFilterData(excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> FilterData {
         let albums = buildAlbums(excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
         let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
@@ -552,6 +549,39 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return smartAlbums + userAlbums
     }
 
+    private nonisolated static func makeFetchOptions(
+        dateInterval: DateInterval?,
+        includeMediaTypePredicate: Bool
+    ) -> PHFetchOptions {
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        fetchOptions.includeHiddenAssets = false
+
+        var predicates: [NSPredicate] = []
+
+        if includeMediaTypePredicate {
+            predicates.append(NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue))
+        }
+
+        if let interval = dateInterval {
+            predicates.append(
+                NSPredicate(
+                    format: "creationDate >= %@ AND creationDate < %@",
+                    interval.start as NSDate,
+                    interval.end as NSDate
+                )
+            )
+        }
+
+        if !predicates.isEmpty {
+            fetchOptions.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        }
+
+        return fetchOptions
+    }
+
+    // MARK: - Private Helpers
+
     private func fetchAssetCollection(identifier: String) -> PHAssetCollection? {
         let result = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: [identifier], options: nil)
         return result.firstObject
@@ -592,49 +622,20 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return DateInterval(start: startDate, end: endDate)
     }
 
-    private nonisolated static func makeFetchOptions(
-        dateInterval: DateInterval?,
-        includeMediaTypePredicate: Bool
-    ) -> PHFetchOptions {
-        let fetchOptions = PHFetchOptions()
-        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchOptions.includeHiddenAssets = false
-
-        var predicates: [NSPredicate] = []
-
-        if includeMediaTypePredicate {
-            predicates.append(NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue))
-        }
-
-        if let interval = dateInterval {
-            predicates.append(
-                NSPredicate(
-                    format: "creationDate >= %@ AND creationDate < %@",
-                    interval.start as NSDate,
-                    interval.end as NSDate
-                )
-            )
-        }
-
-        if !predicates.isEmpty {
-            fetchOptions.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        }
-
-        return fetchOptions
-    }
-
     private func preferredResource(from resources: [PHAssetResource]) -> PHAssetResource? {
         resources.first {
             $0.type == .fullSizePhoto || $0.type == .photo
         } ?? resources.first
     }
 
+    // MARK: - View Controller Helpers
+
     private func activeViewController() -> UIViewController? {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .first { $0.activationState == .foregroundActive }?
             .windows
-            .first(where: \ .isKeyWindow)
+            .first(where: \.isKeyWindow)
             .flatMap { topViewController(from: $0.rootViewController) }
     }
 
