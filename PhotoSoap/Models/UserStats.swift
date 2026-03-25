@@ -2,54 +2,55 @@ import Foundation
 import SwiftData
 
 @Model
-class UserStats: DailyChallengeStats {
+class UserStats {
+    // MARK: - Core Stats
     var totalReviewed: Int
     var totalDeleted: Int
     var totalKept: Int
+    var storageFreed: Int64
+    var sessionReviewCount: Int
+
+    // MARK: - Streak Tracking
     var currentStreak: Int
     var bestStreak: Int
     var dailyStreak: Int
+    var dayStreak: Int
     var lastReviewDate: Date?
     var lastLoginDate: Date?
-    var storageFreed: Int64
-    var reviewedPhotoIDs: [String]
-    
-    // Maximum number of photo IDs to retain (prevents unbounded memory growth)
-    // Maximum number of photo IDs to retain (prevents unbounded memory growth)
-    // @Transient private static let maxReviewedPhotoIDs = 20000 (Removed)
-    var unlockedAchievements: [String]
+    var todayReviewCount: Int
+    var todayDate: Date?
+    var bestDayReviewCount: Int
+
+    // MARK: - Daily Challenge
     var dailyChallengeProgress: Int
     var dailyChallengeTarget: Int
     var dailyChallengeType: String
     var dailyChallengeDate: Date?
-    var sessionReviewCount: Int
-    var todayReviewCount: Int
-    var todayDate: Date?
-    var dayStreak: Int
-    var bestDayReviewCount: Int
 
     init() {
         self.totalReviewed = 0
         self.totalDeleted = 0
         self.totalKept = 0
+        self.storageFreed = 0
+        self.sessionReviewCount = 0
+
         self.currentStreak = 0
         self.bestStreak = 0
         self.dailyStreak = 0
+        self.dayStreak = 0
         self.lastReviewDate = nil
         self.lastLoginDate = nil
-        self.storageFreed = 0
-        self.reviewedPhotoIDs = []
-        self.unlockedAchievements = []
+        self.todayReviewCount = 0
+        self.todayDate = nil
+        self.bestDayReviewCount = 0
+
         self.dailyChallengeProgress = 0
         self.dailyChallengeTarget = 30
         self.dailyChallengeType = "review"
         self.dailyChallengeDate = nil
-        self.sessionReviewCount = 0
-        self.todayReviewCount = 0
-        self.todayDate = nil
-        self.dayStreak = 0
-        self.bestDayReviewCount = 0
     }
+
+    // MARK: - Core Actions
 
     func incrementReviewed() {
         totalReviewed += 1
@@ -64,7 +65,22 @@ class UserStats: DailyChallengeStats {
         updateDayTracking()
     }
 
-    func updateDayTracking() {
+    func incrementDeleted(fileSize: Int64 = 0) {
+        totalDeleted += 1
+        storageFreed += fileSize
+    }
+
+    func incrementKept() {
+        totalKept += 1
+    }
+
+    func resetStreak() {
+        currentStreak = 0
+    }
+
+    // MARK: - Day Tracking
+
+    private func updateDayTracking() {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 
@@ -93,18 +109,7 @@ class UserStats: DailyChallengeStats {
         }
     }
 
-    func incrementDeleted(fileSize: Int64 = 0) {
-        totalDeleted += 1
-        storageFreed += fileSize
-    }
-
-    func incrementKept() {
-        totalKept += 1
-    }
-
-    func resetStreak() {
-        currentStreak = 0
-    }
+    // MARK: - Daily Streak
 
     func updateDailyStreak() {
         let calendar = Calendar.current
@@ -126,29 +131,7 @@ class UserStats: DailyChallengeStats {
         lastLoginDate = Date()
     }
 
-    // MARK: - Legacy / Migration
-    // Kept only for migration in PhotoSoapApp.swift. Do not use for new logic.
-    // Logic moved to ReviewedPhoto model.
-    @available(*, deprecated, message: "Use GameificationService.markPhotoReviewed instead")
-    func markPhotoReviewed(_ photoID: String) {
-        // No-op - moved to GameificationService & ReviewedPhoto
-    }
-
-    @available(*, deprecated, message: "Use PhotoLibraryService.isReviewed instead")
-    func hasReviewedPhoto(_ photoID: String) -> Bool {
-        // No-op - deprecated
-        return false
-    }
-
-    func unlockAchievement(_ achievementID: String) {
-        if !unlockedAchievements.contains(achievementID) {
-            unlockedAchievements.append(achievementID)
-        }
-    }
-
-    func hasUnlockedAchievement(_ achievementID: String) -> Bool {
-        unlockedAchievements.contains(achievementID)
-    }
+    // MARK: - Daily Challenge
 
     func updateDailyChallengeProgress(for type: DailyChallengeType) {
         let calendar = Calendar.current
@@ -183,6 +166,8 @@ class UserStats: DailyChallengeStats {
     func updateDailyChallengeTarget(_ target: Int) {
         dailyChallengeTarget = target
     }
+
+    // MARK: - Formatting
 
     var storageFreedFormatted: String {
         let formatter = ByteCountFormatter()

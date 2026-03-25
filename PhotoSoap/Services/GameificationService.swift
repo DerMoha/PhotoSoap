@@ -36,9 +36,9 @@ class GameificationService: ObservableObject {
     func processSkip(stats: UserStats) {
         stats.resetStreak()
     }
-    
+
     // MARK: - Review History Management
-    
+
     func markPhotoReviewed(id: String, context: ModelContext) throws {
         let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
         if (try? context.fetchCount(descriptor)) == 0 {
@@ -46,7 +46,7 @@ class GameificationService: ObservableObject {
             context.insert(review)
         }
     }
-    
+
     func isPhotoReviewed(id: String, context: ModelContext) -> Bool {
         let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
         return (try? context.fetchCount(descriptor)) ?? 0 > 0
@@ -65,21 +65,30 @@ class GameificationService: ObservableObject {
             streakMilestoneReached = currentStreak
             showStreakCelebration = true
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                self.showStreakCelebration = false
-                self.streakMilestoneReached = nil
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                await MainActor.run {
+                    self.showStreakCelebration = false
+                    self.streakMilestoneReached = nil
+                }
             }
         }
     }
 
     private func checkAchievements(stats: UserStats, context: ModelContext) {
         for achievement in Achievement.allAchievements {
-            if !stats.hasUnlockedAchievement(achievement.id) && meetsRequirement(achievement, stats: stats) {
-                stats.unlockAchievement(achievement.id)
+            if !isAchievementUnlocked(achievement.id, context: context) && meetsRequirement(achievement, stats: stats) {
                 let unlocked = UnlockedAchievement(achievementId: achievement.id)
                 context.insert(unlocked)
             }
         }
+    }
+
+    private func isAchievementUnlocked(_ achievementId: String, context: ModelContext) -> Bool {
+        let descriptor = FetchDescriptor<UnlockedAchievement>(
+            predicate: #Predicate { $0.achievementId == achievementId }
+        )
+        return (try? context.fetchCount(descriptor)) ?? 0 > 0
     }
 
     private func meetsRequirement(_ achievement: Achievement, stats: UserStats) -> Bool {
@@ -143,9 +152,9 @@ class GameificationService: ObservableObject {
         )
     }
 
-    func getAchievementProgress(stats: UserStats) -> [(Achievement, Bool, Double)] {
+    func getAchievementProgress(stats: UserStats, context: ModelContext) -> [(Achievement, Bool, Double)] {
         Achievement.allAchievements.map { achievement in
-            let isUnlocked = stats.hasUnlockedAchievement(achievement.id)
+            let isUnlocked = isAchievementUnlocked(achievement.id, context: context)
             let progress = calculateProgress(for: achievement, stats: stats)
             return (achievement, isUnlocked, progress)
         }

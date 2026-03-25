@@ -4,6 +4,7 @@ import SwiftData
 struct AchievementsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var gameificationService: GameificationService
+    @Environment(\.modelContext) private var modelContext
     @Query private var unlockedAchievements: [UnlockedAchievement]
     @State private var selectedAchievement: Achievement?
 
@@ -26,7 +27,7 @@ struct AchievementsView: View {
             .sheet(item: $selectedAchievement) { achievement in
                 AchievementDetailSheet(
                     achievement: achievement,
-                    isUnlocked: stats.hasUnlockedAchievement(achievement.id),
+                    isUnlocked: isAchievementUnlocked(achievement.id),
                     progress: getProgress(for: achievement),
                     unlockDate: getUnlockDate(for: achievement.id)
                 )
@@ -80,7 +81,7 @@ struct AchievementsView: View {
             ForEach(Achievement.allAchievements) { achievement in
                 AchievementCard(
                     achievement: achievement,
-                    isUnlocked: stats.hasUnlockedAchievement(achievement.id),
+                    isUnlocked: isAchievementUnlocked(achievement.id),
                     progress: getProgress(for: achievement),
                     unlockDate: getUnlockDate(for: achievement.id)
                 )
@@ -91,8 +92,12 @@ struct AchievementsView: View {
         }
     }
 
+    private func isAchievementUnlocked(_ achievementId: String) -> Bool {
+        unlockedAchievements.contains { $0.achievementId == achievementId }
+    }
+
     private func getProgress(for achievement: Achievement) -> Double {
-        let progressData = gameificationService.getAchievementProgress(stats: stats)
+        let progressData = gameificationService.getAchievementProgress(stats: stats, context: modelContext)
         return progressData.first { $0.0.id == achievement.id }?.2 ?? 0
     }
 
