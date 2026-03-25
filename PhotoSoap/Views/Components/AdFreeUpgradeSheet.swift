@@ -152,35 +152,6 @@ struct AdFreeUpgradeSheet: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
-    private var bannerSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(String(localized: "adfree.banner.title", table: "LocalizableAdFree"))
-                .font(.headline)
-                .foregroundStyle(.secondary)
-
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "rectangle.bottomthird.inset.filled")
-                    .foregroundStyle(.blue)
-                    .frame(width: 24)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(String(localized: "adfree.banner.title", table: "LocalizableAdFree"))
-                        .font(.subheadline.weight(.semibold))
-                    Text(String(localized: "adfree.banner.description", table: "LocalizableAdFree"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Label(adCoordinator.statusSummary, systemImage: adCoordinator.adsEnabled ? "play.circle.fill" : "checkmark.seal.fill")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-    }
-
     @ViewBuilder
     private var couponSection: some View {
         if !adRemovalPurchaseService.hasAdRemovalEntitlement {

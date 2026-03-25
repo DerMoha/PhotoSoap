@@ -235,8 +235,11 @@ struct ShakeModifier: ViewModifier {
                     withAnimation(.default) {
                         shakeAmount = 1
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        shakeAmount = 0
+                    Task {
+                        try? await Task.sleep(nanoseconds: 300_000_000)
+                        await MainActor.run {
+                            shakeAmount = 0
+                        }
                     }
                 }
             }
