@@ -402,6 +402,46 @@
           }
         }
       }
+    },
+    "stats.todayReviews" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
+    },
+    "stats.dayStreak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day Streak"
+          }
+        }
+      }
+    },
+    "stats.bestDayReviews" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best Day"
+          }
+        }
+      }
+    },
+    "stats.loginStreak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login Streak"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

@@ -23,6 +23,10 @@ class UserStats: DailyChallengeStats {
     var dailyChallengeType: String
     var dailyChallengeDate: Date?
     var sessionReviewCount: Int
+    var todayReviewCount: Int
+    var todayDate: Date?
+    var dayStreak: Int
+    var bestDayReviewCount: Int
 
     init() {
         self.totalReviewed = 0
@@ -41,6 +45,10 @@ class UserStats: DailyChallengeStats {
         self.dailyChallengeType = "review"
         self.dailyChallengeDate = nil
         self.sessionReviewCount = 0
+        self.todayReviewCount = 0
+        self.todayDate = nil
+        self.dayStreak = 0
+        self.bestDayReviewCount = 0
     }
 
     func incrementReviewed() {
@@ -51,6 +59,37 @@ class UserStats: DailyChallengeStats {
 
         if currentStreak > bestStreak {
             bestStreak = currentStreak
+        }
+
+        updateDayTracking()
+    }
+
+    func updateDayTracking() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        if let storedDate = todayDate {
+            let storedDay = calendar.startOfDay(for: storedDate)
+            if storedDay == today {
+                todayReviewCount += 1
+            } else {
+                let daysDifference = calendar.dateComponents([.day], from: storedDay, to: today).day ?? 0
+                if daysDifference == 1 {
+                    dayStreak += 1
+                } else if daysDifference > 1 {
+                    dayStreak = 1
+                }
+                todayReviewCount = 1
+                todayDate = Date()
+            }
+        } else {
+            todayReviewCount = 1
+            todayDate = Date()
+            dayStreak = 1
+        }
+
+        if todayReviewCount > bestDayReviewCount {
+            bestDayReviewCount = todayReviewCount
         }
     }
 
