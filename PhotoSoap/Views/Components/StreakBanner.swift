@@ -84,15 +84,13 @@ struct StreakBanner: View {
     private func triggerAnimation() {
         isAnimating = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            isAnimating = false
+            self.isAnimating = false
         }
     }
 }
 
-// MARK: - Compact Header (Combines Streak + Daily Challenge)
-
 struct CompactHeader: View {
-    let currentStreak: Int
+    let todayReviewCount: Int
     let progress: Double
     let current: Int
     let target: Int
@@ -107,7 +105,6 @@ struct CompactHeader: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Streak pill
             HStack(spacing: 6) {
                 Image(systemName: "flame.fill")
                     .font(.subheadline)
@@ -115,11 +112,11 @@ struct CompactHeader: View {
                     .scaleEffect(isAnimating ? 1.2 : 1.0)
                     .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isAnimating)
 
-                Text("\(currentStreak)")
+                Text("\(todayReviewCount)")
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .contentTransition(.numericText())
-                    .animation(.spring(), value: currentStreak)
+                    .animation(.spring(), value: todayReviewCount)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -130,10 +127,8 @@ struct CompactHeader: View {
 
             Spacer()
 
-            // Daily challenge pill - tappable
             Button(action: onGoalTap) {
                 HStack(spacing: 8) {
-                    // Mini progress ring
                     ZStack {
                         Circle()
                             .stroke(Color(.systemGray4), lineWidth: 3)
@@ -176,11 +171,11 @@ struct CompactHeader: View {
             }
             .buttonStyle(.plain)
         }
-        .onChange(of: currentStreak) { oldValue, newValue in
+        .onChange(of: todayReviewCount) { oldValue, newValue in
             if newValue > oldValue {
                 isAnimating = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    isAnimating = false
+                    self.isAnimating = false
                 }
             }
         }
@@ -190,7 +185,7 @@ struct CompactHeader: View {
                 isAnimating = true
                 onDailyGoalComplete()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    isAnimating = false
+                    self.isAnimating = false
                 }
             }
         }
@@ -208,13 +203,13 @@ struct CompactHeader: View {
 }
 
 struct StreakBannerCompact: View {
-    let currentStreak: Int
+    let todayReviewCount: Int
 
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "flame.fill")
                 .foregroundStyle(.orange)
-            Text("\(currentStreak)")
+            Text("\(todayReviewCount)")
                 .fontWeight(.semibold)
         }
         .padding(.horizontal, 12)
@@ -280,7 +275,7 @@ struct StreakMilestoneView: View {
 #Preview {
     VStack(spacing: 20) {
         StreakBanner(currentStreak: 15, bestStreak: 42)
-        StreakBannerCompact(currentStreak: 15)
+        StreakBannerCompact(todayReviewCount: 15)
         StreakMilestoneView(milestone: 25, isShowing: .constant(true))
     }
     .padding()

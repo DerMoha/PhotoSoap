@@ -44,28 +44,28 @@ final class StatsViewModel {
     func getStreakStats(from stats: UserStats) -> [StatItem] {
         [
             StatItem(
-                title: String(localized: "stats.currentStreak", defaultValue: "Review Streak", table: "LocalizableStats"),
-                value: "\(stats.currentStreak)",
+                title: String(localized: "stats.todayReviews", defaultValue: "Today", table: "LocalizableStats"),
+                value: "\(stats.todayReviewCount)",
                 iconName: "flame",
                 color: .orange
             ),
             StatItem(
-                title: String(localized: "stats.bestStreak", defaultValue: "Best Streak", table: "LocalizableStats"),
-                value: "\(stats.bestStreak)",
-                iconName: "flame.fill",
-                color: .red
-            ),
-            StatItem(
-                title: String(localized: "stats.dailyStreak", defaultValue: "Login Streak", table: "LocalizableStats"),
-                value: "\(stats.dailyStreak)",
+                title: String(localized: "stats.dayStreak", defaultValue: "Day Streak", table: "LocalizableStats"),
+                value: "\(stats.dayStreak)",
                 iconName: "calendar",
                 color: .purple
             ),
             StatItem(
-                title: String(localized: "stats.sessionReviews", defaultValue: "Session Reviews", table: "LocalizableStats"),
-                value: "\(stats.sessionReviewCount)",
-                iconName: "clock",
-                color: .blue
+                title: String(localized: "stats.bestDayReviews", defaultValue: "Best Day", table: "LocalizableStats"),
+                value: "\(stats.bestDayReviewCount)",
+                iconName: "trophy.fill",
+                color: .yellow
+            ),
+            StatItem(
+                title: String(localized: "stats.loginStreak", defaultValue: "Login Streak", table: "LocalizableStats"),
+                value: "\(stats.dailyStreak)",
+                iconName: "person.fill.checkmark",
+                color: .green
             )
         ]
     }
