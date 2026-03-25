@@ -3,44 +3,39 @@ import SwiftData
 
 struct PhotoReviewView: View {
     @EnvironmentObject private var hapticsService: HapticsService
+    @Environment(\.modelContext) private var modelContext
+
+    @StateObject private var viewModel: PhotoReviewViewModel
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
     @Bindable var stats: UserStats
     @ObservedObject var analyticsService: AnalyticsService
     @ObservedObject var aggregateMetricsService: AggregateMetricsService
     @ObservedObject var adCoordinator: AdCoordinator
-    
-    @Environment(\.modelContext) private var modelContext
 
-    @State private var currentPhoto: Photo?
-    @State private var nextPhoto: Photo?
-    @State private var isLoading = false
-    @State private var error: String?
-    @State private var isShowingError = false
-    @State private var noMorePhotos = false
-    @State private var cardOffset: CGSize = .zero
-    @State private var cardRotation: Double = 0
-    @State private var swipeProgress: CGFloat = 0
-    @State private var swipeDirection: SwipeDirection?
-    
-    @State private var isProcessingAction = false  // Prevents concurrent button presses
-    @State private var currentFilter: PhotoFilter = .all
-    @State private var showFilterSheet = false
-    @State private var showGoalSheet = false
-    @State private var persistedReviewedIDs: Set<String> = []
-    @State private var knownUnreviewedIDs: Set<String> = []
-    @State private var hasTrackedReviewStart = false
-    @State private var cycleKeptCount = 0
-    @State private var cycleDeletedCount = 0
-    @State private var showStartOverConfirmation = false
-    @State private var showDailyGoalToast = false
-    @State private var hasTriggeredSwipeThresholdFeedback = false
-    @State private var lastCelebrationFeedbackDate = Date.distantPast
-    private let swipeActionThreshold: CGFloat = 100
-    private let swipeFeedbackDistance: CGFloat = 140
-    private let swipeOverlayThreshold: CGFloat = 12
-    private let cardCornerRadius: CGFloat = 16
-    private let celebrationFeedbackCooldown: TimeInterval = 0.75
+    init(
+        photoLibraryService: PhotoLibraryService,
+        gameificationService: GameificationService,
+        stats: UserStats,
+        analyticsService: AnalyticsService,
+        aggregateMetricsService: AggregateMetricsService,
+        adCoordinator: AdCoordinator
+    ) {
+        self.photoLibraryService = photoLibraryService
+        self.gameificationService = gameificationService
+        self.stats = stats
+        self.analyticsService = analyticsService
+        self.aggregateMetricsService = aggregateMetricsService
+        self.adCoordinator = adCoordinator
+        self._viewModel = StateObject(wrappedValue: PhotoReviewViewModel(
+            photoLibraryService: photoLibraryService,
+            gameificationService: gameificationService,
+            analyticsService: analyticsService,
+            aggregateMetricsService: aggregateMetricsService,
+            adCoordinator: adCoordinator,
+            hapticsService: HapticsService()
+        ))
+    }
 
     var body: some View {
         NavigationStack {
@@ -49,21 +44,19 @@ struct PhotoReviewView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Compact header
                     compactHeaderSection
                         .padding(.horizontal)
                         .padding(.top, 8)
 
-                    // Photo card takes remaining space
-                    if isLoading {
+                    if viewModel.isLoading {
                         Spacer()
                         loadingView
                         Spacer()
-                    } else if noMorePhotos {
+                    } else if viewModel.noMorePhotos {
                         Spacer()
                         noMorePhotosView
                         Spacer()
-                    } else if let photo = currentPhoto {
+                    } else if let photo = viewModel.currentPhoto {
                         reviewContent(photo: photo)
                             .padding(.top, 8)
                             .padding(.horizontal, 12)
@@ -82,52 +75,48 @@ struct PhotoReviewView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                if !hasTrackedReviewStart {
-                    analyticsService.track(.reviewStarted(filter: currentFilter))
-                    hasTrackedReviewStart = true
-                }
+                viewModel.setModelContext(modelContext)
+                viewModel.setStats(stats)
+                viewModel.onViewAppear()
 
                 Task {
-                    await loadInitialPhoto()
+                    await viewModel.loadInitialPhoto()
                 }
             }
             .onChange(of: gameificationService.showAchievementBanner) { _, isShowing in
-                guard isShowing else { return }
-                triggerCelebrationFeedbackIfNeeded()
+                viewModel.onAchievementBannerChanged(isShowing)
             }
             .onChange(of: gameificationService.showStreakCelebration) { _, isShowing in
-                guard isShowing else { return }
-                triggerCelebrationFeedbackIfNeeded()
+                viewModel.onStreakCelebrationChanged(isShowing)
             }
-            .onChange(of: showDailyGoalToast) { _, isShowing in
-                guard isShowing else { return }
-                triggerCelebrationFeedbackIfNeeded()
+            .onChange(of: viewModel.showDailyGoalToast) { _, isShowing in
+                viewModel.onDailyGoalToastChanged(isShowing)
             }
-            .alert("Error", isPresented: $isShowingError) {
+            .alert("Error", isPresented: $viewModel.isShowingError) {
                 Button("OK") {}
             } message: {
-                Text(error ?? String(localized: "error.unknown", table: "LocalizableShared"))
+                Text(viewModel.error ?? String(localized: "error.unknown", table: "LocalizableShared"))
             }
-            .alert("Start Over?", isPresented: $showStartOverConfirmation) {
+            .alert("Start Over?", isPresented: $viewModel.showStartOverConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 Button("Start Over", role: .destructive) {
-                    startOverWithClearing()
+                    viewModel.startOverWithClearing()
                 }
             } message: {
                 Text(String(localized: "review.startOver.confirmation", table: "LocalizableReview"))
             }
-            .sheet(isPresented: $showFilterSheet) {
+            .sheet(isPresented: $viewModel.showFilterSheet) {
                 FilterSheet(
                     photoLibraryService: photoLibraryService,
-                    currentFilter: currentFilter,
+                    currentFilter: viewModel.currentFilter,
                     onSelect: { filter in
-                        applyFilter(filter)
+                        viewModel.applyFilter(filter)
                     }
                 )
             }
-            .sheet(isPresented: $showGoalSheet) {
+            .sheet(isPresented: $viewModel.showGoalSheet) {
                 DailyGoalSettingSheet(
-                    isPresented: $showGoalSheet,
+                    isPresented: $viewModel.showGoalSheet,
                     currentTarget: stats.dailyChallengeTarget,
                     onSelect: { newTarget in
                         stats.updateDailyChallengeTarget(newTarget)
@@ -147,15 +136,15 @@ struct PhotoReviewView: View {
             current: stats.dailyChallengeProgress,
             target: stats.dailyChallengeTarget,
             challengeTitle: challenge.title,
-            isFilterActive: !currentFilter.isAll,
+            isFilterActive: !viewModel.currentFilter.isAll,
             onFilterTap: {
-                showFilterSheet = true
+                viewModel.showFilterSheet = true
             },
             onGoalTap: {
-                showGoalSheet = true
+                viewModel.showGoalSheet = true
             },
             onDailyGoalComplete: {
-                showDailyGoalToast = true
+                viewModel.showDailyGoalToast = true
             }
         )
     }
@@ -168,10 +157,10 @@ struct PhotoReviewView: View {
                 PhotoCardDisplay(
                     photo: photo,
                     photoLibraryService: photoLibraryService,
-                    offset: cardOffset,
-                    rotation: cardRotation,
-                    swipeProgress: swipeProgress,
-                    swipeDirection: swipeDirection
+                    offset: viewModel.cardOffset,
+                    rotation: viewModel.cardRotation,
+                    swipeProgress: viewModel.swipeProgress,
+                    swipeDirection: viewModel.swipeDirection
                 )
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -179,11 +168,11 @@ struct PhotoReviewView: View {
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    handleDragGesture(value)
+                    viewModel.handleDragGesture(value)
                 }
                 .onEnded { value in
                     Task {
-                        await handleDragEnd(value)
+                        await viewModel.handleDragEnd(value)
                     }
                 }
         )
@@ -191,25 +180,22 @@ struct PhotoReviewView: View {
 
     private func swipeDecisionBackdrop(cardWidth: CGFloat) -> some View {
         Group {
-            if let direction = swipeDirection {
+            if let direction = viewModel.swipeDirection {
                 decisionIcon(direction: direction, cardWidth: cardWidth)
             }
         }
-        .animation(.easeOut(duration: 0.18), value: swipeDirection)
+        .animation(.easeOut(duration: 0.18), value: viewModel.swipeDirection)
         .allowsHitTesting(false)
     }
 
     private func decisionIcon(direction: SwipeDirection, cardWidth: CGFloat) -> some View {
-        // The icon (86pt) is centered. It starts peeking out when the card edge
-        // passes the center, i.e. offset > cardWidth/2 - iconRadius.
-        // Color fill ramps from that reveal point to the action threshold.
         let iconRadius: CGFloat = 43
         let revealStart = cardWidth / 2
         let revealEnd = cardWidth / 2 + iconRadius * 2
-        let absOffset = abs(cardOffset.width)
+        let absOffset = abs(viewModel.cardOffset.width)
         let p = Double(min(max((absOffset - revealStart) / (revealEnd - revealStart), 0), 1))
 
-        let actionColor = color(for: direction)
+        let actionColor = viewModel.color(for: direction)
         let circleFillOpacity = p * 0.18
         let strokeOpacity = p * 0.45 + 0.1
         let iconBrightness = (1 - p) * 0.35
@@ -218,7 +204,6 @@ struct PhotoReviewView: View {
         let shadowRadius: CGFloat = 12 + CGFloat(p) * 6
 
         return ZStack {
-            // Circle that tints from gray toward the action color
             Circle()
                 .fill(actionColor.opacity(circleFillOpacity))
                 .background {
@@ -229,8 +214,7 @@ struct PhotoReviewView: View {
                         .stroke(actionColor.opacity(strokeOpacity), lineWidth: 1.5)
                 }
 
-            // Single icon: starts desaturated/washed-out, fills with saturated color
-            Image(systemName: symbolName(for: direction))
+            Image(systemName: viewModel.symbolName(for: direction))
                 .font(.system(size: 28, weight: .semibold))
                 .foregroundStyle(actionColor)
                 .saturation(p)
@@ -238,8 +222,8 @@ struct PhotoReviewView: View {
                 .opacity(iconOpacity)
         }
         .frame(width: 86, height: 86)
-        .scaleEffect(decisionIconScale)
-        .opacity(decisionIconOpacity)
+        .scaleEffect(viewModel.decisionIconScale)
+        .opacity(viewModel.decisionIconOpacity)
         .shadow(color: actionColor.opacity(shadowOpacity), radius: shadowRadius, x: 0, y: 6)
     }
 
@@ -296,14 +280,16 @@ struct PhotoReviewView: View {
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 8) {
-                Text("\(persistedReviewedIDs.count) photos reviewed")
-                Text("\(cycleDeletedCount) deleted • \(cycleKeptCount) kept")
+                Text("\(viewModel.persistedReviewedIDs.count) photos reviewed")
+                    .foregroundStyle(.secondary)
+
+                Text("\(viewModel.cycleDeletedCount) deleted • \(viewModel.cycleKeptCount) kept")
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
 
             Button {
-                showStartOverConfirmation = true
+                viewModel.showStartOverConfirmation = true
             } label: {
                 Label(String(localized: "review.startOver", table: "LocalizableReview"), systemImage: "arrow.counterclockwise")
                     .font(.headline)
@@ -383,7 +369,7 @@ struct PhotoReviewView: View {
 
     @ViewBuilder
     private var dailyGoalToast: some View {
-        if showDailyGoalToast {
+        if viewModel.showDailyGoalToast {
             VStack {
                 Spacer()
 
@@ -411,379 +397,15 @@ struct PhotoReviewView: View {
 
                 Spacer()
             }
-            .animation(.spring(), value: showDailyGoalToast)
+            .animation(.spring(), value: viewModel.showDailyGoalToast)
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                    withAnimation {
-                        showDailyGoalToast = false
+                Task {
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    await MainActor.run {
+                        viewModel.dismissDailyGoalToast()
                     }
                 }
             }
-        }
-    }
-
-    // MARK: - Actions
-
-    private func startOverWithClearing() {
-        isLoading = true
-        currentPhoto = nil
-        nextPhoto = nil
-        cycleKeptCount = 0
-        cycleDeletedCount = 0
-
-        do {
-            try gameificationService.deleteAllReviewedPhotos(context: modelContext)
-            try modelContext.save()
-        } catch {
-            presentError("Failed to clear review history: \(error.localizedDescription)")
-            return
-        }
-
-        photoLibraryService.refreshLibrary()
-        noMorePhotos = false
-        persistedReviewedIDs.removeAll()
-        knownUnreviewedIDs.removeAll()
-        photoLibraryService.setSessionReviewedIDs(Set<String>())
-
-        Task {
-            await loadInitialPhoto()
-        }
-    }
-
-    private func loadInitialPhoto() async {
-        isLoading = true
-        error = nil
-        noMorePhotos = false
-        currentPhoto = nil
-        nextPhoto = nil
-        cycleKeptCount = 0
-        cycleDeletedCount = 0
-        persistedReviewedIDs.removeAll()
-        knownUnreviewedIDs.removeAll()
-
-        do {
-            photoLibraryService.setSessionReviewedIDs(Set<String>())
-
-            if let photo = try await nextAvailablePhoto() {
-                currentPhoto = photo
-                await preloadNextPhoto()
-            } else {
-                noMorePhotos = true
-            }
-        } catch {
-            presentError(error.localizedDescription)
-        }
-
-        isLoading = false
-    }
-
-    private func preloadNextPhoto() async {
-        let excluded = currentPhoto.map { Set<String>([$0.id]) } ?? Set<String>()
-        if let photo = try? await nextAvailablePhoto(excluding: excluded) {
-            nextPhoto = photo
-        }
-    }
-
-    private func nextAvailablePhoto(excluding excludedIDs: Set<String> = []) async throws -> Photo? {
-        var attemptedIDs = excludedIDs
-        let maxAttempts = 80
-
-        for _ in 0..<maxAttempts {
-            guard let photo = try await photoLibraryService.getNextPhoto(excluding: attemptedIDs) else {
-                return nil
-            }
-
-            if isKnownReviewed(photo.id) {
-                photoLibraryService.markReviewed(photo.id)
-                attemptedIDs.insert(photo.id)
-                continue
-            }
-
-            return photo
-        }
-
-        return nil
-    }
-
-    private func keepPhoto() async {
-        guard !isProcessingAction else { return }
-        guard let photo = currentPhoto else { return }
-        
-        isProcessingAction = true
-        defer { isProcessingAction = false }
-
-        let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-
-        // 1. Mark in DB
-        do {
-            try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
-            gameificationService.processPhotoReview(
-                action: .keep,
-                fileSize: 0,
-                stats: stats,
-                challengeType: challengeType,
-                context: modelContext
-            )
-        } catch {
-            presentError("Failed to update review history: \(error.localizedDescription)")
-            return
-        }
-
-        guard persistReviewProgress(for: photo.id, cacheInSession: true) else {
-            return
-        }
-
-        cycleKeptCount += 1
-        analyticsService.track(.photoKept(filter: currentFilter))
-        aggregateMetricsService.recordReview()
-        hapticsService.impact(.medium)
-
-        await advanceToNextPhoto()
-    }
-
-    private func deletePhoto() async {
-        guard !isProcessingAction else { return }
-        guard let photo = currentPhoto else { return }
-        
-        isProcessingAction = true
-        defer { isProcessingAction = false }
-
-        do {
-            let resolvedFileSize: Int64
-            if photo.fileSize > 0 {
-                resolvedFileSize = photo.fileSize
-            } else {
-                resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo.asset)
-            }
-
-            try await photoLibraryService.deletePhoto(photo)
-            
-            let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-
-            do {
-                try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
-                gameificationService.processPhotoReview(
-                    action: .delete,
-                    fileSize: resolvedFileSize,
-                    stats: stats,
-                    challengeType: challengeType,
-                    context: modelContext
-                )
-            } catch {
-                presentError("Failed to update review history: \(error.localizedDescription)")
-                return
-            }
-
-            guard persistReviewProgress(for: photo.id, cacheInSession: false) else {
-                return
-            }
-
-            cycleDeletedCount += 1
-            analyticsService.track(.photoDeleted(filter: currentFilter))
-            aggregateMetricsService.recordDeletion(bytesFreed: resolvedFileSize)
-            hapticsService.impact(.rigid)
-
-            await advanceToNextPhoto()
-        } catch let error as NSError {
-            if error.code == 3072 {
-                aggregateMetricsService.recordReview()
-                await advanceToNextPhoto()
-            } else {
-                presentError("Failed to delete photo: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    private func persistReviewProgress(for photoID: String, cacheInSession: Bool) -> Bool {
-        do {
-            try modelContext.save()
-            persistedReviewedIDs.insert(photoID)
-            knownUnreviewedIDs.remove(photoID)
-
-            if cacheInSession {
-                photoLibraryService.markReviewed(photoID)
-            }
-
-            return true
-        } catch {
-            modelContext.rollback()
-            presentError("Failed to save your progress: \(error.localizedDescription)")
-            return false
-        }
-    }
-
-    private func isKnownReviewed(_ photoID: String) -> Bool {
-        if persistedReviewedIDs.contains(photoID) || photoLibraryService.isReviewed(photoID) {
-            return true
-        }
-
-        if knownUnreviewedIDs.contains(photoID) {
-            return false
-        }
-
-        let isReviewed = gameificationService.isPhotoReviewed(id: photoID, context: modelContext)
-        if isReviewed {
-            persistedReviewedIDs.insert(photoID)
-        } else {
-            knownUnreviewedIDs.insert(photoID)
-        }
-
-        return isReviewed
-    }
-
-    private func advanceToNextPhoto() async {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            resetSwipeState()
-        }
-
-        if let next = nextPhoto {
-            currentPhoto = next
-            nextPhoto = nil
-            await preloadNextPhoto()
-        } else {
-            await loadNextPhoto()
-        }
-    }
-
-    private func loadNextPhoto() async {
-        if let photo = try? await nextAvailablePhoto() {
-            currentPhoto = photo
-            await preloadNextPhoto()
-        } else {
-            currentPhoto = nil
-            noMorePhotos = true
-            analyticsService.track(.reviewBatchCompleted(filter: currentFilter))
-        }
-    }
-    
-    private func handleDragGesture(_ value: DragGesture.Value) {
-        guard !isProcessingAction else { return }
-
-        var t = Transaction(animation: nil)
-        t.disablesAnimations = true
-        withTransaction(t) {
-            cardOffset = CGSize(width: value.translation.width, height: 0)
-        }
-        cardRotation = 0
-
-        let translation = value.translation.width
-        let distance = abs(translation)
-        let progress = min(distance / swipeFeedbackDistance, 1)
-
-        if distance < swipeOverlayThreshold {
-            swipeProgress = 0
-            swipeDirection = nil
-            hasTriggeredSwipeThresholdFeedback = false
-        } else {
-            swipeProgress = progress
-            swipeDirection = translation > 0 ? .keep : .delete
-
-            if distance >= swipeActionThreshold {
-                if !hasTriggeredSwipeThresholdFeedback {
-                    hapticsService.selection()
-                    hasTriggeredSwipeThresholdFeedback = true
-                }
-            } else {
-                hasTriggeredSwipeThresholdFeedback = false
-            }
-        }
-    }
-
-    private func handleDragEnd(_ value: DragGesture.Value) async {
-        guard !isProcessingAction else { return }
-        
-        if value.translation.width > swipeActionThreshold {
-            withAnimation(.easeOut(duration: 0.3)) {
-                cardOffset = CGSize(width: 500, height: 0)
-            }
-            try? await Task.sleep(nanoseconds: 200_000_000)
-            await keepPhoto()
-        } else if value.translation.width < -swipeActionThreshold {
-            withAnimation(.easeOut(duration: 0.3)) {
-                cardOffset = CGSize(width: -500, height: 0)
-            }
-            try? await Task.sleep(nanoseconds: 200_000_000)
-            await deletePhoto()
-        } else {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                resetSwipeState()
-            }
-        }
-    }
-
-    private func refreshLibrary() {
-        photoLibraryService.refreshLibrary()
-        noMorePhotos = false
-
-        Task {
-            await loadInitialPhoto()
-        }
-    }
-
-    private func applyFilter(_ filter: PhotoFilter) {
-        currentFilter = filter
-        photoLibraryService.setFilter(filter)
-        currentPhoto = nil
-        nextPhoto = nil
-        noMorePhotos = false
-        analyticsService.track(.filterApplied(filter))
-
-        Task {
-            await loadInitialPhoto()
-        }
-    }
-
-    private func presentError(_ message: String) {
-        error = message
-        isShowingError = true
-        hapticsService.error()
-    }
-
-    private func resetSwipeState() {
-        cardOffset = .zero
-        cardRotation = 0
-        swipeProgress = 0
-        swipeDirection = nil
-        hasTriggeredSwipeThresholdFeedback = false
-    }
-
-    private func triggerCelebrationFeedbackIfNeeded() {
-        let now = Date()
-        guard now.timeIntervalSince(lastCelebrationFeedbackDate) > celebrationFeedbackCooldown else { return }
-
-        lastCelebrationFeedbackDate = now
-        hapticsService.success()
-    }
-
-    private var normalizedSwipeProgress: CGFloat {
-        min(max(swipeProgress, 0), 1)
-    }
-
-    private var decisionIconOpacity: Double {
-        0.78 + (Double(normalizedSwipeProgress) * 0.22)
-    }
-
-    private var decisionIconScale: CGFloat {
-        0.82 + (normalizedSwipeProgress * 0.18)
-    }
-
-    private func color(for direction: SwipeDirection?) -> Color {
-        switch direction {
-        case .keep:
-            return .green
-        case .delete:
-            return .red
-        case .none:
-            return .clear
-        }
-    }
-
-    private func symbolName(for direction: SwipeDirection) -> String {
-        switch direction {
-        case .keep:
-            return "checkmark"
-        case .delete:
-            return "trash"
         }
     }
 }
