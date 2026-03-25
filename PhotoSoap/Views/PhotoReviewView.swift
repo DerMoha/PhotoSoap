@@ -142,7 +142,7 @@ struct PhotoReviewView: View {
         let progress = Double(stats.dailyChallengeProgress) / Double(max(stats.dailyChallengeTarget, 1))
 
         return CompactHeader(
-            currentStreak: stats.currentStreak,
+            todayReviewCount: stats.todayReviewCount,
             progress: progress,
             current: stats.dailyChallengeProgress,
             target: stats.dailyChallengeTarget,
