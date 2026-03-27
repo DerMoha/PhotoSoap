@@ -2,10 +2,9 @@ import SwiftUI
 
 struct DeleteBatchExplainerSheet: View {
     let itemCount: Int
+    let isCommitting: Bool
     let onConfirm: () -> Void
     let onCancel: () -> Void
-
-    @State private var isCommitting = false
 
     var body: some View {
         NavigationStack {
@@ -77,6 +76,7 @@ struct DeleteBatchExplainerSheet: View {
 #Preview {
     DeleteBatchExplainerSheet(
         itemCount: 12,
+        isCommitting: false,
         onConfirm: {},
         onCancel: {}
     )

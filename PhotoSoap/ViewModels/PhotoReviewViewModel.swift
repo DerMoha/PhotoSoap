@@ -186,7 +186,7 @@ final class PhotoReviewViewModel: ObservableObject {
         do {
             photoLibraryService.setSessionReviewedIDs(Set<String>())
 
-            if let photo = try await nextAvailablePhoto() {
+            if let photo = try await nextAvailablePhoto(excluding: pendingDeletionIDs) {
                 currentPhoto = photo
                 await preloadNextPhoto()
             } else {
@@ -309,7 +309,8 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     private func preloadNextPhoto() async {
-        let excluded = currentPhoto.map { Set<String>([$0.id]) } ?? Set<String>()
+        var excluded = currentPhoto.map { Set<String>([$0.id]) } ?? Set<String>()
+        excluded.formUnion(pendingDeletionIDs)
         if let photo = try? await nextAvailablePhoto(excluding: excluded) {
             nextPhoto = photo
         }
@@ -451,6 +452,10 @@ final class PhotoReviewViewModel: ObservableObject {
         pendingDeletionItems.removeAll { $0.id == lastItem.id }
         lastQueuedDeletion = nil
         hapticsService.impact(.light)
+
+        if noMorePhotos || currentPhoto == nil {
+            Task { await reloadPhotoAfterQueueChange() }
+        }
     }
 
     func requestRemoveFromQueue(_ item: PendingDeletionItem) {
@@ -469,6 +474,10 @@ final class PhotoReviewViewModel: ObservableObject {
         isShowingRemoveFromQueueConfirmation = false
         photoPendingQueueRemoval = nil
         hapticsService.impact(.light)
+
+        if noMorePhotos || currentPhoto == nil {
+            Task { await reloadPhotoAfterQueueChange() }
+        }
     }
 
     func dismissRemoveFromQueueConfirmation() {
@@ -486,6 +495,10 @@ final class PhotoReviewViewModel: ObservableObject {
 
         isShowingClearQueueConfirmation = false
         hapticsService.impact(.medium)
+
+        if noMorePhotos || currentPhoto == nil {
+            Task { await reloadPhotoAfterQueueChange() }
+        }
     }
 
     func dismissClearQueueConfirmation() {
@@ -497,6 +510,7 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     func commitPendingDeletionBatch() async {
+        guard !isCommittingDeletionBatch else { return }
         guard !pendingDeletionItems.isEmpty else { return }
         guard let stats, let modelContext else { return }
 
@@ -629,7 +643,7 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     private func loadNextPhoto() async {
-        if let photo = try? await nextAvailablePhoto() {
+        if let photo = try? await nextAvailablePhoto(excluding: pendingDeletionIDs) {
             currentPhoto = photo
             await preloadNextPhoto()
         } else {
@@ -645,6 +659,16 @@ final class PhotoReviewViewModel: ObservableObject {
         swipeProgress = 0
         swipeDirection = nil
         hasTriggeredSwipeThresholdFeedback = false
+    }
+
+    private func reloadPhotoAfterQueueChange() async {
+        noMorePhotos = false
+        if let photo = try? await nextAvailablePhoto(excluding: pendingDeletionIDs) {
+            currentPhoto = photo
+            await preloadNextPhoto()
+        } else {
+            noMorePhotos = true
+        }
     }
 
     private func triggerCelebrationFeedbackIfNeeded() {

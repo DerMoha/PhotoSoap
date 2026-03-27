@@ -156,6 +156,7 @@ struct PhotoReviewView: View {
             .sheet(isPresented: $viewModel.isShowingDeleteBatchExplainer) {
                 DeleteBatchExplainerSheet(
                     itemCount: viewModel.pendingDeletionCount,
+                    isCommitting: viewModel.isCommittingDeletionBatch,
                     onConfirm: {
                         Task {
                             await viewModel.commitPendingDeletionBatch()
