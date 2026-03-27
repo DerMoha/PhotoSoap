@@ -384,6 +384,13 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
     }
 
+    func deletePhotos(_ photos: [Photo]) async throws {
+        let assets = photos.map { $0.asset }
+        try await PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.deleteAssets(assets as NSFastEnumeration)
+        }
+    }
+
     // MARK: - Library Refresh
 
     func getTotalPhotoCount() -> Int {

@@ -72,6 +72,18 @@ struct PhotoReviewView: View {
                 achievementBanner
                 streakCelebration
                 dailyGoalToast
+
+                if viewModel.pendingDeletionCount > 0 {
+                    deleteQueueTray
+                }
+
+                if viewModel.showDeletionSuccessToast {
+                    deletionSuccessToast
+                }
+
+                if viewModel.showDeletionCancelledToast {
+                    deletionCancelledToast
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
@@ -122,6 +134,58 @@ struct PhotoReviewView: View {
                         stats.updateDailyChallengeTarget(newTarget)
                     }
                 )
+            }
+            .sheet(isPresented: $viewModel.isShowingDeleteQueueSheet) {
+                DeleteQueueSheet(
+                    items: viewModel.pendingDeletionItems,
+                    onRemoveFromQueue: { item in
+                        viewModel.requestRemoveFromQueue(item)
+                    },
+                    onClearQueue: {
+                        viewModel.requestClearQueue()
+                    },
+                    onDeleteAll: {
+                        viewModel.requestCommitPendingDeletionBatch()
+                    },
+                    onDismiss: {
+                        viewModel.isShowingDeleteQueueSheet = false
+                    }
+                )
+                .interactiveDismissDisabled(viewModel.isCommittingDeletionBatch)
+            }
+            .sheet(isPresented: $viewModel.isShowingDeleteBatchExplainer) {
+                DeleteBatchExplainerSheet(
+                    itemCount: viewModel.pendingDeletionCount,
+                    onConfirm: {
+                        Task {
+                            await viewModel.commitPendingDeletionBatch()
+                        }
+                    },
+                    onCancel: {
+                        viewModel.isShowingDeleteBatchExplainer = false
+                    }
+                )
+                .interactiveDismissDisabled(viewModel.isCommittingDeletionBatch)
+            }
+            .alert(String(localized: "review.queue.remove.confirmation.title", defaultValue: "Remove from queue?", table: "LocalizableReview"), isPresented: $viewModel.isShowingRemoveFromQueueConfirmation) {
+                Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {
+                    viewModel.dismissRemoveFromQueueConfirmation()
+                }
+                Button(String(localized: "common.remove", defaultValue: "Remove", table: "LocalizableShared")) {
+                    viewModel.confirmRemoveFromQueue()
+                }
+            } message: {
+                Text(String(localized: "review.queue.remove.confirmation.message", defaultValue: "This photo will stay in your library and won't be included in the next delete batch.", table: "LocalizableReview"))
+            }
+            .alert(String(localized: "review.queue.clear.confirmation.title", defaultValue: "Clear delete queue?", table: "LocalizableReview"), isPresented: $viewModel.isShowingClearQueueConfirmation) {
+                Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {
+                    viewModel.dismissClearQueueConfirmation()
+                }
+                Button(String(localized: "common.clear", defaultValue: "Clear", table: "LocalizableShared"), role: .destructive) {
+                    viewModel.confirmClearQueue()
+                }
+            } message: {
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All queued photos will be kept. Nothing will be deleted from Photos.", table: "LocalizableReview"))
             }
         }
     }
@@ -403,6 +467,97 @@ struct PhotoReviewView: View {
                     try? await Task.sleep(nanoseconds: 3_000_000_000)
                     await MainActor.run {
                         viewModel.dismissDailyGoalToast()
+                    }
+                }
+            }
+        }
+    }
+
+    private var deleteQueueTray: some View {
+        VStack {
+            Spacer()
+            DeleteQueueTray(
+                queueCount: viewModel.pendingDeletionCount,
+                bytesFreed: viewModel.pendingDeletionBytesFormatted,
+                onUndo: {
+                    viewModel.undoLastQueuedDeletion()
+                },
+                onReviewQueue: {
+                    viewModel.isShowingDeleteQueueSheet = true
+                },
+                onDeleteAll: {
+                    viewModel.requestCommitPendingDeletionBatch()
+                }
+            )
+        }
+    }
+
+    private var deletionSuccessToast: some View {
+        VStack {
+            Spacer()
+
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.green)
+
+                VStack(alignment: .leading) {
+                    Text(String(localized: "review.queue.deletedSuccess", defaultValue: "Deleted!", table: "LocalizableReview"))
+                        .font(.headline)
+                    Text(String(localized: "review.queue.deletedSuccess.detail", defaultValue: "Photos removed from your library.", table: "LocalizableReview"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(radius: 10)
+            .padding()
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .onAppear {
+                Task {
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    await MainActor.run {
+                        viewModel.dismissDeletionSuccessToast()
+                    }
+                }
+            }
+        }
+    }
+
+    private var deletionCancelledToast: some View {
+        VStack {
+            Spacer()
+
+            HStack(spacing: 12) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.orange)
+
+                VStack(alignment: .leading) {
+                    Text(String(localized: "review.queue.cancelled", defaultValue: "Deletion Cancelled", table: "LocalizableReview"))
+                        .font(.headline)
+                    Text(String(localized: "review.queue.cancelled.detail", defaultValue: "Your queued photos are still here.", table: "LocalizableReview"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(radius: 10)
+            .padding()
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .onAppear {
+                Task {
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    await MainActor.run {
+                        viewModel.dismissDeletionCancelledToast()
                     }
                 }
             }

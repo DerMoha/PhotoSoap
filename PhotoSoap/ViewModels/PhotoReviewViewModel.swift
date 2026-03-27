@@ -2,6 +2,18 @@ import Foundation
 import SwiftUI
 import SwiftData
 import Combine
+import Photos
+
+struct PendingDeletionItem: Identifiable, Equatable {
+    let id: String
+    let photo: Photo
+    let queuedAt: Date
+    var fileSize: Int64
+
+    static func == (lhs: PendingDeletionItem, rhs: PendingDeletionItem) -> Bool {
+        lhs.id == rhs.id
+    }
+}
 
 @MainActor
 final class PhotoReviewViewModel: ObservableObject {
@@ -29,6 +41,37 @@ final class PhotoReviewViewModel: ObservableObject {
     @Published var showDailyGoalToast = false
     @Published var hasTriggeredSwipeThresholdFeedback = false
     @Published var lastCelebrationFeedbackDate = Date.distantPast
+
+    @Published var pendingDeletionItems: [PendingDeletionItem] = []
+    @Published var isShowingDeleteQueueSheet = false
+    @Published var isShowingDeleteBatchExplainer = false
+    @Published var isShowingRemoveFromQueueConfirmation = false
+    @Published var isShowingClearQueueConfirmation = false
+    @Published var photoPendingQueueRemoval: PendingDeletionItem? = nil
+    @Published var isCommittingDeletionBatch = false
+    @Published var showDeletionSuccessToast = false
+    @Published var showDeletionCancelledToast = false
+
+    var pendingDeletionCount: Int {
+        pendingDeletionItems.count
+    }
+
+    var pendingDeletionBytes: Int64 {
+        pendingDeletionItems.reduce(0) { $0 + $1.fileSize }
+    }
+
+    var pendingDeletionBytesFormatted: String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: pendingDeletionBytes)
+    }
+
+    var pendingDeletionIDs: Set<String> {
+        Set(pendingDeletionItems.map { $0.id })
+    }
+
+    private var lastQueuedDeletion: PendingDeletionItem? = nil
 
     let swipeActionThreshold: CGFloat = 100
     let swipeFeedbackDistance: CGFloat = 140
@@ -100,6 +143,9 @@ final class PhotoReviewViewModel: ObservableObject {
 
     func startOverWithClearing() {
         guard let stats, let modelContext else { return }
+
+        pendingDeletionItems.removeAll()
+        lastQueuedDeletion = nil
 
         isLoading = true
         currentPhoto = nil
@@ -213,7 +259,7 @@ final class PhotoReviewViewModel: ObservableObject {
                 cardOffset = CGSize(width: -500, height: 0)
             }
             try? await Task.sleep(nanoseconds: 200_000_000)
-            await deletePhoto()
+            await queueCurrentPhotoForDeletion()
         } else {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                 resetSwipeState()
@@ -376,6 +422,155 @@ final class PhotoReviewViewModel: ObservableObject {
                 presentError("Failed to delete photo: \(error.localizedDescription)")
             }
         }
+    }
+
+    func queueCurrentPhotoForDeletion() async {
+        guard let photo = currentPhoto else { return }
+
+        var resolvedFileSize: Int64 = photo.fileSize
+        if resolvedFileSize == 0 {
+            resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo.asset)
+        }
+
+        let item = PendingDeletionItem(
+            id: photo.id,
+            photo: photo,
+            queuedAt: Date(),
+            fileSize: resolvedFileSize
+        )
+        pendingDeletionItems.append(item)
+        lastQueuedDeletion = item
+
+        hapticsService.impact(.rigid)
+        await advanceToNextPhoto()
+    }
+
+    func undoLastQueuedDeletion() {
+        guard let lastItem = lastQueuedDeletion else { return }
+
+        pendingDeletionItems.removeAll { $0.id == lastItem.id }
+        lastQueuedDeletion = nil
+        hapticsService.impact(.light)
+    }
+
+    func requestRemoveFromQueue(_ item: PendingDeletionItem) {
+        photoPendingQueueRemoval = item
+        isShowingRemoveFromQueueConfirmation = true
+    }
+
+    func confirmRemoveFromQueue() {
+        guard let item = photoPendingQueueRemoval else { return }
+
+        pendingDeletionItems.removeAll { $0.id == item.id }
+        if lastQueuedDeletion?.id == item.id {
+            lastQueuedDeletion = nil
+        }
+
+        isShowingRemoveFromQueueConfirmation = false
+        photoPendingQueueRemoval = nil
+        hapticsService.impact(.light)
+    }
+
+    func dismissRemoveFromQueueConfirmation() {
+        isShowingRemoveFromQueueConfirmation = false
+        photoPendingQueueRemoval = nil
+    }
+
+    func requestClearQueue() {
+        isShowingClearQueueConfirmation = true
+    }
+
+    func confirmClearQueue() {
+        pendingDeletionItems.removeAll()
+        lastQueuedDeletion = nil
+
+        isShowingClearQueueConfirmation = false
+        hapticsService.impact(.medium)
+    }
+
+    func dismissClearQueueConfirmation() {
+        isShowingClearQueueConfirmation = false
+    }
+
+    func requestCommitPendingDeletionBatch() {
+        isShowingDeleteBatchExplainer = true
+    }
+
+    func commitPendingDeletionBatch() async {
+        guard !pendingDeletionItems.isEmpty else { return }
+        guard let stats, let modelContext else { return }
+
+        isCommittingDeletionBatch = true
+        defer {
+            isCommittingDeletionBatch = false
+            isShowingDeleteBatchExplainer = false
+        }
+
+        let photosToDelete = pendingDeletionItems.map { $0.photo }
+        let totalBytes = pendingDeletionItems.reduce(0) { $0 + $1.fileSize }
+
+        do {
+            try await photoLibraryService.deletePhotos(photosToDelete)
+
+            let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
+
+            for item in pendingDeletionItems {
+                do {
+                    try gameificationService.markPhotoReviewed(id: item.id, context: modelContext)
+                    gameificationService.processPhotoReview(
+                        action: .delete,
+                        fileSize: item.fileSize,
+                        stats: stats,
+                        challengeType: challengeType,
+                        context: modelContext
+                    )
+                } catch {
+                    continue
+                }
+
+                _ = persistReviewProgress(for: item.id, cacheInSession: false)
+            }
+
+            try modelContext.save()
+
+            let deletedCount = pendingDeletionItems.count
+            cycleDeletedCount += deletedCount
+            analyticsService.track(.photoDeleted(filter: currentFilter))
+            aggregateMetricsService.recordDeletion(bytesFreed: totalBytes)
+
+            pendingDeletionItems.removeAll()
+            lastQueuedDeletion = nil
+
+            showDeletionSuccessToast = true
+            hapticsService.success()
+
+            Task {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                await MainActor.run {
+                    self.showDeletionSuccessToast = false
+                }
+            }
+        } catch let error as NSError {
+            if error.code == 3072 {
+                showDeletionCancelledToast = true
+                Task {
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    await MainActor.run {
+                        self.showDeletionCancelledToast = false
+                    }
+                }
+            } else {
+                presentError("Failed to delete photos: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func dismissDeletionSuccessToast() {
+        showDeletionSuccessToast = false
+    }
+
+    func dismissDeletionCancelledToast() {
+        showDeletionCancelledToast = false
     }
 
     private func persistReviewProgress(for photoID: String, cacheInSession: Bool) -> Bool {
