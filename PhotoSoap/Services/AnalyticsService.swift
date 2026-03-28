@@ -99,7 +99,7 @@ final class AnalyticsService: ObservableObject {
 
     init(defaults: UserDefaults = .standard, recorder: ((AnalyticsEvent) -> Void)? = nil) {
         self.defaults = defaults
-        self.isEnabled = defaults.object(forKey: Self.analyticsEnabledKey) as? Bool ?? false
+        self.isEnabled = defaults.object(forKey: Self.analyticsEnabledKey) as? Bool ?? true
         self.recorder = recorder ?? Self.defaultRecorder
     }
 
