@@ -99,7 +99,18 @@
         }
       }
     },
+    "stats.bestDayReviews" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best Day"
+          }
+        }
+      }
+    },
     "stats.bestStreak" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -116,6 +127,7 @@
       }
     },
     "stats.currentStreak" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -132,6 +144,7 @@
       }
     },
     "stats.dailyStreak" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -143,6 +156,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Login Streak"
+          }
+        }
+      }
+    },
+    "stats.dayStreak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day Streak"
           }
         }
       }
@@ -191,6 +214,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keep Rate"
+          }
+        }
+      }
+    },
+    "stats.loginStreak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login Streak"
           }
         }
       }
@@ -324,6 +357,7 @@
       }
     },
     "stats.sessionReviews" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -409,36 +443,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Today"
-          }
-        }
-      }
-    },
-    "stats.dayStreak" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Day Streak"
-          }
-        }
-      }
-    },
-    "stats.bestDayReviews" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Best Day"
-          }
-        }
-      }
-    },
-    "stats.loginStreak" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Login Streak"
           }
         }
       }

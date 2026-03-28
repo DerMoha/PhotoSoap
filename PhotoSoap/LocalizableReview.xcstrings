@@ -196,6 +196,237 @@
         }
       }
     },
+    "deleteQueue.cancelled.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your photos were not deleted."
+          }
+        }
+      }
+    },
+    "deleteQueue.cancelled.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled"
+          }
+        }
+      }
+    },
+    "deleteQueue.clear.confirm" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear All"
+          }
+        }
+      }
+    },
+    "deleteQueue.clear.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove all %d photos from the delete queue?"
+          }
+        }
+      }
+    },
+    "deleteQueue.clear.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Queue"
+          }
+        }
+      }
+    },
+    "deleteQueue.explainer.cancel" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "deleteQueue.explainer.delete" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
+    "deleteQueue.explainer.subtitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS will now ask you to confirm deletion of %d photos from your Photo Library."
+          }
+        }
+      }
+    },
+    "deleteQueue.explainer.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to Delete"
+          }
+        }
+      }
+    },
+    "deleteQueue.removing.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove this photo from the delete queue?"
+          }
+        }
+      }
+    },
+    "deleteQueue.removing.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from Queue"
+          }
+        }
+      }
+    },
+    "deleteQueue.sheet.clearQueue" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Queue"
+          }
+        }
+      }
+    },
+    "deleteQueue.sheet.deleteInPhotos" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete in Photos"
+          }
+        }
+      }
+    },
+    "deleteQueue.sheet.empty" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No photos queued for deletion"
+          }
+        }
+      }
+    },
+    "deleteQueue.sheet.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos to Delete"
+          }
+        }
+      }
+    },
+    "deleteQueue.success.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d photos removed from your library."
+          }
+        }
+      }
+    },
+    "deleteQueue.success.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted"
+          }
+        }
+      }
+    },
+    "deleteQueue.tray.deleteAll" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All"
+          }
+        }
+      }
+    },
+    "deleteQueue.tray.review" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review"
+          }
+        }
+      }
+    },
+    "deleteQueue.tray.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Queue"
+          }
+        }
+      }
+    },
+    "deleteQueue.tray.undo" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undo"
+          }
+        }
+      }
+    },
     "review.complete.subtitle" : {
       "localizations" : {
         "de" : {
@@ -277,6 +508,7 @@
       }
     },
     "review.progress" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -288,6 +520,262 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "reviewed"
+          }
+        }
+      }
+    },
+    "review.queue.cancelled" : {
+      "comment" : "A title for a toast that appears when the user cancels a pending deletion.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Deletion Cancelled"
+          }
+        }
+      }
+    },
+    "review.queue.cancelled.detail" : {
+      "comment" : "A description of the message that appears when the user cancels a pending deletion.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your queued photos are still here."
+          }
+        }
+      }
+    },
+    "review.queue.clear" : {
+      "comment" : "The title of the button that clears the delete queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Queue"
+          }
+        }
+      }
+    },
+    "review.queue.clear.confirmation.message" : {
+      "comment" : "A message displayed in a confirmation alert when the user is about to clear the delete queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All queued photos will be kept. Nothing will be deleted from Photos."
+          }
+        }
+      }
+    },
+    "review.queue.clear.confirmation.title" : {
+      "comment" : "The title of a confirmation alert that asks the user if they're sure they want to clear the delete queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear delete queue?"
+          }
+        }
+      }
+    },
+    "review.queue.count" : {
+      "comment" : "A label that displays the number of items in the review queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld queued"
+          }
+        }
+      }
+    },
+    "review.queue.deleteAll" : {
+      "comment" : "A button title that deletes all items in the review queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete All"
+          }
+        }
+      }
+    },
+    "review.queue.deletedSuccess" : {
+      "comment" : "A label displayed after a photo is successfully deleted from the review queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Deleted!"
+          }
+        }
+      }
+    },
+    "review.queue.deletedSuccess.detail" : {
+      "comment" : "A description of the effect of successfully deleting photos from the review queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Photos removed from your library."
+          }
+        }
+      }
+    },
+    "review.queue.deleteInPhotos" : {
+      "comment" : "A button title that deletes all pending deletions in Photos.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete in Photos"
+          }
+        }
+      }
+    },
+    "review.queue.empty.title" : {
+      "comment" : "A title for the empty state when there are no photos in the queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No photos in queue"
+          }
+        }
+      }
+    },
+    "review.queue.explainer.confirm" : {
+      "comment" : "A button title for confirming the deletion of a batch of photos.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Continue to Delete"
+          }
+        }
+      }
+    },
+    "review.queue.explainer.message" : {
+      "comment" : "A message displayed in the delete batch explainer sheet.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "iOS will ask once to confirm deleting %lld photos. These photos will move to Recently Deleted."
+          }
+        }
+      }
+    },
+    "review.queue.explainer.title" : {
+      "comment" : "The title of the explainer sheet that appears when the user deletes a batch of photos.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "iOS Will Ask Once"
+          }
+        }
+      }
+    },
+    "review.queue.remove.confirmation.message" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This photo will stay in your library and won't be included in the next delete batch."
+          }
+        }
+      }
+    },
+    "review.queue.remove.confirmation.title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove from queue?"
+          }
+        }
+      }
+    },
+    "review.queue.review" : {
+      "comment" : "A button to review the queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Review"
+          }
+        }
+      }
+    },
+    "review.queue.space" : {
+      "comment" : "A description of the amount of space freed by deleting the queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ to free"
+          }
+        }
+      }
+    },
+    "review.queue.title" : {
+      "comment" : "The title of the delete queue screen.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete Queue"
+          }
+        }
+      }
+    },
+    "review.queue.undo" : {
+      "comment" : "A button to undo the deletion of a review.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Undo"
           }
         }
       }
@@ -406,6 +894,19 @@
         }
       }
     },
+    "reviewqueue.empty.description" : {
+      "comment" : "A description of the empty state of the queue.",
+      "extractionState" : "extracted_with_value",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Swipe left on photos to queue them for deletion."
+          }
+        }
+      }
+    },
     "streak.best" : {
       "localizations" : {
         "de" : {
@@ -469,217 +970,7 @@
           }
         }
       }
-    },
-    "deleteQueue.tray.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Queue"
-          }
-        }
-      }
-    },
-    "deleteQueue.tray.undo" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Undo"
-          }
-        }
-      }
-    },
-    "deleteQueue.tray.review" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Review"
-          }
-        }
-      }
-    },
-    "deleteQueue.tray.deleteAll" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete All"
-          }
-        }
-      }
-    },
-    "deleteQueue.sheet.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photos to Delete"
-          }
-        }
-      }
-    },
-    "deleteQueue.sheet.empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No photos queued for deletion"
-          }
-        }
-      }
-    },
-    "deleteQueue.sheet.clearQueue" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear Queue"
-          }
-        }
-      }
-    },
-    "deleteQueue.sheet.deleteInPhotos" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete in Photos"
-          }
-        }
-      }
-    },
-    "deleteQueue.removing.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from Queue"
-          }
-        }
-      }
-    },
-    "deleteQueue.removing.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove this photo from the delete queue?"
-          }
-        }
-      }
-    },
-    "deleteQueue.clear.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear Queue"
-          }
-        }
-      }
-    },
-    "deleteQueue.clear.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove all %d photos from the delete queue?"
-          }
-        }
-      }
-    },
-    "deleteQueue.clear.confirm" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear All"
-          }
-        }
-      }
-    },
-    "deleteQueue.explainer.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ready to Delete"
-          }
-        }
-      }
-    },
-    "deleteQueue.explainer.subtitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iOS will now ask you to confirm deletion of %d photos from your Photo Library."
-          }
-        }
-      }
-    },
-    "deleteQueue.explainer.cancel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
-          }
-        }
-      }
-    },
-    "deleteQueue.explainer.delete" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
-          }
-        }
-      }
-    },
-    "deleteQueue.success.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deleted"
-          }
-        }
-      }
-    },
-    "deleteQueue.success.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d photos removed from your library."
-          }
-        }
-      }
-    },
-    "deleteQueue.cancelled.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancelled"
-          }
-        }
-      }
-    },
-    "deleteQueue.cancelled.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your photos were not deleted."
-          }
-        }
-      }
     }
   },
-  "version" : "1.0"
+  "version" : "1.1"
 }
