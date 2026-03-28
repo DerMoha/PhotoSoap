@@ -71,7 +71,7 @@ final class PhotoReviewViewModel: ObservableObject {
         Set(pendingDeletionItems.map { $0.id })
     }
 
-    private var lastQueuedDeletion: PendingDeletionItem? = nil
+    private var deletionStack: [PendingDeletionItem] = []
 
     let swipeActionThreshold: CGFloat = 100
     let swipeFeedbackDistance: CGFloat = 140
@@ -145,7 +145,7 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let stats, let modelContext else { return }
 
         pendingDeletionItems.removeAll()
-        lastQueuedDeletion = nil
+        deletionStack.removeAll()
 
         isLoading = true
         currentPhoto = nil
@@ -440,17 +440,17 @@ final class PhotoReviewViewModel: ObservableObject {
             fileSize: resolvedFileSize
         )
         pendingDeletionItems.append(item)
-        lastQueuedDeletion = item
+        deletionStack.append(item)
 
         hapticsService.impact(.rigid)
         await advanceToNextPhoto()
     }
 
     func undoLastQueuedDeletion() {
-        guard let lastItem = lastQueuedDeletion else { return }
+        guard !deletionStack.isEmpty else { return }
 
+        let lastItem = deletionStack.removeLast()
         pendingDeletionItems.removeAll { $0.id == lastItem.id }
-        lastQueuedDeletion = nil
         hapticsService.impact(.light)
 
         if noMorePhotos || currentPhoto == nil {
@@ -467,9 +467,7 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let item = photoPendingQueueRemoval else { return }
 
         pendingDeletionItems.removeAll { $0.id == item.id }
-        if lastQueuedDeletion?.id == item.id {
-            lastQueuedDeletion = nil
-        }
+        deletionStack.removeAll { $0.id == item.id }
 
         isShowingRemoveFromQueueConfirmation = false
         photoPendingQueueRemoval = nil
@@ -491,7 +489,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
     func confirmClearQueue() {
         pendingDeletionItems.removeAll()
-        lastQueuedDeletion = nil
+        deletionStack.removeAll()
 
         isShowingClearQueueConfirmation = false
         hapticsService.impact(.medium)
@@ -553,7 +551,7 @@ final class PhotoReviewViewModel: ObservableObject {
             aggregateMetricsService.recordDeletion(bytesFreed: totalBytes)
 
             pendingDeletionItems.removeAll()
-            lastQueuedDeletion = nil
+            deletionStack.removeAll()
 
             showDeletionSuccessToast = true
             hapticsService.success()
