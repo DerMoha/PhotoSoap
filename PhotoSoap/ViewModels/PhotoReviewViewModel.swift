@@ -85,6 +85,7 @@ final class PhotoReviewViewModel: ObservableObject {
     private let aggregateMetricsService: AggregateMetricsService
     private let adCoordinator: AdCoordinator
     private let hapticsService: HapticsService
+    private let defaults: UserDefaults
     private weak var modelContext: ModelContext?
     private var stats: UserStats?
 
@@ -94,7 +95,8 @@ final class PhotoReviewViewModel: ObservableObject {
         analyticsService: AnalyticsService,
         aggregateMetricsService: AggregateMetricsService,
         adCoordinator: AdCoordinator,
-        hapticsService: HapticsService
+        hapticsService: HapticsService,
+        defaults: UserDefaults = .standard
     ) {
         self.photoLibraryService = photoLibraryService
         self.gameificationService = gameificationService
@@ -102,6 +104,7 @@ final class PhotoReviewViewModel: ObservableObject {
         self.aggregateMetricsService = aggregateMetricsService
         self.adCoordinator = adCoordinator
         self.hapticsService = hapticsService
+        self.defaults = defaults
     }
 
     func setModelContext(_ context: ModelContext) {
@@ -259,7 +262,11 @@ final class PhotoReviewViewModel: ObservableObject {
                 cardOffset = CGSize(width: -500, height: 0)
             }
             try? await Task.sleep(nanoseconds: 200_000_000)
-            await queueCurrentPhotoForDeletion()
+            if defaults.object(forKey: UserDefaultsKeys.deleteQueueEnabled) as? Bool ?? true {
+                await queueCurrentPhotoForDeletion()
+            } else {
+                await deletePhoto()
+            }
         } else {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                 resetSwipeState()

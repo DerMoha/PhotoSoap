@@ -7,6 +7,8 @@ struct SettingsView: View {
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
     @ObservedObject var adCoordinator: AdCoordinator
 
+    @AppStorage(UserDefaultsKeys.deleteQueueEnabled) private var isDeleteQueueEnabled = true
+
     #if DEBUG
     @State private var isShowingDeveloperOptions = false
     #endif
@@ -14,6 +16,7 @@ struct SettingsView: View {
     var body: some View {
         List {
             feedbackSection
+            deletionSection
             privacySection
 
             #if DEBUG
@@ -39,6 +42,21 @@ struct SettingsView: View {
                     Text(String(localized: "settings.feedback.haptics", table: "LocalizableShared"))
                         .font(.subheadline.weight(.semibold))
                     Text(String(localized: "settings.feedback.hapticsDescription", table: "LocalizableShared"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(.blue)
+        }
+    }
+
+    private var deletionSection: some View {
+        Section(String(localized: "settings.deletion.title", table: "LocalizableStats")) {
+            Toggle(isOn: $isDeleteQueueEnabled) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: "settings.deletion.useQueue", table: "LocalizableStats"))
+                        .font(.subheadline.weight(.semibold))
+                    Text(String(localized: "settings.deletion.useQueueDescription", table: "LocalizableStats"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

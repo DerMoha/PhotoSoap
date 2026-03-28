@@ -33,7 +33,8 @@ struct PhotoReviewView: View {
             analyticsService: analyticsService,
             aggregateMetricsService: aggregateMetricsService,
             adCoordinator: adCoordinator,
-            hapticsService: HapticsService()
+            hapticsService: HapticsService(),
+            defaults: UserDefaults.standard
         ))
     }
 
