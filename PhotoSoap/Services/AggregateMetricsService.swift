@@ -95,7 +95,7 @@ struct RemoteAggregateMetricsSink: AggregateMetricsSink {
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        request.setValue("return=minimal, resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
         request.setValue(anonKey, forHTTPHeaderField: "apikey")
         request.setValue(anonKey, forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONEncoder().encode(row)
