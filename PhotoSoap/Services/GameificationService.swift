@@ -94,25 +94,25 @@ class GameificationService: ObservableObject {
     private func meetsRequirement(_ achievement: Achievement, stats: UserStats) -> Bool {
         switch achievement.id {
         case "first_steps":
-            return stats.totalReviewed >= 10
+            return stats.totalReviewed >= 50
         case "spring_cleaning":
-            return stats.totalDeleted >= 50
+            return stats.totalDeleted >= 200
         case "memory_keeper":
-            return stats.totalKept >= 100
+            return stats.totalKept >= 500
         case "streak_master":
-            return stats.bestStreak >= 25
+            return stats.bestStreak >= 100
         case "daily_devotee":
-            return stats.dailyStreak >= 7
+            return stats.dailyStreak >= 14
         case "storage_saver":
-            return stats.storageFreed >= 1_073_741_824
+            return stats.storageFreed >= 5_368_709_120
         case "century_club":
-            return stats.sessionReviewCount >= 100
+            return stats.sessionReviewCount >= 500
         case "photo_pro":
-            return stats.totalReviewed >= 1000
+            return stats.totalReviewed >= 5000
         case "decisive":
-            return stats.bestStreak >= 50
+            return stats.bestStreak >= 200
         case "cleanup_champion":
-            return stats.totalDeleted >= 500
+            return stats.totalDeleted >= 2000
         default:
             return false
         }
@@ -163,25 +163,25 @@ class GameificationService: ObservableObject {
     private func calculateProgress(for achievement: Achievement, stats: UserStats) -> Double {
         switch achievement.id {
         case "first_steps":
-            return min(1.0, Double(stats.totalReviewed) / 10.0)
+            return min(1.0, Double(stats.totalReviewed) / 50.0)
         case "spring_cleaning":
-            return min(1.0, Double(stats.totalDeleted) / 50.0)
+            return min(1.0, Double(stats.totalDeleted) / 200.0)
         case "memory_keeper":
-            return min(1.0, Double(stats.totalKept) / 100.0)
+            return min(1.0, Double(stats.totalKept) / 500.0)
         case "streak_master":
-            return min(1.0, Double(stats.bestStreak) / 25.0)
+            return min(1.0, Double(stats.bestStreak) / 100.0)
         case "daily_devotee":
-            return min(1.0, Double(stats.dailyStreak) / 7.0)
+            return min(1.0, Double(stats.dailyStreak) / 14.0)
         case "storage_saver":
-            return min(1.0, Double(stats.storageFreed) / 1_073_741_824.0)
+            return min(1.0, Double(stats.storageFreed) / 5_368_709_120.0)
         case "century_club":
-            return min(1.0, Double(stats.sessionReviewCount) / 100.0)
+            return min(1.0, Double(stats.sessionReviewCount) / 500.0)
         case "photo_pro":
-            return min(1.0, Double(stats.totalReviewed) / 1000.0)
+            return min(1.0, Double(stats.totalReviewed) / 5000.0)
         case "decisive":
-            return min(1.0, Double(stats.bestStreak) / 50.0)
+            return min(1.0, Double(stats.bestStreak) / 200.0)
         case "cleanup_champion":
-            return min(1.0, Double(stats.totalDeleted) / 500.0)
+            return min(1.0, Double(stats.totalDeleted) / 2000.0)
         default:
             return 0.0
         }

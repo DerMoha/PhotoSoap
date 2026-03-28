@@ -10,61 +10,61 @@ struct Achievement: Identifiable, Hashable {
         Achievement(
             id: "first_steps",
             title: "First Steps",
-            description: "Review 10 photos",
+            description: "Review 50 photos",
             iconName: "figure.walk"
         ),
         Achievement(
             id: "spring_cleaning",
             title: "Spring Cleaning",
-            description: "Delete 50 photos",
+            description: "Delete 200 photos",
             iconName: "leaf.fill"
         ),
         Achievement(
             id: "memory_keeper",
             title: "Memory Keeper",
-            description: "Keep 100 photos",
+            description: "Keep 500 photos",
             iconName: "heart.fill"
         ),
         Achievement(
             id: "streak_master",
             title: "Streak Master",
-            description: "Achieve a 25 photo streak",
+            description: "Achieve a 100 photo streak",
             iconName: "flame.fill"
         ),
         Achievement(
             id: "daily_devotee",
             title: "Daily Devotee",
-            description: "Maintain a 7-day login streak",
+            description: "Maintain a 14-day login streak",
             iconName: "calendar.badge.checkmark"
         ),
         Achievement(
             id: "storage_saver",
             title: "Storage Saver",
-            description: "Free 1GB of storage space",
+            description: "Free 5GB of storage space",
             iconName: "externaldrive.fill"
         ),
         Achievement(
             id: "century_club",
             title: "Century Club",
-            description: "Review 100 photos in one session",
+            description: "Review 500 photos in one session",
             iconName: "star.circle.fill"
         ),
         Achievement(
             id: "photo_pro",
             title: "Photo Pro",
-            description: "Review 1000 total photos",
+            description: "Review 5000 total photos",
             iconName: "crown.fill"
         ),
         Achievement(
             id: "decisive",
             title: "Decisive",
-            description: "Review 50 photos without breaking streak",
+            description: "Review 200 photos without breaking streak",
             iconName: "bolt.fill"
         ),
         Achievement(
             id: "cleanup_champion",
             title: "Cleanup Champion",
-            description: "Delete 500 photos",
+            description: "Delete 2000 photos",
             iconName: "trophy.fill"
         )
     ]
