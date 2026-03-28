@@ -108,13 +108,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine Mediathek wird nicht hochgeladen. Optionale Analysen sind standardmaessig aus, und PhotoSoap speichert nur anonyme Gesamtzahlen wie Installationen und geloeschte Fotos - niemals Fotoinhalte, Asset-IDs oder Standortdaten."
+            "value" : "Nutzungsanalysen sind standardmaessig aktiviert und helfen PhotoSoap zu verbessern. Sie teilen anonyme Gesamtzahlen wie Installationen, ueberpruefte und geloeschte Fotos — niemals Fotoinhalte, Asset-IDs oder Standortdaten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your library is not uploaded anywhere. Optional analytics are off by default, and PhotoSoap only keeps anonymous totals like installs and deleted photos - never photo contents, asset IDs, or location."
+            "value" : "Usage analytics are on by default and help improve PhotoSoap. They share anonymous totals like installs, photos reviewed, and deleted — never photo contents, asset IDs, or location."
           }
         }
       }

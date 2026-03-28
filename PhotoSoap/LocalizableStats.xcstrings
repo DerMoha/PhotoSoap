@@ -34,6 +34,36 @@
         }
       }
     },
+    "settings.deletion.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deletion"
+          }
+        }
+      }
+    },
+    "settings.deletion.useQueue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Delete Queue"
+          }
+        }
+      }
+    },
+    "settings.deletion.useQueueDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When on, swipe left queues photos for batch deletion. When off, swipe left deletes immediately with one confirmation."
+          }
+        }
+      }
+    },
     "stats.achievements" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -313,13 +343,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Optionale Nutzungsanalysen helfen PhotoSoap zu verbessern und sind standardmäßig aus. Sie enthalten niemals Fotoinhalte, Asset-IDs oder Standortdaten."
+            "value" : "Nutzungsanalysen helfen PhotoSoap zu verbessern und sind standardmaessig aktiviert. Sie teilen anonyme Gesamtzahlen wie Installationen, ueberpruefte und geloeschte Fotos — niemals Fotoinhalte, Asset-IDs oder Standortdaten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Optional usage analytics help improve PhotoSoap and stay off by default. They never include photo contents, asset IDs, or location data."
+            "value" : "Usage analytics help improve PhotoSoap and are on by default. They share anonymous totals like installs, photos reviewed, and deleted — never photo contents, asset IDs, or location data."
           }
         }
       }

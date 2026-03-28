@@ -27,7 +27,7 @@ PhotoSoap now uses a single non-personalized AdMob banner placed directly below 
 - `PhotoSoap/PrivacyInfo.xcprivacy` currently declares no tracking, no collected data at the app level, and only `UserDefaults` accessed API usage.
 - `PhotoSoap/Info.plist` contains only Photos permission strings plus the AdMob app ID and single review-banner unit ID.
 - The app always keeps anonymous aggregate totals for installs, photos reviewed, photos deleted, and storage freed.
-- Optional usage analytics remain off by default and do not send photo contents, asset IDs, or location data.
+- Optional usage analytics remain on by default and do not send photo contents, asset IDs, or location data.
 - The first-run welcome sheet explains anonymous community totals, the single review banner, and the free loyalty unlock after 2000 deleted photos.
 
 ## Embedded SDK manifest notes
@@ -43,7 +43,7 @@ PhotoSoap now uses a single non-personalized AdMob banner placed directly below 
 - Photos or videos: `No` for collected data sent off-device by the app, because PhotoSoap reviews the library locally and neither aggregate totals nor optional analytics transmit photo contents.
 - Purchases: review carefully during submission; StoreKit powers ad-free unlocks, but PhotoSoap does not maintain its own purchase profile beyond entitlement state.
 - Identifiers and usage data: expect to disclose the categories declared by the embedded Google SDK manifests.
-- Privacy policy text should clearly say that PhotoSoap may show one non-personalized ad while reviewing, keeps anonymous totals for installs/reviews/deletes/storage freed, offers optional usage analytics that are off by default, and unlocks ad-free by purchase or after 2000 deleted photos.
+- Privacy policy text should clearly say that PhotoSoap may show one non-personalized ad while reviewing, keeps anonymous totals for installs/reviews/deletes/storage freed, offers optional usage analytics that are on by default, and unlocks ad-free by purchase or after 2000 deleted photos.
 
 ## Final submission check
 
