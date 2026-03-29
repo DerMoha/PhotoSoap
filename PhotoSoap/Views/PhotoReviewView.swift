@@ -90,6 +90,7 @@ struct PhotoReviewView: View {
                 viewModel.setModelContext(modelContext)
                 viewModel.setStats(stats)
                 viewModel.onViewAppear()
+                viewModel.restorePendingDeletionQueueIfNeeded()
 
                 Task {
                     await viewModel.loadInitialPhoto()

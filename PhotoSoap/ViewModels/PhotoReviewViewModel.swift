@@ -15,6 +15,12 @@ struct PendingDeletionItem: Identifiable, Equatable {
     }
 }
 
+private struct PersistedPendingDeletionItem: Codable {
+    let id: String
+    let queuedAt: Date
+    let fileSize: Int64
+}
+
 @MainActor
 final class PhotoReviewViewModel: ObservableObject {
     @Published var currentPhoto: Photo?
@@ -77,6 +83,7 @@ final class PhotoReviewViewModel: ObservableObject {
     private let defaults: UserDefaults
     private weak var modelContext: ModelContext?
     private var stats: UserStats?
+    private var hasRestoredPendingDeletionQueue = false
 
     init(
         photoLibraryService: PhotoLibraryService,
@@ -112,6 +119,33 @@ final class PhotoReviewViewModel: ObservableObject {
         guard !hasTrackedReviewStart else { return }
         analyticsService.track(.reviewStarted(filter: currentFilter))
         hasTrackedReviewStart = true
+    }
+
+    func restorePendingDeletionQueueIfNeeded() {
+        guard !hasRestoredPendingDeletionQueue else { return }
+        hasRestoredPendingDeletionQueue = true
+
+        let persistedItems = loadPersistedPendingDeletionItems()
+        guard !persistedItems.isEmpty else { return }
+
+        let assetsByIdentifier = photoLibraryService.fetchAssets(withLocalIdentifiers: persistedItems.map(\.id))
+        let restoredItems: [PendingDeletionItem] = persistedItems.compactMap { item in
+            guard let asset = assetsByIdentifier[item.id] else { return nil }
+
+            return PendingDeletionItem(
+                id: item.id,
+                photo: Photo(asset: asset, fileSize: item.fileSize),
+                queuedAt: item.queuedAt,
+                fileSize: item.fileSize
+            )
+        }
+
+        pendingDeletionItems = restoredItems
+        deletionStack = restoredItems
+
+        if restoredItems.count != persistedItems.count {
+            persistPendingDeletionQueue()
+        }
     }
 
     func onAchievementBannerChanged(_ isShowing: Bool) {
@@ -434,6 +468,7 @@ final class PhotoReviewViewModel: ObservableObject {
         )
         pendingDeletionItems.append(item)
         deletionStack.append(item)
+        persistPendingDeletionQueue()
 
         hapticsService.impact(.rigid)
         await advanceToNextPhoto()
@@ -444,6 +479,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
         let lastItem = deletionStack.removeLast()
         pendingDeletionItems.removeAll { $0.id == lastItem.id }
+        persistPendingDeletionQueue()
         hapticsService.impact(.light)
 
         if noMorePhotos || currentPhoto == nil {
@@ -461,6 +497,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
         pendingDeletionItems.removeAll { $0.id == item.id }
         deletionStack.removeAll { $0.id == item.id }
+        persistPendingDeletionQueue()
 
         isShowingRemoveFromQueueConfirmation = false
         photoPendingQueueRemoval = nil
@@ -483,6 +520,7 @@ final class PhotoReviewViewModel: ObservableObject {
     func confirmClearQueue() {
         pendingDeletionItems.removeAll()
         deletionStack.removeAll()
+        clearPersistedPendingDeletionQueue()
 
         isShowingClearQueueConfirmation = false
         hapticsService.impact(.medium)
@@ -545,6 +583,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
             pendingDeletionItems.removeAll()
             deletionStack.removeAll()
+            clearPersistedPendingDeletionQueue()
 
             showDeletionSuccessToast = true
             hapticsService.success()
@@ -660,6 +699,37 @@ final class PhotoReviewViewModel: ObservableObject {
         } else {
             noMorePhotos = true
         }
+    }
+
+    private func persistPendingDeletionQueue() {
+        guard !pendingDeletionItems.isEmpty else {
+            clearPersistedPendingDeletionQueue()
+            return
+        }
+
+        let persistedItems = pendingDeletionItems.map {
+            PersistedPendingDeletionItem(id: $0.id, queuedAt: $0.queuedAt, fileSize: $0.fileSize)
+        }
+
+        guard let encoded = try? JSONEncoder().encode(persistedItems) else { return }
+        defaults.set(encoded, forKey: UserDefaultsKeys.pendingDeletionQueue)
+    }
+
+    private func clearPersistedPendingDeletionQueue() {
+        defaults.removeObject(forKey: UserDefaultsKeys.pendingDeletionQueue)
+    }
+
+    private func loadPersistedPendingDeletionItems() -> [PersistedPendingDeletionItem] {
+        guard let data = defaults.data(forKey: UserDefaultsKeys.pendingDeletionQueue) else {
+            return []
+        }
+
+        guard let items = try? JSONDecoder().decode([PersistedPendingDeletionItem].self, from: data) else {
+            clearPersistedPendingDeletionQueue()
+            return []
+        }
+
+        return items
     }
 
     private func triggerCelebrationFeedbackIfNeeded() {

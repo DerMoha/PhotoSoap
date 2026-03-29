@@ -376,6 +376,19 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return fileSize
     }
 
+    func fetchAssets(withLocalIdentifiers identifiers: [String]) -> [String: PHAsset] {
+        guard !identifiers.isEmpty else { return [:] }
+
+        let fetchedAssets = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
+        var assetsByIdentifier: [String: PHAsset] = [:]
+
+        fetchedAssets.enumerateObjects { asset, _, _ in
+            assetsByIdentifier[asset.localIdentifier] = asset
+        }
+
+        return assetsByIdentifier
+    }
+
     // MARK: - Deletion
 
     func deletePhoto(_ photo: Photo) async throws {
