@@ -74,10 +74,6 @@ struct PhotoReviewView: View {
                 streakCelebration
                 dailyGoalToast
 
-                if viewModel.pendingDeletionCount > 0 {
-                    deleteQueueTray
-                }
-
                 if viewModel.showDeletionSuccessToast {
                     deletionSuccessToast
                 }
@@ -87,6 +83,9 @@ struct PhotoReviewView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom) {
+                bottomChrome
+            }
             .onAppear {
                 viewModel.setModelContext(modelContext)
                 viewModel.setStats(stats)
@@ -295,18 +294,9 @@ struct PhotoReviewView: View {
 
     @ViewBuilder
     private func reviewContent(photo: Photo) -> some View {
-        VStack(spacing: 12) {
-            photoCardSection(photo: photo)
-                .frame(maxHeight: .infinity)
-
-            if adCoordinator.shouldShowBanner(at: .reviewBanner),
-               let unitID = adCoordinator.unitID(for: .reviewBanner) {
-                ReviewBannerAdView(adUnitID: unitID)
-                    .frame(height: 60)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: adCoordinator.adsEnabled)
+        photoCardSection(photo: photo)
+            .frame(maxHeight: .infinity)
+            .animation(.easeInOut(duration: 0.2), value: adCoordinator.adsEnabled)
     }
 
     private var loadingView: some View {
@@ -476,22 +466,54 @@ struct PhotoReviewView: View {
     }
 
     private var deleteQueueTray: some View {
-        VStack {
-            Spacer()
-            DeleteQueueTray(
-                queueCount: viewModel.pendingDeletionCount,
-                bytesFreed: viewModel.pendingDeletionBytesFormatted,
-                onUndo: {
-                    viewModel.undoLastQueuedDeletion()
-                },
-                onReviewQueue: {
-                    viewModel.isShowingDeleteQueueSheet = true
-                },
-                onDeleteAll: {
-                    viewModel.requestCommitPendingDeletionBatch()
-                }
-            )
+        DeleteQueueTray(
+            queueCount: viewModel.pendingDeletionCount,
+            bytesFreed: viewModel.pendingDeletionBytesFormatted,
+            onUndo: {
+                viewModel.undoLastQueuedDeletion()
+            },
+            onReviewQueue: {
+                viewModel.isShowingDeleteQueueSheet = true
+            }
+        )
+    }
+
+    @ViewBuilder
+    private var reviewBanner: some View {
+        if let unitID = reviewBannerUnitID {
+            ReviewBannerAdView(adUnitID: unitID)
+                .frame(height: 60)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
         }
+    }
+
+    @ViewBuilder
+    private var bottomChrome: some View {
+        if viewModel.pendingDeletionCount > 0 || reviewBannerUnitID != nil {
+            VStack(spacing: 8) {
+                if viewModel.pendingDeletionCount > 0 {
+                    deleteQueueTray
+                }
+
+                reviewBanner
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            .background(Color(.systemGroupedBackground).opacity(0.96))
+        }
+    }
+
+    private var reviewBannerUnitID: String? {
+        guard viewModel.currentPhoto != nil,
+              !viewModel.isLoading,
+              !viewModel.noMorePhotos,
+              adCoordinator.shouldShowBanner(at: .reviewBanner)
+        else {
+            return nil
+        }
+
+        return adCoordinator.unitID(for: .reviewBanner)
     }
 
     private var deletionSuccessToast: some View {
