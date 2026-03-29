@@ -56,17 +56,6 @@ final class PhotoReviewViewModel: ObservableObject {
         pendingDeletionItems.count
     }
 
-    var pendingDeletionBytes: Int64 {
-        pendingDeletionItems.reduce(0) { $0 + $1.fileSize }
-    }
-
-    var pendingDeletionBytesFormatted: String {
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useKB, .useMB, .useGB]
-        formatter.countStyle = .file
-        return formatter.string(fromByteCount: pendingDeletionBytes)
-    }
-
     var pendingDeletionIDs: Set<String> {
         Set(pendingDeletionItems.map { $0.id })
     }
@@ -144,11 +133,8 @@ final class PhotoReviewViewModel: ObservableObject {
         showDailyGoalToast = false
     }
 
-    func startOverWithClearing() {
-        guard let stats, let modelContext else { return }
-
-        pendingDeletionItems.removeAll()
-        deletionStack.removeAll()
+    func startOver() {
+        guard let modelContext else { return }
 
         isLoading = true
         currentPhoto = nil

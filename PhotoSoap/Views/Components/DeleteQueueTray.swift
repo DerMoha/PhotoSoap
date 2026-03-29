@@ -2,7 +2,6 @@ import SwiftUI
 
 struct DeleteQueueTray: View {
     let queueCount: Int
-    let bytesFreed: String
     let onUndo: () -> Void
     let onReviewQueue: () -> Void
 
@@ -46,9 +45,7 @@ struct DeleteQueueTray: View {
     }
 
     private var summaryText: String {
-        let countText = String(localized: "review.queue.count", defaultValue: "\(queueCount) queued", table: "LocalizableReview")
-        let spaceText = String(localized: "review.queue.space", defaultValue: "\(bytesFreed) to free", table: "LocalizableReview")
-        return "\(countText) - \(spaceText)"
+        String(localized: "review.queue.count", defaultValue: "\(queueCount) queued", table: "LocalizableReview")
     }
 
     private func trayButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
@@ -70,7 +67,6 @@ struct DeleteQueueTray: View {
         Spacer()
         DeleteQueueTray(
             queueCount: 12,
-            bytesFreed: "250 MB",
             onUndo: {},
             onReviewQueue: {}
         )

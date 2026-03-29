@@ -59,9 +59,9 @@ struct PhotoReviewView: View {
                         Spacer()
                     } else if let photo = viewModel.currentPhoto {
                         reviewContent(photo: photo)
-                            .padding(.top, 8)
+                            .padding(.top, 6)
                             .padding(.horizontal, 12)
-                            .padding(.bottom, 12)
+                            .padding(.bottom, 4)
                             .frame(maxHeight: .infinity)
                     } else {
                         Spacer()
@@ -112,7 +112,7 @@ struct PhotoReviewView: View {
             .alert("Start Over?", isPresented: $viewModel.showStartOverConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 Button("Start Over", role: .destructive) {
-                    viewModel.startOverWithClearing()
+                    viewModel.startOver()
                 }
             } message: {
                 Text(String(localized: "review.startOver.confirmation", table: "LocalizableReview"))
@@ -468,7 +468,6 @@ struct PhotoReviewView: View {
     private var deleteQueueTray: some View {
         DeleteQueueTray(
             queueCount: viewModel.pendingDeletionCount,
-            bytesFreed: viewModel.pendingDeletionBytesFormatted,
             onUndo: {
                 viewModel.undoLastQueuedDeletion()
             },
@@ -498,7 +497,7 @@ struct PhotoReviewView: View {
                 reviewBanner
             }
             .padding(.horizontal, 12)
-            .padding(.top, 8)
+            .padding(.top, 4)
             .padding(.bottom, 8)
             .background(Color(.systemGroupedBackground).opacity(0.96))
         }

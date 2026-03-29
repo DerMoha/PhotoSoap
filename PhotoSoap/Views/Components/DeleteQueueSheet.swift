@@ -122,7 +122,7 @@ struct DeleteQueueItemRow: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
 
-                Text(item.photo.fileSizeFormatted)
+                Text(fileSizeText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -161,6 +161,14 @@ struct DeleteQueueItemRow: View {
                 }
             }
         }
+    }
+
+    private var fileSizeText: String {
+        guard item.fileSize > 0 else {
+            return item.photo.fileSizeFormatted
+        }
+
+        return item.fileSize.formattedBytes
     }
 }
 
