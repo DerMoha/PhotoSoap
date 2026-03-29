@@ -4,6 +4,33 @@ import Photos
 @testable import PhotoSoap
 
 final class SmokeTests: XCTestCase {
+    func testCompactCouponGenerationProducesEightUppercaseLetters() {
+        let issuedAt = Date(timeIntervalSince1970: 1_774_700_800)
+        let token = CouponService.generateToken(for: "TEST", now: issuedAt)
+
+        XCTAssertEqual(token?.count, 8)
+        XCTAssertEqual(token, token?.uppercased())
+        XCTAssertEqual(token?.range(of: "^[A-Z]{8}$", options: .regularExpression) != nil, true)
+        XCTAssertEqual(CouponService.validate(code: token ?? "", now: issuedAt), .success)
+    }
+
+    func testCompactCouponExpiresAfterThirtyDays() {
+        let issuedAt = Date(timeIntervalSince1970: 1_774_700_800)
+        let token = CouponService.generateToken(for: "TEST", now: issuedAt)
+        let stillValidDate = issuedAt.addingTimeInterval(30 * 24 * 60 * 60)
+        let expiredDate = issuedAt.addingTimeInterval(31 * 24 * 60 * 60)
+
+        XCTAssertEqual(CouponService.validate(code: token ?? "", now: stillValidDate), .success)
+        XCTAssertEqual(CouponService.validate(code: token ?? "", now: expiredDate), .expiredCode)
+    }
+
+    func testLegacyCouponValidationStillWorks() {
+        let issuedAt = Date(timeIntervalSince1970: 1_774_700_800)
+        let token = CouponService.generateLegacyToken(for: "TEST", now: issuedAt)
+
+        XCTAssertEqual(CouponService.validate(code: token, now: issuedAt), .success)
+    }
+
     func testIncrementReviewedUpdatesCoreStats() {
         let stats = UserStats()
 
