@@ -5,66 +5,63 @@ struct DeleteQueueTray: View {
     let bytesFreed: String
     let onUndo: () -> Void
     let onReviewQueue: () -> Void
-    let onDeleteAll: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "review.queue.count", defaultValue: "\(queueCount) queued", table: "LocalizableReview"))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-
-                    Text(String(localized: "review.queue.space", defaultValue: "\(bytesFreed) to free", table: "LocalizableReview"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Button(action: onUndo) {
-                    Text(String(localized: "review.queue.undo", defaultValue: "Undo", table: "LocalizableReview"))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color(.systemGray5))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-
-                Button(action: onReviewQueue) {
-                    Text(String(localized: "review.queue.review", defaultValue: "Review", table: "LocalizableReview"))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color(.systemGray5))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
+        HStack(spacing: 12) {
+            Label {
+                Text(summaryText)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+            } icon: {
+                Image(systemName: "trash.fill")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.red)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
 
-            Button(action: onDeleteAll) {
-                HStack {
-                    Image(systemName: "trash.fill")
+            Spacer(minLength: 0)
 
-                    Text(String(localized: "review.queue.deleteAll", defaultValue: "Delete All", table: "LocalizableReview"))
-                        .fontWeight(.semibold)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(.red)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+            trayButton(
+                title: String(localized: "review.queue.undo", defaultValue: "Undo", table: "LocalizableReview"),
+                systemImage: "arrow.uturn.backward"
+            ) {
+                onUndo()
             }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 12)
+
+            trayButton(
+                title: String(localized: "review.queue.shortTitle", defaultValue: "Queue", table: "LocalizableReview"),
+                systemImage: "list.bullet"
+            ) {
+                onReviewQueue()
+            }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .background(.ultraThinMaterial)
+        .clipShape(Capsule())
+        .overlay {
+            Capsule()
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+        }
+    }
+
+    private var summaryText: String {
+        let countText = String(localized: "review.queue.count", defaultValue: "\(queueCount) queued", table: "LocalizableReview")
+        let spaceText = String(localized: "review.queue.space", defaultValue: "\(bytesFreed) to free", table: "LocalizableReview")
+        return "\(countText) - \(spaceText)"
+    }
+
+    private func trayButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .font(.footnote.weight(.semibold))
+                .lineLimit(1)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.secondary.opacity(0.12))
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -75,8 +72,7 @@ struct DeleteQueueTray: View {
             queueCount: 12,
             bytesFreed: "250 MB",
             onUndo: {},
-            onReviewQueue: {},
-            onDeleteAll: {}
+            onReviewQueue: {}
         )
     }
 }
