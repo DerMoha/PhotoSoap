@@ -118,18 +118,10 @@ struct ContentView: View {
                     .padding(.top, bootstrapErrorMessage == nil ? 8 : 0)
             }
 
-            if photoLibraryService.authorizationStatus == .limited {
-                LimitedAccessBanner {
-                    analyticsService.track(.limitedLibraryPickerOpened())
-                    photoLibraryService.presentLimitedLibraryPicker()
-                }
-                .padding(.horizontal)
-                .padding(.top, bootstrapErrorMessage == nil ? 8 : 0)
-            }
-
             TabView(selection: $selectedTab) {
                 StatsView(
                     stats: stats,
+                    photoLibraryService: photoLibraryService,
                     gameificationService: gameificationService,
                     adRemovalPurchaseService: adRemovalPurchaseService,
                     adCoordinator: adCoordinator,
@@ -307,33 +299,6 @@ private struct MigrationWarningBanner: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Color.yellow.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-    }
-}
-
-private struct LimitedAccessBanner: View {
-    let onManage: () -> Void
-
-    var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(String(localized: "limitedAccess.title", table: "LocalizableShared"))
-                    .font(.subheadline.weight(.semibold))
-                Text(String(localized: "limitedAccess.description", table: "LocalizableShared"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Button(String(localized: "limitedAccess.chooseMore", table: "LocalizableShared")) {
-                onManage()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-        }
-        .padding(12)
-        .background(Color.blue.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }

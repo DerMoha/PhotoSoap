@@ -459,6 +459,70 @@
         }
       }
     },
+    "review.action.delete" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto löschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete photo"
+          }
+        }
+      }
+    },
+    "review.action.keep" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto behalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep photo"
+          }
+        }
+      }
+    },
+    "review.complete.limited.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle weitere Fotos aus deiner Bibliothek aus, damit du mit der nächsten Runde weitermachen kannst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose more photos from your library selection to keep the next review session going."
+          }
+        }
+      }
+    },
+    "review.complete.limited.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereit für mehr"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready for more"
+          }
+        }
+      }
+    },
     "review.complete.subtitle" : {
       "localizations" : {
         "de" : {
@@ -471,6 +535,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You've reviewed all your photos!"
+          }
+        }
+      }
+    },
+    "review.complete.subtitle.limited" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast alle Fotos aus deiner aktuellen Auswahl überprüft."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've reviewed everything in your current selection."
           }
         }
       }
@@ -943,7 +1023,6 @@
       }
     },
     "review.stats" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -960,7 +1039,6 @@
       }
     },
     "review.statsDetail" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1020,38 +1098,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Review"
-          }
-        }
-      }
-    },
-    "review.action.delete" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foto löschen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete photo"
-          }
-        }
-      }
-    },
-    "review.action.keep" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foto behalten"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep photo"
           }
         }
       }

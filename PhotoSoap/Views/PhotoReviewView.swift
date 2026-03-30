@@ -333,9 +333,14 @@ struct PhotoReviewView: View {
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text(String(localized: "review.complete.subtitle", table: "LocalizableReview"))
-                .font(.body)
-                .foregroundStyle(.secondary)
+            Text(
+                photoLibraryService.authorizationStatus == .limited
+                    ? String(localized: "review.complete.subtitle.limited", table: "LocalizableReview")
+                    : String(localized: "review.complete.subtitle", table: "LocalizableReview")
+            )
+            .font(.body)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
 
             VStack(spacing: 8) {
                 Text(String(localized: "review.stats", defaultValue: "%d photos reviewed", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(viewModel.persistedReviewedIDs.count)"))
@@ -349,6 +354,19 @@ struct PhotoReviewView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
+
+            if photoLibraryService.authorizationStatus == .limited {
+                LimitedAccessCard(
+                    title: String(localized: "review.complete.limited.title", table: "LocalizableReview"),
+                    message: String(localized: "review.complete.limited.description", table: "LocalizableReview"),
+                    buttonTitle: String(localized: "limitedAccess.chooseMore", table: "LocalizableShared"),
+                    style: .completion,
+                    onManage: {
+                        analyticsService.track(.limitedLibraryPickerOpened())
+                        photoLibraryService.presentLimitedLibraryPicker()
+                    }
+                )
+            }
 
             Button {
                 viewModel.showStartOverConfirmation = true

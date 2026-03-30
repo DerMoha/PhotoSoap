@@ -3,6 +3,7 @@ import SwiftData
 
 struct StatsView: View {
     @Bindable var stats: UserStats
+    @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
     @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
     @ObservedObject var adCoordinator: AdCoordinator
@@ -15,6 +16,10 @@ struct StatsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
+                    if photoLibraryService.authorizationStatus == .limited {
+                        limitedAccessSection
+                    }
+
                     overviewSection
                     streaksSection
                     ratioSection
@@ -73,6 +78,19 @@ struct StatsView: View {
                 }
             }
         }
+    }
+
+    private var limitedAccessSection: some View {
+        LimitedAccessCard(
+            title: String(localized: "limitedAccess.title", table: "LocalizableShared"),
+            message: String(localized: "limitedAccess.description", table: "LocalizableShared"),
+            buttonTitle: String(localized: "limitedAccess.chooseMore", table: "LocalizableShared"),
+            style: .stats,
+            onManage: {
+                analyticsService.track(.limitedLibraryPickerOpened())
+                photoLibraryService.presentLimitedLibraryPicker()
+            }
+        )
     }
 
     private var streaksSection: some View {
@@ -310,6 +328,7 @@ struct StatCard: View {
 #Preview {
     StatsView(
         stats: UserStats(),
+        photoLibraryService: PhotoLibraryService(),
         gameificationService: GameificationService(),
         adRemovalPurchaseService: AdRemovalPurchaseService(
             analyticsService: AnalyticsService(),
