@@ -136,7 +136,9 @@ struct PhotoReviewView: View {
                     }
                 )
             }
-            .sheet(isPresented: $viewModel.isShowingDeleteQueueSheet) {
+            .sheet(isPresented: $viewModel.isShowingDeleteQueueSheet, onDismiss: {
+                viewModel.handleDeleteQueueSheetDismissed()
+            }) {
                 DeleteQueueSheet(
                     items: viewModel.pendingDeletionItems,
                     onRemoveFromQueue: { item in
@@ -159,9 +161,7 @@ struct PhotoReviewView: View {
                     itemCount: viewModel.pendingDeletionCount,
                     isCommitting: viewModel.isCommittingDeletionBatch,
                     onConfirm: {
-                        Task {
-                            await viewModel.commitPendingDeletionBatch()
-                        }
+                        viewModel.confirmDeleteBatchExplainer()
                     },
                     onCancel: {
                         viewModel.isShowingDeleteBatchExplainer = false

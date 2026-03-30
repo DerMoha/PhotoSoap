@@ -21,6 +21,11 @@ private struct PersistedPendingDeletionItem: Codable {
     let fileSize: Int64
 }
 
+private enum PendingDeleteBatchAction {
+    case showExplainer
+    case commit
+}
+
 @MainActor
 final class PhotoReviewViewModel: ObservableObject {
     @Published var currentPhoto: Photo?
@@ -84,6 +89,7 @@ final class PhotoReviewViewModel: ObservableObject {
     private weak var modelContext: ModelContext?
     private var stats: UserStats?
     private var hasRestoredPendingDeletionQueue = false
+    private var pendingDeleteBatchAction: PendingDeleteBatchAction?
 
     init(
         photoLibraryService: PhotoLibraryService,
@@ -535,7 +541,33 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     func requestCommitPendingDeletionBatch() {
-        isShowingDeleteBatchExplainer = true
+        guard !pendingDeletionItems.isEmpty else { return }
+
+        let action: PendingDeleteBatchAction = defaults.bool(forKey: UserDefaultsKeys.hasSeenDeleteBatchExplainer)
+            ? .commit
+            : .showExplainer
+
+        if isShowingDeleteQueueSheet {
+            pendingDeleteBatchAction = action
+            isShowingDeleteQueueSheet = false
+        } else {
+            performPendingDeleteBatchAction(action)
+        }
+    }
+
+    func handleDeleteQueueSheetDismissed() {
+        guard let action = pendingDeleteBatchAction else { return }
+
+        pendingDeleteBatchAction = nil
+        performPendingDeleteBatchAction(action)
+    }
+
+    func confirmDeleteBatchExplainer() {
+        defaults.set(true, forKey: UserDefaultsKeys.hasSeenDeleteBatchExplainer)
+
+        Task {
+            await commitPendingDeletionBatch()
+        }
     }
 
     func commitPendingDeletionBatch() async {
@@ -698,6 +730,17 @@ final class PhotoReviewViewModel: ObservableObject {
             await preloadNextPhoto()
         } else {
             noMorePhotos = true
+        }
+    }
+
+    private func performPendingDeleteBatchAction(_ action: PendingDeleteBatchAction) {
+        switch action {
+        case .showExplainer:
+            isShowingDeleteBatchExplainer = true
+        case .commit:
+            Task {
+                await commitPendingDeletionBatch()
+            }
         }
     }
 
