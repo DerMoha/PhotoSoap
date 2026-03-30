@@ -139,7 +139,7 @@ struct AchievementCard: View {
                 .lineLimit(2)
 
             if isUnlocked, let date = unlockDate {
-                Text("Completed on \(date.formatted(.dateTime.month(.abbreviated).day()))")
+                Text(String(localized: "achievements.completedOn", defaultValue: "Completed on %@", table: "LocalizableAchievements").replacingOccurrences(of: "%@", with: date.formatted(.dateTime.month(.abbreviated).day())))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else if !isUnlocked {
@@ -202,7 +202,7 @@ struct AchievementDetailSheet: View {
                         .foregroundStyle(.green)
 
                     if let date = unlockDate {
-                        Text("Completed on \(date.formatted(date: .abbreviated, time: .omitted))")
+                        Text(String(localized: "achievements.completedOn", defaultValue: "Completed on %@", table: "LocalizableAchievements").replacingOccurrences(of: "%@", with: date.formatted(date: .abbreviated, time: .omitted)))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }

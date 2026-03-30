@@ -36,7 +36,7 @@ struct ActionButtons: View {
             }
         }
         .buttonStyle(ScaleButtonStyle())
-        .accessibilityLabel("Delete photo")
+        .accessibilityLabel(String(localized: "review.action.delete", defaultValue: "Delete photo", table: "LocalizableReview"))
     }
 
     private var keepButton: some View {
@@ -61,7 +61,7 @@ struct ActionButtons: View {
             }
         }
         .buttonStyle(ScaleButtonStyle())
-        .accessibilityLabel("Keep photo")
+        .accessibilityLabel(String(localized: "review.action.keep", defaultValue: "Keep photo", table: "LocalizableReview"))
     }
 }
 

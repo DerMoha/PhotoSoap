@@ -23,7 +23,7 @@ struct FilterButton: View {
         }
         .buttonStyle(.plain)
         .frame(minWidth: 44, minHeight: 44)
-        .accessibilityLabel("Filter photos")
+        .accessibilityLabel(String(localized: "filter.accessibility", defaultValue: "Filter photos", table: "LocalizableFilter"))
     }
 }
 

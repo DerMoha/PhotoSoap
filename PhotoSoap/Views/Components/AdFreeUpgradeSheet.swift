@@ -139,7 +139,7 @@ struct AdFreeUpgradeSheet: View {
                 .tint(.orange)
 
             HStack {
-                Text("\(stats.totalDeleted) deleted")
+                Text(String(localized: "adfree.deletedCount", defaultValue: "%d deleted", table: "LocalizableAdFree").replacingOccurrences(of: "%d", with: "\(stats.totalDeleted)"))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
                 Text(progressMessage)

@@ -34,7 +34,22 @@ struct DailyChallenge: Identifiable {
     let date: Date
 
     var title: String {
-        "\(type.verb) \(target) \(type.unit)"
+        switch type {
+        case .review, .delete:
+            return "\(type.verb) \(target) \(type.unit)"
+        case .streak:
+            return String(localized: "challenge.streak.title", defaultValue: "%d-photo streak", table: "LocalizableReview")
+                .replacingOccurrences(of: "%d", with: "\(target)")
+        }
+    }
+
+    var compactTitle: String {
+        switch type {
+        case .review, .delete:
+            return type.verb
+        case .streak:
+            return String(localized: "challenge.streak.short", defaultValue: "Streak", table: "LocalizableReview")
+        }
     }
 
     var description: String {

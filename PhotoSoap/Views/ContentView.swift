@@ -92,7 +92,7 @@ struct ContentView: View {
             analyticsService.track(.tabSelected(tabName(for: newTab)))
         }
         .alert(String(localized: "recoveryMode.title", table: "LocalizableShared"), isPresented: $showBootstrapAlert) {
-            Button("OK") {}
+            Button(String(localized: "common.ok", defaultValue: "OK", table: "LocalizableShared")) {}
         } message: {
             Text(bootstrapErrorMessage ?? "")
         }

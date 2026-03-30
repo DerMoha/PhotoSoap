@@ -93,8 +93,8 @@ struct SettingsView: View {
 
     #if DEBUG
     private var developerSection: some View {
-        Section("Developer") {
-            Button("Open Developer Options") {
+        Section(String(localized: "settings.developer.title", defaultValue: "Developer", table: "LocalizableShared")) {
+            Button(String(localized: "settings.developer.open", defaultValue: "Open Developer Options", table: "LocalizableShared")) {
                 isShowingDeveloperOptions = true
             }
         }

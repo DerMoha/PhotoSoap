@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct StreakBanner: View {
     let currentStreak: Int
@@ -95,6 +96,7 @@ struct CompactHeader: View {
     let current: Int
     let target: Int
     let challengeTitle: String
+    let challengeCompactTitle: String
     let isFilterActive: Bool
     let onFilterTap: () -> Void
     let onGoalTap: () -> Void
@@ -128,46 +130,11 @@ struct CompactHeader: View {
             Spacer()
 
             Button(action: onGoalTap) {
-                HStack(spacing: 8) {
-                    ZStack {
-                        Circle()
-                            .stroke(Color(.systemGray4), lineWidth: 3)
-                            .frame(width: 24, height: 24)
-
-                        Circle()
-                            .trim(from: 0, to: min(progress, 1.0))
-                            .stroke(progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                            .frame(width: 24, height: 24)
-                            .rotationEffect(.degrees(-90))
-                            .animation(.spring(duration: 0.5), value: progress)
-
-                        if progress >= 1.0 {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.green)
-                                .scaleEffect(isAnimating ? 1.3 : 1.0)
-                                .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isAnimating)
-                        }
-                    }
-                    .frame(width: 24, height: 24)
-
-                    if progress < 1.0 {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(challengeTitle)
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .lineLimit(1)
-
-                            Text("\(current)/\(target)")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                ViewThatFits(in: .horizontal) {
+                    goalLabel(title: challengeTitle)
+                    goalLabel(title: challengeCompactTitle)
+                    goalLabel(title: nil)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(Capsule())
             }
             .buttonStyle(.plain)
         }
@@ -199,6 +166,60 @@ struct CompactHeader: View {
         } else {
             return .orange
         }
+    }
+
+    private var progressIndicator: some View {
+        ZStack {
+            Circle()
+                .stroke(Color(.systemGray4), lineWidth: 3)
+                .frame(width: 24, height: 24)
+
+            Circle()
+                .trim(from: 0, to: min(progress, 1.0))
+                .stroke(progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .frame(width: 24, height: 24)
+                .rotationEffect(.degrees(-90))
+                .animation(.spring(duration: 0.5), value: progress)
+
+            if progress >= 1.0 {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.green)
+                    .scaleEffect(isAnimating ? 1.3 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isAnimating)
+            }
+        }
+        .frame(width: 24, height: 24)
+    }
+
+    private func goalLabel(title: String?) -> some View {
+        HStack(spacing: 8) {
+            progressIndicator
+
+            if progress < 1.0 {
+                if let title {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(title)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+
+                        Text("\(current)/\(target)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("\(current)/\(target)")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(Capsule())
     }
 }
 

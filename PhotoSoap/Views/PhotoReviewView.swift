@@ -105,14 +105,14 @@ struct PhotoReviewView: View {
             .onChange(of: viewModel.showDailyGoalToast) { _, isShowing in
                 viewModel.onDailyGoalToastChanged(isShowing)
             }
-            .alert("Error", isPresented: $viewModel.isShowingError) {
-                Button("OK") {}
+            .alert(String(localized: "error.title", table: "LocalizableShared"), isPresented: $viewModel.isShowingError) {
+                Button(String(localized: "common.ok", defaultValue: "OK", table: "LocalizableShared")) {}
             } message: {
                 Text(viewModel.error ?? String(localized: "error.unknown", table: "LocalizableShared"))
             }
-            .alert("Start Over?", isPresented: $viewModel.showStartOverConfirmation) {
-                Button("Cancel", role: .cancel) {}
-                Button("Start Over", role: .destructive) {
+            .alert(String(localized: "review.startOver.confirmation.title", defaultValue: "Start over?", table: "LocalizableReview"), isPresented: $viewModel.showStartOverConfirmation) {
+                Button(String(localized: "common.cancel", table: "LocalizableShared"), role: .cancel) {}
+                Button(String(localized: "review.startOver", table: "LocalizableReview"), role: .destructive) {
                     viewModel.startOver()
                 }
             } message: {
@@ -202,6 +202,7 @@ struct PhotoReviewView: View {
             current: stats.dailyChallengeProgress,
             target: stats.dailyChallengeTarget,
             challengeTitle: challenge.title,
+            challengeCompactTitle: challenge.compactTitle,
             isFilterActive: !viewModel.currentFilter.isAll,
             onFilterTap: {
                 viewModel.showFilterSheet = true
@@ -337,10 +338,14 @@ struct PhotoReviewView: View {
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 8) {
-                Text("\(viewModel.persistedReviewedIDs.count) photos reviewed")
+                Text(String(localized: "review.stats", defaultValue: "%d photos reviewed", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(viewModel.persistedReviewedIDs.count)"))
                     .foregroundStyle(.secondary)
 
-                Text("\(viewModel.cycleDeletedCount) deleted • \(viewModel.cycleKeptCount) kept")
+                Text(
+                    String(localized: "review.statsDetail", defaultValue: "%d deleted • %d kept", table: "LocalizableReview")
+                        .replacingOccurrences(of: "%d", with: "\(viewModel.cycleDeletedCount)", options: [], range: nil)
+                        .replacingOccurrences(of: "%d", with: "\(viewModel.cycleKeptCount)", options: [], range: nil)
+                )
                     .foregroundStyle(.secondary)
             }
             .padding(.top)

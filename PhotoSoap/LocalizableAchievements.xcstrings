@@ -75,7 +75,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pruefe Fotos an 14 Tagen in Folge"
+            "value" : "Prüfe Fotos an 14 Tagen in Folge"
           }
         },
         "en" : {
@@ -369,6 +369,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Close"
+          }
+        }
+      }
+    },
+    "achievements.completedOn" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgeschlossen am %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed on %@"
           }
         }
       }

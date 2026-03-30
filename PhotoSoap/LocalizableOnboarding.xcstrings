@@ -108,7 +108,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nutzungsanalysen sind standardmaessig aktiviert und helfen PhotoSoap zu verbessern. Sie teilen anonyme Gesamtzahlen wie Installationen, ueberpruefte und geloeschte Fotos — niemals Fotoinhalte, Asset-IDs oder Standortdaten."
+            "value" : "Nutzungsanalysen sind standardmäßig aktiviert und helfen, PhotoSoap zu verbessern. Sie teilen anonyme Gesamtzahlen wie Installationen, überprüfte und gelöschte Fotos — niemals Fotoinhalte, Asset-IDs oder Standortdaten."
           }
         },
         "en" : {
@@ -140,7 +140,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loesche 2000 Fotos und das Banner in der Review-Ansicht verschwindet dauerhaft kostenlos."
+            "value" : "Lösche 2000 Fotos und das Banner in der Review-Ansicht verschwindet dauerhaft kostenlos."
           }
         },
         "en" : {
@@ -172,7 +172,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit dem Pruefen starten"
+            "value" : "Mit dem Prüfen starten"
           }
         },
         "en" : {
@@ -188,7 +188,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loeschen"
+            "value" : "Löschen"
           }
         },
         "en" : {
@@ -204,7 +204,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du pruefst immer nur ein Foto. Gehoert es in deine Mediathek, behalte es. Wenn nicht, wische es weg."
+            "value" : "Du prüfst immer nur ein Foto. Gehört es in deine Mediathek, behalte es. Wenn nicht, wische es weg."
           }
         },
         "en" : {
@@ -334,7 +334,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wische nach rechts, um ein Foto zu behalten, und nach links, um es zu loeschen. Der Ablauf ist bewusst schnell und unkompliziert."
+            "value" : "Wische nach rechts, um ein Foto zu behalten, und nach links, um es zu löschen. Der Ablauf ist bewusst schnell und unkompliziert."
           }
         },
         "en" : {
@@ -350,7 +350,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Raeume deine Mediathek mit einem Wisch auf"
+            "value" : "Räume deine Mediathek mit einem Wisch auf"
           }
         },
         "en" : {

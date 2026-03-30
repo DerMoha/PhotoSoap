@@ -32,7 +32,7 @@ struct RedeemCouponSheet: View {
 
                 if result != .success {
                     VStack(spacing: 12) {
-                        TextField("coupon.enter", text: $code)
+                        TextField(String(localized: "coupon.enter", table: "LocalizableCoupon"), text: $code)
                             .textFieldStyle(.roundedBorder)
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()

@@ -9,22 +9,22 @@ struct DeveloperOptionsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Reset Actions") {
-                    Button("Reset Onboarding") {
+                Section(String(localized: "developer.reset.title", defaultValue: "Reset Actions", table: "LocalizableShared")) {
+                    Button(String(localized: "developer.reset.onboarding", defaultValue: "Reset Onboarding", table: "LocalizableShared")) {
                         UserDefaults.standard.set(false, forKey: "hasSeenQuickStartInfo")
                     }
 
-                    Button("Reset Coupon Redemption") {
+                    Button(String(localized: "developer.reset.coupon", defaultValue: "Reset Coupon Redemption", table: "LocalizableShared")) {
                         adRemovalPurchaseService.applyCouponEntitlement(false)
                     }
 
-                    Button("Reset All Dev Overrides", role: .destructive) {
+                    Button(String(localized: "developer.reset.all", defaultValue: "Reset All Dev Overrides", table: "LocalizableShared"), role: .destructive) {
                         adRemovalPurchaseService.applyCouponEntitlement(false)
                         UserDefaults.standard.set(false, forKey: "hasSeenQuickStartInfo")
                     }
                 }
 
-                Section("Current State") {
+                Section(String(localized: "developer.state.title", defaultValue: "Current State", table: "LocalizableShared")) {
                     StateRow(label: "hasPurchasedEntitlement", value: adRemovalPurchaseService.hasPurchasedEntitlement)
                     StateRow(label: "hasEarnedEntitlement", value: adRemovalPurchaseService.hasEarnedEntitlement)
                     StateRow(label: "hasCouponEntitlement", value: adRemovalPurchaseService.hasCouponEntitlement)
@@ -50,11 +50,11 @@ struct DeveloperOptionsView: View {
                     }
                 }
             }
-            .navigationTitle("Developer Options")
+            .navigationTitle(String(localized: "developer.title", defaultValue: "Developer Options", table: "LocalizableShared"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button(String(localized: "common.done", table: "LocalizableShared")) {
                         dismiss()
                     }
                 }
