@@ -50,7 +50,6 @@
       }
     },
     "coupon.enter" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

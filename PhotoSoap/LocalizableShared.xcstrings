@@ -69,22 +69,6 @@
         }
       }
     },
-    "common.ok" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
-          }
-        }
-      }
-    },
     "common.kept" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -98,6 +82,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kept"
+          }
+        }
+      }
+    },
+    "common.ok" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
           }
         }
       }
@@ -135,7 +135,24 @@
         }
       }
     },
+    "common.unknown" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
     "developer.reset.all" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -152,6 +169,7 @@
       }
     },
     "developer.reset.coupon" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -168,6 +186,7 @@
       }
     },
     "developer.reset.onboarding" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -184,6 +203,7 @@
       }
     },
     "developer.reset.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -200,6 +220,7 @@
       }
     },
     "developer.state.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -216,6 +237,7 @@
       }
     },
     "developer.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -227,22 +249,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Developer Options"
-          }
-        }
-      }
-    },
-    "common.unknown" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unbekannt"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown"
           }
         }
       }
@@ -450,7 +456,6 @@
       }
     },
     "error.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -462,38 +467,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Error"
-          }
-        }
-      }
-    },
-    "settings.developer.open" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entwickleroptionen öffnen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Developer Options"
-          }
-        }
-      }
-    },
-    "settings.developer.title" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entwickler"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Developer"
           }
         }
       }
@@ -639,6 +612,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recovery Mode"
+          }
+        }
+      }
+    },
+    "settings.developer.open" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entwickleroptionen öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Developer Options"
+          }
+        }
+      }
+    },
+    "settings.developer.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entwickler"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Developer"
           }
         }
       }
