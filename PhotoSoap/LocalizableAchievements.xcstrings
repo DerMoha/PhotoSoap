@@ -75,13 +75,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Halte eine 7-Tage-Anmeldesträfe"
+            "value" : "Pruefe Fotos an 14 Tagen in Folge"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Maintain a 7-day login streak"
+            "value" : "Review photos 14 days in a row"
           }
         }
       }

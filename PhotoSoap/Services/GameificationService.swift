@@ -102,7 +102,7 @@ class GameificationService: ObservableObject {
         case "streak_master":
             return stats.bestStreak >= 100
         case "daily_devotee":
-            return stats.dailyStreak >= 14
+            return stats.dayStreak >= 14
         case "storage_saver":
             return stats.storageFreed >= 5_368_709_120
         case "century_club":
@@ -116,11 +116,6 @@ class GameificationService: ObservableObject {
         default:
             return false
         }
-    }
-
-    func updateDailyStreak(stats: UserStats, context: ModelContext) {
-        stats.updateDailyStreak()
-        checkAchievements(stats: stats, context: context)
     }
 
     func resetSessionStats(stats: UserStats) {
@@ -171,7 +166,7 @@ class GameificationService: ObservableObject {
         case "streak_master":
             return min(1.0, Double(stats.bestStreak) / 100.0)
         case "daily_devotee":
-            return min(1.0, Double(stats.dailyStreak) / 14.0)
+            return min(1.0, Double(stats.dayStreak) / 14.0)
         case "storage_saver":
             return min(1.0, Double(stats.storageFreed) / 5_368_709_120.0)
         case "century_club":

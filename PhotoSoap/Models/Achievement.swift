@@ -34,7 +34,7 @@ struct Achievement: Identifiable, Hashable {
         Achievement(
             id: "daily_devotee",
             title: "Daily Devotee",
-            description: "Maintain a 14-day login streak",
+            description: "Review photos 14 days in a row",
             iconName: "calendar.badge.checkmark"
         ),
         Achievement(

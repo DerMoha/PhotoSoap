@@ -131,10 +131,16 @@
     },
     "stats.bestDayReviews" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meiste an einem Tag"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Best Day"
+            "value" : "Most in a Day"
           }
         }
       }
@@ -173,29 +179,18 @@
         }
       }
     },
-    "stats.dailyStreak" : {
-      "extractionState" : "stale",
+    "stats.dayStreak" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tägliche Serie"
+            "value" : "Gepruefte Tage in Folge"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Login Streak"
-          }
-        }
-      }
-    },
-    "stats.dayStreak" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Day Streak"
+            "value" : "Reviewed Days in a Row"
           }
         }
       }
@@ -244,16 +239,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keep Rate"
-          }
-        }
-      }
-    },
-    "stats.loginStreak" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Login Streak"
           }
         }
       }
@@ -424,13 +409,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Serien"
+            "value" : "Taegliche Aktivitaet"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Streaks"
+            "value" : "Daily Activity"
           }
         }
       }
@@ -469,10 +454,16 @@
     },
     "stats.todayReviews" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heute geprueft"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Today"
+            "value" : "Reviewed Today"
           }
         }
       }

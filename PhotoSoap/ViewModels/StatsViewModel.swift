@@ -44,28 +44,22 @@ final class StatsViewModel {
     func getStreakStats(from stats: UserStats) -> [StatItem] {
         [
             StatItem(
-                title: String(localized: "stats.todayReviews", defaultValue: "Today", table: "LocalizableStats"),
+                title: String(localized: "stats.todayReviews", defaultValue: "Reviewed Today", table: "LocalizableStats"),
                 value: "\(stats.todayReviewCount)",
                 iconName: "flame",
                 color: .orange
             ),
             StatItem(
-                title: String(localized: "stats.dayStreak", defaultValue: "Day Streak", table: "LocalizableStats"),
+                title: String(localized: "stats.dayStreak", defaultValue: "Reviewed Days in a Row", table: "LocalizableStats"),
                 value: "\(stats.dayStreak)",
                 iconName: "calendar",
                 color: .purple
             ),
             StatItem(
-                title: String(localized: "stats.bestDayReviews", defaultValue: "Best Day", table: "LocalizableStats"),
+                title: String(localized: "stats.bestDayReviews", defaultValue: "Most in a Day", table: "LocalizableStats"),
                 value: "\(stats.bestDayReviewCount)",
                 iconName: "trophy.fill",
                 color: .yellow
-            ),
-            StatItem(
-                title: String(localized: "stats.loginStreak", defaultValue: "Login Streak", table: "LocalizableStats"),
-                value: "\(stats.dailyStreak)",
-                iconName: "person.fill.checkmark",
-                color: .green
             )
         ]
     }

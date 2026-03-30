@@ -13,10 +13,8 @@ class UserStats {
     // MARK: - Streak Tracking
     var currentStreak: Int
     var bestStreak: Int
-    var dailyStreak: Int
     var dayStreak: Int
     var lastReviewDate: Date?
-    var lastLoginDate: Date?
     var todayReviewCount: Int
     var todayDate: Date?
     var bestDayReviewCount: Int
@@ -36,10 +34,8 @@ class UserStats {
 
         self.currentStreak = 0
         self.bestStreak = 0
-        self.dailyStreak = 0
         self.dayStreak = 0
         self.lastReviewDate = nil
-        self.lastLoginDate = nil
         self.todayReviewCount = 0
         self.todayDate = nil
         self.bestDayReviewCount = 0
@@ -107,28 +103,6 @@ class UserStats {
         if todayReviewCount > bestDayReviewCount {
             bestDayReviewCount = todayReviewCount
         }
-    }
-
-    // MARK: - Daily Streak
-
-    func updateDailyStreak() {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-
-        if let lastLogin = lastLoginDate {
-            let lastLoginDay = calendar.startOfDay(for: lastLogin)
-            let daysDifference = calendar.dateComponents([.day], from: lastLoginDay, to: today).day ?? 0
-
-            if daysDifference == 1 {
-                dailyStreak += 1
-            } else if daysDifference > 1 {
-                dailyStreak = 1
-            }
-        } else {
-            dailyStreak = 1
-        }
-
-        lastLoginDate = Date()
     }
 
     // MARK: - Daily Challenge
