@@ -221,14 +221,16 @@ struct AchievementDetailSheet: View {
 
             Spacer()
 
-            Button(String(localized: "achievements.close", table: "LocalizableAchievements")) {
+            Button {
                 dismiss()
+            } label: {
+                Text(String(localized: "achievements.close", table: "LocalizableAchievements"))
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray5))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color(.systemGray5))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal)
             .padding(.bottom)
         }
