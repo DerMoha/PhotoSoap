@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct LimitedAccessCard: View {
     enum Style {
@@ -25,23 +24,24 @@ struct LimitedAccessCard: View {
     }
 
     private var statsCard: some View {
-        HStack(alignment: .top, spacing: 14) {
-            iconBadge
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                iconBadge
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.headline)
 
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    Text(message)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
 
-            Spacer(minLength: 12)
-
             actionButton(controlSize: .small)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(16)
+        .padding(18)
         .background(statsBackground)
     }
 
@@ -78,14 +78,14 @@ struct LimitedAccessCard: View {
 
     private var statsBackground: some View {
         RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(Color(uiColor: UIColor.secondarySystemGroupedBackground))
+            .fill(Color(.secondarySystemGroupedBackground))
             .overlay {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.blue.opacity(0.05))
+                    .fill(Color.blue.opacity(0.04))
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.blue.opacity(0.10), lineWidth: 1)
+                    .stroke(Color.blue.opacity(0.08), lineWidth: 1)
             }
     }
 
@@ -130,5 +130,5 @@ struct LimitedAccessCard: View {
         )
     }
     .padding()
-    .background(Color(uiColor: UIColor.systemGroupedBackground))
+    .background(Color(.systemGroupedBackground))
 }
