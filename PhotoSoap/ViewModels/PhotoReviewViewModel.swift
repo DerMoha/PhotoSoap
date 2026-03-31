@@ -49,6 +49,7 @@ final class PhotoReviewViewModel: ObservableObject {
     @Published var cycleKeptCount = 0
     @Published var cycleDeletedCount = 0
     @Published var showStartOverConfirmation = false
+    @Published var showQueuedStartOverConfirmation = false
     @Published var showDailyGoalToast = false
     @Published var hasTriggeredSwipeThresholdFeedback = false
     @Published var lastCelebrationFeedbackDate = Date.distantPast
@@ -173,8 +174,24 @@ final class PhotoReviewViewModel: ObservableObject {
         showDailyGoalToast = false
     }
 
+    func requestStartOver() {
+        if pendingDeletionCount > 0 {
+            showQueuedStartOverConfirmation = true
+        } else {
+            showStartOverConfirmation = true
+        }
+    }
+
+    func reviewPendingDeletionQueue() {
+        showQueuedStartOverConfirmation = false
+        isShowingDeleteQueueSheet = true
+    }
+
     func startOver() {
         guard let modelContext else { return }
+
+        showStartOverConfirmation = false
+        showQueuedStartOverConfirmation = false
 
         isLoading = true
         currentPhoto = nil

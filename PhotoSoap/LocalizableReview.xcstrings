@@ -995,13 +995,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du wirst alle Fotos erneut überprüfen. Dein Fortschritt wird zurückgesetzt, aber deine Löschwarteschlange bleibt erhalten."
+            "value" : "Du wirst alle Fotos erneut überprüfen. Dein Fortschritt wird zurückgesetzt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You will re-review all photos. Your progress will reset, but your delete queue will stay intact."
+            "value" : "You will re-review all photos. Your progress will reset."
           }
         }
       }
@@ -1018,6 +1018,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start over?"
+          }
+        }
+      }
+    },
+    "review.startOver.reviewQueue" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschliste prüfen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review Queue"
+          }
+        }
+      }
+    },
+    "review.startOver.withQueue.message" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Löschliste bleibt erhalten. Du kannst jetzt neu starten oder erst die Löschliste prüfen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your delete queue will stay saved. You can start over now or review the queue first."
+          }
+        }
+      }
+    },
+    "review.startOver.withQueue.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Löschliste neu starten?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start over with queued photos?"
           }
         }
       }

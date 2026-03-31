@@ -118,6 +118,23 @@ struct PhotoReviewView: View {
             } message: {
                 Text(String(localized: "review.startOver.confirmation", table: "LocalizableReview"))
             }
+            .confirmationDialog(
+                String(localized: "review.startOver.withQueue.title", defaultValue: "Start over with queued photos?", table: "LocalizableReview"),
+                isPresented: $viewModel.showQueuedStartOverConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button(String(localized: "review.startOver", table: "LocalizableReview"), role: .destructive) {
+                    viewModel.startOver()
+                }
+
+                Button(String(localized: "review.startOver.reviewQueue", defaultValue: "Review Queue", table: "LocalizableReview")) {
+                    viewModel.reviewPendingDeletionQueue()
+                }
+
+                Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {}
+            } message: {
+                Text(String(localized: "review.startOver.withQueue.message", defaultValue: "Your delete queue will stay saved. You can start over now or review the queue first.", table: "LocalizableReview"))
+            }
             .sheet(isPresented: $viewModel.showFilterSheet) {
                 FilterSheet(
                     photoLibraryService: photoLibraryService,
@@ -369,7 +386,7 @@ struct PhotoReviewView: View {
             }
 
             Button {
-                viewModel.showStartOverConfirmation = true
+                viewModel.requestStartOver()
             } label: {
                 Label(String(localized: "review.startOver", table: "LocalizableReview"), systemImage: "arrow.counterclockwise")
                     .font(.headline)
