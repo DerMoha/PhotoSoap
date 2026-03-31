@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct StreakBanner: View {
     let currentStreak: Int
@@ -95,15 +94,16 @@ struct CompactHeader: View {
     let progress: Double
     let current: Int
     let target: Int
-    let challengeTitle: String
-    let challengeCompactTitle: String
     let isFilterActive: Bool
+    let goalOptions: [Int]
     let onFilterTap: () -> Void
-    let onGoalTap: () -> Void
+    let onGoalSelect: (Int) -> Void
     let onDailyGoalComplete: () -> Void
 
     @State private var isAnimating = false
     @State private var wasCompleted = false
+
+    private let photosLabel = String(localized: "common.photos", table: "LocalizableShared")
 
     var body: some View {
         HStack(spacing: 12) {
@@ -129,13 +129,22 @@ struct CompactHeader: View {
 
             Spacer()
 
-            Button(action: onGoalTap) {
-                ViewThatFits(in: .horizontal) {
-                    goalLabel(title: challengeTitle)
-                    goalLabel(title: challengeCompactTitle)
-                    goalLabel(title: nil)
+            Menu {
+                ForEach(goalOptions, id: \.self) { goal in
+                    Button {
+                        onGoalSelect(goal)
+                    } label: {
+                        if goal == target {
+                            Label("\(goal) \(photosLabel)", systemImage: "checkmark")
+                        } else {
+                            Text("\(goal) \(photosLabel)")
+                        }
+                    }
                 }
+            } label: {
+                goalLabel
             }
+            .menuStyle(.button)
             .buttonStyle(.plain)
         }
         .onChange(of: todayReviewCount) { oldValue, newValue in
@@ -192,28 +201,18 @@ struct CompactHeader: View {
         .frame(width: 24, height: 24)
     }
 
-    private func goalLabel(title: String?) -> some View {
+    private var goalLabel: some View {
         HStack(spacing: 8) {
             progressIndicator
 
-            if progress < 1.0 {
-                if let title {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(title)
-                            .font(.caption2)
-                            .fontWeight(.medium)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
+            Text("\(current)/\(target)")
+                .font(.caption)
+                .fontWeight(.semibold)
 
-                        Text("\(current)/\(target)")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Text("\(current)/\(target)")
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                }
+            if progress < 1.0 {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.horizontal, 12)

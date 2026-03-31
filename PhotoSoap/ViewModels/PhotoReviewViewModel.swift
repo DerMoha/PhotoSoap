@@ -42,7 +42,6 @@ final class PhotoReviewViewModel: ObservableObject {
     @Published var isProcessingAction = false
     @Published var currentFilter: PhotoFilter = .all
     @Published var showFilterSheet = false
-    @Published var showGoalSheet = false
     @Published var persistedReviewedIDs: Set<String> = []
     @Published var knownUnreviewedIDs: Set<String> = []
     @Published var hasTrackedReviewStart = false

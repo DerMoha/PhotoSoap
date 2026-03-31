@@ -150,3 +150,5 @@ class UserStats {
         return formatter.string(fromByteCount: storageFreed)
     }
 }
+
+extension UserStats: DailyChallengeStats {}

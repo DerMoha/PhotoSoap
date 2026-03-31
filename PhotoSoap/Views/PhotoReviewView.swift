@@ -13,6 +13,8 @@ struct PhotoReviewView: View {
     @ObservedObject var aggregateMetricsService: AggregateMetricsService
     @ObservedObject var adCoordinator: AdCoordinator
 
+    private let dailyGoalOptions = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
     init(
         photoLibraryService: PhotoLibraryService,
         gameificationService: GameificationService,
@@ -144,15 +146,6 @@ struct PhotoReviewView: View {
                     }
                 )
             }
-            .sheet(isPresented: $viewModel.showGoalSheet) {
-                DailyGoalSettingSheet(
-                    isPresented: $viewModel.showGoalSheet,
-                    currentTarget: stats.dailyChallengeTarget,
-                    onSelect: { newTarget in
-                        stats.updateDailyChallengeTarget(newTarget)
-                    }
-                )
-            }
             .sheet(isPresented: $viewModel.isShowingDeleteQueueSheet, onDismiss: {
                 viewModel.handleDeleteQueueSheetDismissed()
             }) {
@@ -211,21 +204,22 @@ struct PhotoReviewView: View {
 
     private var compactHeaderSection: some View {
         let challenge = gameificationService.getCurrentDailyChallenge(stats: stats)
-        let progress = Double(stats.dailyChallengeProgress) / Double(max(stats.dailyChallengeTarget, 1))
+        let current = challenge.progress(from: stats)
+        let progress = Double(current) / Double(max(stats.dailyChallengeTarget, 1))
 
         return CompactHeader(
             todayReviewCount: stats.todayReviewCount,
             progress: progress,
-            current: stats.dailyChallengeProgress,
+            current: current,
             target: stats.dailyChallengeTarget,
-            challengeTitle: challenge.title,
-            challengeCompactTitle: challenge.compactTitle,
             isFilterActive: !viewModel.currentFilter.isAll,
+            goalOptions: dailyGoalOptions,
             onFilterTap: {
                 viewModel.showFilterSheet = true
             },
-            onGoalTap: {
-                viewModel.showGoalSheet = true
+            onGoalSelect: { newTarget in
+                hapticsService.selection()
+                stats.updateDailyChallengeTarget(newTarget)
             },
             onDailyGoalComplete: {
                 viewModel.showDailyGoalToast = true
