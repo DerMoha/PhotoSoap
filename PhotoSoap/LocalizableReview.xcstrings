@@ -147,6 +147,7 @@
     },
     "dailyGoal.changeApply" : {
       "comment" : "A description below the current daily goal that explains that changes apply only to the current challenge.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -180,6 +181,7 @@
     },
     "dailyGoal.current" : {
       "comment" : "A label displaying the user's current daily review goal.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -213,6 +215,7 @@
     },
     "dailyGoal.title" : {
       "comment" : "The title of a sheet where a user can set their daily review goal.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
