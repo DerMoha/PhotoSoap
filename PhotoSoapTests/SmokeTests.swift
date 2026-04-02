@@ -183,26 +183,78 @@ final class SmokeTests: XCTestCase {
 
         XCTAssertEqual(service.pendingMetrics.reviewedPhotos, 2)
         XCTAssertEqual(service.pendingMetrics.deletedPhotos, 1)
+        XCTAssertEqual(service.pendingMetrics.keptPhotos, 1)
         XCTAssertEqual(service.pendingMetrics.bytesFreed, 4_096)
     }
 
     @MainActor
-    func testAggregateMetricsFlushesThroughConfiguredSink() async {
+    func testAggregateMetricsDoesNotFlushOnEveryReview() async {
         let defaults = UserDefaults(suiteName: #function)!
         defaults.removePersistentDomain(forName: #function)
+        let clock = TestClock(now: Date(timeIntervalSince1970: 1_776_000_000))
         let sink = TestAggregateMetricsSink()
-        let service = AggregateMetricsService(defaults: defaults, sink: sink, allowsAutomaticFlush: false)
+        let service = AggregateMetricsService(
+            defaults: defaults,
+            sink: sink,
+            allowsAutomaticFlush: true,
+            now: { clock.now }
+        )
+
+        service.recordReview()
+        await Task.yield()
+
+        let payloads = await sink.payloads
+
+        XCTAssertTrue(payloads.isEmpty)
+        XCTAssertEqual(service.pendingMetrics.reviewedPhotos, 1)
+    }
+
+    @MainActor
+    func testAggregateMetricsFlushesCumulativeDailyBucketAndRespectsDailyCadence() async {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let clock = TestClock(now: Date(timeIntervalSince1970: 1_776_000_000))
+        let sink = TestAggregateMetricsSink()
+        let service = AggregateMetricsService(
+            defaults: defaults,
+            sink: sink,
+            allowsAutomaticFlush: true,
+            now: { clock.now }
+        )
 
         service.registerInstallIfNeeded()
         service.recordDeletion(bytesFreed: 2_048)
         await service.flushForTesting()
 
-        let payloads = await sink.payloads
+        var payloads = await sink.payloads
         XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads.first?.metrics.installs, 1)
-        XCTAssertEqual(payloads.first?.metrics.reviewedPhotos, 1)
-        XCTAssertEqual(payloads.first?.metrics.deletedPhotos, 1)
-        XCTAssertEqual(payloads.first?.metrics.bytesFreed, 2_048)
+        XCTAssertTrue(payloads.first?.registerInstall == true)
+        XCTAssertEqual(payloads.first?.dailyBuckets.count, 1)
+        XCTAssertEqual(payloads.first?.dailyBuckets.first?.reviewedPhotos, 1)
+        XCTAssertEqual(payloads.first?.dailyBuckets.first?.deletedPhotos, 1)
+        XCTAssertEqual(payloads.first?.dailyBuckets.first?.keptPhotos, 0)
+        XCTAssertEqual(payloads.first?.dailyBuckets.first?.bytesFreed, 2_048)
+        XCTAssertTrue(service.pendingMetrics.isEmpty)
+
+        service.recordReview()
+        service.flushPendingMetricsIfNeeded()
+        await Task.yield()
+
+        payloads = await sink.payloads
+        XCTAssertEqual(payloads.count, 1)
+
+        clock.now = clock.now.addingTimeInterval(24 * 60 * 60 + 1)
+        service.flushPendingMetricsIfNeeded()
+        await Task.yield()
+
+        payloads = await sink.payloads
+        XCTAssertEqual(payloads.count, 2)
+        XCTAssertTrue(payloads.last?.registerInstall == false)
+        XCTAssertEqual(payloads.last?.dailyBuckets.count, 1)
+        XCTAssertEqual(payloads.last?.dailyBuckets.first?.reviewedPhotos, 2)
+        XCTAssertEqual(payloads.last?.dailyBuckets.first?.deletedPhotos, 1)
+        XCTAssertEqual(payloads.last?.dailyBuckets.first?.keptPhotos, 1)
+        XCTAssertEqual(payloads.last?.dailyBuckets.first?.bytesFreed, 2_048)
         XCTAssertTrue(service.pendingMetrics.isEmpty)
     }
 
@@ -373,5 +425,13 @@ private actor TestAggregateMetricsSink: AggregateMetricsSink {
         }
 
         payloads.append(payload)
+    }
+}
+
+private final class TestClock {
+    var now: Date
+
+    init(now: Date) {
+        self.now = now
     }
 }

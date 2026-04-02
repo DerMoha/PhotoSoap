@@ -1,0 +1,3 @@
+[functions.metrics-ingest]
+verify_jwt = false
+import_map = "./functions/import_map.json"
