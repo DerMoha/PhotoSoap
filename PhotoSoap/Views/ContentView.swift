@@ -37,7 +37,9 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if photoLibraryService.authorizationStatus == .notDetermined {
+            if shouldShowQuickStart {
+                QuickStartInfoView()
+            } else if photoLibraryService.authorizationStatus == .notDetermined {
                 PermissionRequestView(
                     photoLibraryService: photoLibraryService,
                     analyticsService: analyticsService
@@ -45,8 +47,6 @@ struct ContentView: View {
             } else if photoLibraryService.authorizationStatus == .denied ||
                       photoLibraryService.authorizationStatus == .restricted {
                 PermissionDeniedView(analyticsService: analyticsService)
-            } else if shouldShowQuickStart {
-                QuickStartInfoView()
             } else {
                 mainTabView
             }
@@ -58,7 +58,7 @@ struct ContentView: View {
             }
 
             initializeStats()
-            photoLibraryService.refreshLibraryAccessState()
+            refreshPhotoLibraryStateIfNeeded()
             aggregateMetricsService.registerInstallIfNeeded()
             adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
             adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
@@ -68,7 +68,7 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active:
-                photoLibraryService.refreshLibraryAccessState()
+                refreshPhotoLibraryStateIfNeeded()
                 aggregateMetricsService.flushPendingMetricsIfNeeded()
                 adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
                 adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
@@ -88,6 +88,9 @@ struct ContentView: View {
         .onChange(of: photoLibraryService.authorizationStatus) { _, status in
             analyticsService.track(.permissionStatusChanged(status))
         }
+        .onChange(of: hasSeenQuickStartInfo) { _, _ in
+            refreshPhotoLibraryStateIfNeeded()
+        }
         .onChange(of: selectedTab) { _, newTab in
             analyticsService.track(.tabSelected(tabName(for: newTab)))
         }
@@ -99,9 +102,7 @@ struct ContentView: View {
     }
 
     private var shouldShowQuickStart: Bool {
-        let status = photoLibraryService.authorizationStatus
-        let canShowMainExperience = status == .authorized || status == .limited
-        return canShowMainExperience && !hasSeenQuickStartInfo
+        !hasSeenQuickStartInfo
     }
 
     private var mainTabView: some View {
@@ -156,6 +157,11 @@ struct ContentView: View {
 
     private func initializeStats() {
         gameificationService.ensureDailyChallengeIsSet(stats: stats)
+    }
+
+    private func refreshPhotoLibraryStateIfNeeded() {
+        guard !shouldShowQuickStart else { return }
+        photoLibraryService.refreshLibraryAccessState()
     }
 
     private func tabName(for selection: MainTab) -> String {

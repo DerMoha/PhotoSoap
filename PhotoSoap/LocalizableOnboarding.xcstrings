@@ -172,13 +172,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit dem Prüfen starten"
+            "value" : "Weiter"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start reviewing"
+            "value" : "Continue"
           }
         }
       }
@@ -400,13 +400,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zugriff erlauben"
+            "value" : "Weiter"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow Access"
+            "value" : "Continue"
           }
         }
       }
@@ -464,13 +464,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap benötigt Zugriff auf deine Fotobibliothek, um dir beim Überprüfen und Organisieren deiner Fotos zu helfen."
+            "value" : "Als Nächstes fragt PhotoSoap nach Zugriff auf deine Fotobibliothek, damit du auswählen kannst, welche Fotos du durchsehen möchtest."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap needs access to your photo library to help you review and organize your photos."
+            "value" : "Next, PhotoSoap will ask for access to your photo library so you can choose which photos to review."
           }
         }
       }

@@ -87,14 +87,13 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     private var sessionReviewedIDs: Set<String> = []
     private let fileSizeCache = NSCache<NSString, NSNumber>()
     private var cachedPreloadPhotos: [Photo] = []
+    private var isObservingPhotoLibrary = false
 
     // MARK: - Initialization
 
     override init() {
         super.init()
         fileSizeCache.countLimit = 1000
-        checkAuthorizationStatus()
-        PHPhotoLibrary.shared().register(self)
     }
 
     deinit {
@@ -156,11 +155,24 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     private func updateAuthorizationStatus(_ status: PHAuthorizationStatus) {
         authorizationStatus = Self.mappedAuthorizationStatus(from: status)
+
+        if authorizationStatus.hasPhotoAccess {
+            startObservingPhotoLibraryIfNeeded()
+        } else {
+            stopObservingPhotoLibraryIfNeeded()
+        }
     }
 
     func requestAuthorization() async -> Bool {
         let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
         updateAuthorizationStatus(status)
+
+        if authorizationStatus.hasPhotoAccess {
+            refreshLibrary()
+        } else {
+            invalidateCaches()
+        }
+
         return status == .authorized || status == .limited
     }
 
@@ -192,6 +204,12 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     // MARK: - Photo Fetching
 
     private func ensureAssetsFetched() {
+        guard authorizationStatus.hasPhotoAccess else {
+            cachedAssets = nil
+            totalAssetCount = 0
+            return
+        }
+
         guard cachedAssets == nil else { return }
 
         switch currentFilter {
@@ -377,7 +395,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     func fetchAssets(withLocalIdentifiers identifiers: [String]) -> [String: PHAsset] {
-        guard !identifiers.isEmpty else { return [:] }
+        guard authorizationStatus.hasPhotoAccess, !identifiers.isEmpty else { return [:] }
 
         let fetchedAssets = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
         var assetsByIdentifier: [String: PHAsset] = [:]
@@ -413,12 +431,18 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     func refreshLibrary() {
         invalidateCaches()
+        guard authorizationStatus.hasPhotoAccess else { return }
         ensureAssetsFetched()
     }
 
     func refreshLibraryAccessState() {
         checkAuthorizationStatus()
-        refreshLibrary()
+
+        if authorizationStatus.hasPhotoAccess {
+            refreshLibrary()
+        } else {
+            invalidateCaches()
+        }
     }
 
     private func invalidateCaches() {
@@ -427,6 +451,18 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         cachedAlbums = []
         cachedYears = []
         cachedMonthsByYear = [:]
+    }
+
+    private func startObservingPhotoLibraryIfNeeded() {
+        guard !isObservingPhotoLibrary else { return }
+        PHPhotoLibrary.shared().register(self)
+        isObservingPhotoLibrary = true
+    }
+
+    private func stopObservingPhotoLibraryIfNeeded() {
+        guard isObservingPhotoLibrary else { return }
+        PHPhotoLibrary.shared().unregisterChangeObserver(self)
+        isObservingPhotoLibrary = false
     }
 
     // MARK: - Filtering
