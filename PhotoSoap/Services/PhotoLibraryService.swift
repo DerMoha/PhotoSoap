@@ -57,6 +57,7 @@ private enum Constants {
     static let baseMaxRetries = 50
     static let sessionReviewedIDsLimit = 10000
     static let maxPreviewDimension: CGFloat = 800
+    static let maxZoomPreviewDimension: CGFloat = 2800
     static let cachingThumbnailSize = CGSize(width: 400, height: 400)
 }
 
@@ -349,6 +350,63 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 continuation.resume(returning: photo)
             }
         }
+    }
+
+    func fetchHighResolutionPreviewImage(for asset: PHAsset) async -> UIImage? {
+        let targetSize = previewTargetSize(for: asset)
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
+        options.isSynchronous = false
+        options.resizeMode = .fast
+
+        return await withCheckedContinuation { (continuation: CheckedContinuation<UIImage?, Never>) in
+            var hasResumed = false
+
+            imageManager.requestImage(
+                for: asset,
+                targetSize: targetSize,
+                contentMode: .aspectFit,
+                options: options
+            ) { image, info in
+                let isCancelled = info?[PHImageCancelledKey] as? Bool ?? false
+                if isCancelled {
+                    guard !hasResumed else { return }
+                    hasResumed = true
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                if let error = info?[PHImageErrorKey] as? Error {
+                    print("PhotoSoap: Failed to load high-resolution preview: \(error.localizedDescription)")
+                    guard !hasResumed else { return }
+                    hasResumed = true
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let isDegraded = info?[PHImageResultIsDegradedKey] as? Bool ?? false
+                guard !isDegraded else { return }
+                guard !hasResumed else { return }
+
+                hasResumed = true
+                continuation.resume(returning: image)
+            }
+        }
+    }
+
+    private func previewTargetSize(for asset: PHAsset) -> CGSize {
+        let screenScale = UIScreen.main.scale
+        let screenBounds = UIScreen.main.bounds
+        let baseLongEdge = max(screenBounds.width, screenBounds.height) * screenScale * 2
+        let assetLongEdge = CGFloat(max(asset.pixelWidth, asset.pixelHeight))
+        let maxDimension = max(Constants.maxPreviewDimension, min(Constants.maxZoomPreviewDimension, baseLongEdge))
+        let scale = min(maxDimension / assetLongEdge, 1.0)
+
+        return CGSize(
+            width: CGFloat(asset.pixelWidth) * scale,
+            height: CGFloat(asset.pixelHeight) * scale
+        )
     }
 
     // MARK: - File Size
