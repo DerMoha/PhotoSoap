@@ -5,6 +5,7 @@ struct PhotoReviewView: View {
     @EnvironmentObject private var hapticsService: HapticsService
     @Environment(\.modelContext) private var modelContext
 
+    @State private var previewPhoto: Photo?
     @StateObject private var viewModel: PhotoReviewViewModel
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
@@ -179,6 +180,12 @@ struct PhotoReviewView: View {
                 )
                 .interactiveDismissDisabled(viewModel.isCommittingDeletionBatch)
             }
+            .fullScreenCover(item: $previewPhoto) { photo in
+                PhotoPreviewSheet(
+                    photo: photo,
+                    photoLibraryService: photoLibraryService
+                )
+            }
             .alert(String(localized: "review.queue.remove.confirmation.title", defaultValue: "Remove from queue?", table: "LocalizableReview"), isPresented: $viewModel.isShowingRemoveFromQueueConfirmation) {
                 Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {
                     viewModel.dismissRemoveFromQueueConfirmation()
@@ -254,6 +261,19 @@ struct PhotoReviewView: View {
                     }
                 }
         )
+        .simultaneousGesture(
+            TapGesture()
+                .onEnded {
+                    presentPreview(for: photo)
+                }
+        )
+    }
+
+    private func presentPreview(for photo: Photo) {
+        guard !viewModel.isProcessingAction else { return }
+        guard abs(viewModel.cardOffset.width) < 10, abs(viewModel.cardOffset.height) < 10 else { return }
+
+        previewPhoto = photo
     }
 
     private func swipeDecisionBackdrop(cardWidth: CGFloat) -> some View {
