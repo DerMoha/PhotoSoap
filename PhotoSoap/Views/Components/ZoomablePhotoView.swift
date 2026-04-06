@@ -6,6 +6,8 @@ struct ZoomablePhotoView: UIViewRepresentable {
     @Binding var zoomScale: CGFloat
     var minimumZoomScale: CGFloat = 1
     var maximumZoomScale: CGFloat = 5
+    var onDismissDragChanged: (CGFloat) -> Void = { _ in }
+    var onDismissDragEnded: (CGFloat, CGFloat) -> Void = { _, _ in }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -41,7 +43,17 @@ struct ZoomablePhotoView: UIViewRepresentable {
         doubleTapRecognizer.numberOfTapsRequired = 2
         scrollView.addGestureRecognizer(doubleTapRecognizer)
 
+        let dismissPanRecognizer = UIPanGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleDismissPan(_:))
+        )
+        dismissPanRecognizer.delegate = context.coordinator
+        dismissPanRecognizer.maximumNumberOfTouches = 1
+        scrollView.addGestureRecognizer(dismissPanRecognizer)
+        scrollView.panGestureRecognizer.require(toFail: dismissPanRecognizer)
+
         context.coordinator.scrollView = scrollView
+        context.coordinator.dismissPanRecognizer = dismissPanRecognizer
         return scrollView
     }
 
@@ -63,10 +75,11 @@ struct ZoomablePhotoView: UIViewRepresentable {
         }
     }
 
-    final class Coordinator: NSObject, UIScrollViewDelegate {
+    final class Coordinator: NSObject, UIScrollViewDelegate, UIGestureRecognizerDelegate {
         var parent: ZoomablePhotoView
         let imageView = UIImageView()
         weak var scrollView: UIScrollView?
+        weak var dismissPanRecognizer: UIPanGestureRecognizer?
 
         init(parent: ZoomablePhotoView) {
             self.parent = parent
@@ -107,6 +120,39 @@ struct ZoomablePhotoView: UIViewRepresentable {
             let location = recognizer.location(in: imageView)
             let zoomRect = zoomRect(for: zoomedInScale, centeredAt: location, in: scrollView)
             scrollView.zoom(to: zoomRect, animated: true)
+        }
+
+        @objc func handleDismissPan(_ recognizer: UIPanGestureRecognizer) {
+            guard let scrollView else { return }
+
+            let translation = recognizer.translation(in: scrollView)
+            let verticalTranslation = max(translation.y, 0)
+
+            switch recognizer.state {
+            case .changed:
+                guard scrollView.zoomScale <= parent.minimumZoomScale + 0.02 else { return }
+                parent.onDismissDragChanged(verticalTranslation)
+            case .ended, .cancelled, .failed:
+                let verticalVelocity = max(recognizer.velocity(in: scrollView).y, 0)
+                parent.onDismissDragEnded(verticalTranslation, verticalVelocity)
+            default:
+                break
+            }
+        }
+
+        func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+            guard
+                gestureRecognizer === dismissPanRecognizer,
+                let scrollView,
+                let panRecognizer = gestureRecognizer as? UIPanGestureRecognizer
+            else {
+                return true
+            }
+
+            let velocity = panRecognizer.velocity(in: scrollView)
+            guard scrollView.zoomScale <= parent.minimumZoomScale + 0.02 else { return false }
+            guard velocity.y > 0 else { return false }
+            return abs(velocity.y) > abs(velocity.x)
         }
 
         private func zoomRect(for scale: CGFloat, centeredAt center: CGPoint, in scrollView: UIScrollView) -> CGRect {
