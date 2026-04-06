@@ -499,13 +499,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wähle weitere Fotos aus deiner Bibliothek aus, damit du mit der nächsten Runde weitermachen kannst."
+            "value" : "PhotoSoap kann nur die Fotos prüfen, die du ausgewählt hast. Du kannst mehr Fotos hinzufügen. Ausgewählte Videos erscheinen nicht."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose more photos from your library selection to keep the next review session going."
+            "value" : "PhotoSoap can review only the photos you selected. You can add more photos to keep going. Videos you choose will not appear."
           }
         }
       }
@@ -515,13 +515,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bereit für mehr"
+            "value" : "Mehr Fotos zum Prüfen hinzufügen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ready for more"
+            "value" : "Add More Photos to Review"
           }
         }
       }
@@ -531,13 +531,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du hast alle deine Fotos überprüft!"
+            "value" : "Du hast alle verfügbaren Fotos überprüft."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You've reviewed all your photos!"
+            "value" : "You've reviewed all available photos."
           }
         }
       }
@@ -547,13 +547,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du hast alle Fotos aus deiner aktuellen Auswahl überprüft."
+            "value" : "Du hast alle Fotos aus deiner aktuellen Auswahl überprüft. Füge mehr Fotos hinzu, wenn du weitermachen möchtest."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You've reviewed everything in your current selection."
+            "value" : "You've reviewed everything in your current selection. Add more photos if you want to keep going."
           }
         }
       }
@@ -563,13 +563,29 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fertig!"
+            "value" : "Du bist fertig"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All Done!"
+            "value" : "You're Caught Up"
+          }
+        }
+      }
+    },
+    "review.complete.title.limited" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählte Fotos geprüft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected Photos Reviewed"
           }
         }
       }
@@ -692,13 +708,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine markierten Fotos sind noch da."
+            "value" : "Deine Fotos bleiben in der Löschliste."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Your queued photos are still here."
+            "value" : "Your photos are still in your Delete List."
           }
         }
       }
@@ -711,13 +727,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Liste leeren"
+            "value" : "Löschliste leeren"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Clear Queue"
+            "value" : "Clear Delete List"
           }
         }
       }
@@ -730,13 +746,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle markierten Fotos bleiben erhalten. Nichts wird aus Fotos gelöscht."
+            "value" : "Alle Fotos werden aus deiner Löschliste entfernt und in Fotos behalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "All queued photos will be kept. Nothing will be deleted from Photos."
+            "value" : "All photos will be removed from your Delete List and kept in Photos."
           }
         }
       }
@@ -755,7 +771,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Clear delete queue?"
+            "value" : "Clear Delete List?"
           }
         }
       }
@@ -774,7 +790,39 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%lld queued"
+            "value" : "%lld in Delete List"
+          }
+        }
+      }
+    },
+    "review.queue.pendingSummary" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Fotos sind in deiner Löschliste"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld photos are in your Delete List"
+          }
+        }
+      }
+    },
+    "review.queue.pendingSummary.detail" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Fotos bleiben in Fotos, bis du das Löschen in iOS bestätigst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These photos stay in Photos until you confirm deletion in iOS."
           }
         }
       }
@@ -787,13 +835,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gelöscht!"
+            "value" : "In Fotos gelöscht"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Deleted!"
+            "value" : "Deleted from Photos"
           }
         }
       }
@@ -806,13 +854,45 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fotos aus deiner Mediathek entfernt."
+            "value" : "iOS hat das Löschen bestätigt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Photos removed from your library."
+            "value" : "iOS confirmed the deletion."
+          }
+        }
+      }
+    },
+    "review.queue.added.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur Löschliste hinzugefügt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added to Delete List"
+          }
+        }
+      }
+    },
+    "review.queue.added.detail" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es wurde noch nichts gelöscht. iOS fragt nach, bevor etwas entfernt wird."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing has been deleted yet. iOS will ask before anything is removed."
           }
         }
       }
@@ -825,13 +905,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In Fotos löschen"
+            "value" : "Diese Fotos löschen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Delete in Photos"
+            "value" : "Delete These Photos"
           }
         }
       }
@@ -850,7 +930,23 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "No photos in queue"
+            "value" : "No photos in Delete List"
+          }
+        }
+      }
+    },
+    "review.queue.sheet.note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotos in deiner Löschliste bleiben in Fotos, bis du die iOS-Abfrage zum Löschen bestätigst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos in your Delete List stay in Photos until you confirm the iOS deletion prompt."
           }
         }
       }
@@ -863,13 +959,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Weiter zum Löschen"
+            "value" : "Weiter"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Continue to Delete"
+            "value" : "Continue"
           }
         }
       }
@@ -882,13 +978,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iOS fragt einmal nach, ob %lld Fotos gelöscht werden sollen. Diese Fotos werden in Zuletzt gelöscht verschoben."
+            "value" : "PhotoSoap bittet iOS darum, %lld Fotos zu löschen. Nichts wird entfernt, bis du die nächste iOS-Abfrage bestätigst. Gelöschte Fotos landen in Zuletzt gelöscht."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "iOS will ask once to confirm deleting %lld photos. These photos will move to Recently Deleted."
+            "value" : "PhotoSoap will ask iOS to delete %lld photos. Nothing is removed until you confirm the next iOS prompt. Deleted photos move to Recently Deleted."
           }
         }
       }
@@ -901,13 +997,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iOS fragt einmal nach"
+            "value" : "In iOS bestätigen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "iOS Will Ask Once"
+            "value" : "Confirm in iOS"
           }
         }
       }
@@ -960,7 +1056,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Queue"
+            "value" : "List"
           }
         }
       }
@@ -979,7 +1075,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Delete Queue"
+            "value" : "Delete List"
           }
         }
       }
@@ -1008,13 +1104,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neu starten"
+            "value" : "Erneut prüfen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start Over"
+            "value" : "Review Again"
           }
         }
       }
@@ -1024,13 +1120,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du wirst alle Fotos erneut überprüfen. Dein Fortschritt wird zurückgesetzt."
+            "value" : "Du prüfst alle verfügbaren Fotos erneut. Dein Fortschritt wird zurückgesetzt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You will re-review all photos. Your progress will reset."
+            "value" : "You will review all available photos again. Your progress will reset."
           }
         }
       }
@@ -1040,13 +1136,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neu starten?"
+            "value" : "Erneut prüfen?"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start over?"
+            "value" : "Review again?"
           }
         }
       }
@@ -1056,13 +1152,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Löschliste prüfen"
+            "value" : "Löschliste ansehen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Review Queue"
+            "value" : "Review Delete List"
           }
         }
       }
@@ -1072,13 +1168,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine Löschliste bleibt erhalten. Du kannst jetzt neu starten oder erst die Löschliste prüfen."
+            "value" : "Deine Löschliste bleibt gespeichert. Du kannst jetzt erneut prüfen oder zuerst die Löschliste ansehen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your delete queue will stay saved. You can start over now or review the queue first."
+            "value" : "Your Delete List stays saved. You can review again now or open the Delete List first."
           }
         }
       }
@@ -1088,13 +1184,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit Löschliste neu starten?"
+            "value" : "Mit Fotos in der Löschliste erneut prüfen?"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start over with queued photos?"
+            "value" : "Review again with photos in your Delete List?"
           }
         }
       }

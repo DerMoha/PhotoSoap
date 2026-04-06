@@ -509,13 +509,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mehr auswählen"
+            "value" : "Mehr Fotos hinzufügen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose More"
+            "value" : "Add More Photos"
           }
         }
       }
@@ -525,13 +525,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wähle mehr Fotos aus, um deine Auswahl zu erweitern, oder verwalte den Zugriff später in den Einstellungen."
+            "value" : "PhotoSoap kann nur die Fotos prüfen, die du ausgewählt hast. Du kannst jederzeit mehr hinzufügen. Ausgewählte Videos erscheinen nicht."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose more photos to expand what you can review, or manage access in Settings later."
+            "value" : "PhotoSoap can review only the photos you selected. You can add more anytime. Videos you choose will not appear."
           }
         }
       }

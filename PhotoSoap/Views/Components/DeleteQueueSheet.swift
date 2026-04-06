@@ -27,8 +27,13 @@ struct DeleteQueueSheet: View {
                     .listStyle(.plain)
 
                     VStack(spacing: 12) {
+                        Text(String(localized: "review.queue.sheet.note", defaultValue: "Photos in your Delete List stay in Photos until you confirm the iOS deletion prompt.", table: "LocalizableReview"))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+
                         Button(action: { isShowingClearConfirmation = true }) {
-                            Text(String(localized: "review.queue.clear", defaultValue: "Clear Queue", table: "LocalizableReview"))
+                            Text(String(localized: "review.queue.clear", defaultValue: "Clear Delete List", table: "LocalizableReview"))
                                 .font(.subheadline)
                                 .foregroundStyle(.red)
                         }
@@ -39,7 +44,7 @@ struct DeleteQueueSheet: View {
                             HStack {
                                 Image(systemName: "trash.fill")
 
-                                Text(String(localized: "review.queue.deleteInPhotos", defaultValue: "Delete in Photos", table: "LocalizableReview"))
+                                Text(String(localized: "review.queue.deleteInPhotos", defaultValue: "Delete These Photos", table: "LocalizableReview"))
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -54,7 +59,7 @@ struct DeleteQueueSheet: View {
                     .background(.ultraThinMaterial)
                 }
             }
-            .navigationTitle(String(localized: "review.queue.title", defaultValue: "Delete Queue", table: "LocalizableReview"))
+            .navigationTitle(String(localized: "review.queue.title", defaultValue: "Delete List", table: "LocalizableReview"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -63,14 +68,14 @@ struct DeleteQueueSheet: View {
                     }
                 }
             }
-            .alert(String(localized: "review.queue.clear.confirmation.title", defaultValue: "Clear delete queue?", table: "LocalizableReview"), isPresented: $isShowingClearConfirmation) {
+            .alert(String(localized: "review.queue.clear.confirmation.title", defaultValue: "Clear Delete List?", table: "LocalizableReview"), isPresented: $isShowingClearConfirmation) {
                 Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {}
                 Button(String(localized: "common.clear", defaultValue: "Clear", table: "LocalizableShared"), role: .destructive) {
                     onClearQueue()
                     onDismiss()
                 }
             } message: {
-                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All queued photos will be kept. Nothing will be deleted from Photos.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All photos will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
             }
         }
     }
@@ -81,11 +86,11 @@ struct DeleteQueueSheet: View {
                 .font(.system(size: 50))
                 .foregroundStyle(.secondary)
 
-            Text(String(localized: "review.queue.empty.title", defaultValue: "No photos in queue", table: "LocalizableReview"))
+            Text(String(localized: "review.queue.empty.title", defaultValue: "No photos in Delete List", table: "LocalizableReview"))
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            Text(String(localized: "reviewqueue.empty.description", defaultValue: "Swipe left on photos to queue them for deletion.", table: "LocalizableReview"))
+            Text(String(localized: "reviewqueue.empty.description", defaultValue: "Swipe left on photos to add them to your Delete List.", table: "LocalizableReview"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

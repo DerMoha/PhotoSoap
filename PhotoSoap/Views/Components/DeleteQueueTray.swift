@@ -28,7 +28,7 @@ struct DeleteQueueTray: View {
             }
 
             trayButton(
-                title: String(localized: "review.queue.shortTitle", defaultValue: "Queue", table: "LocalizableReview"),
+                title: String(localized: "review.queue.shortTitle", defaultValue: "List", table: "LocalizableReview"),
                 systemImage: "list.bullet"
             ) {
                 onReviewQueue()
@@ -45,7 +45,10 @@ struct DeleteQueueTray: View {
     }
 
     private var summaryText: String {
-        String(localized: "review.queue.count", defaultValue: "\(queueCount) queued", table: "LocalizableReview")
+        String.localizedStringWithFormat(
+            String(localized: "review.queue.count", defaultValue: "%lld in Delete List", table: "LocalizableReview"),
+            queueCount
+        )
     }
 
     private func trayButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {

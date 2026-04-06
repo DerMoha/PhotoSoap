@@ -115,16 +115,16 @@ struct LimitedAccessCard: View {
     VStack(spacing: 20) {
         LimitedAccessCard(
             title: "Reviewing selected photos only",
-            message: "Choose more photos to expand what you can review, or manage access in Settings later.",
-            buttonTitle: "Choose More",
+            message: "PhotoSoap can review only the photos you selected. You can add more anytime. Videos you choose will not appear.",
+            buttonTitle: "Add More Photos",
             style: .stats,
             onManage: {}
         )
 
         LimitedAccessCard(
-            title: "You finished your selected photos",
-            message: "Add more photos from your library selection to keep reviewing.",
-            buttonTitle: "Choose More",
+            title: "Add More Photos to Review",
+            message: "PhotoSoap can review only the photos you selected. You can add more photos to keep going. Videos you choose will not appear.",
+            buttonTitle: "Add More Photos",
             style: .completion,
             onManage: {}
         )

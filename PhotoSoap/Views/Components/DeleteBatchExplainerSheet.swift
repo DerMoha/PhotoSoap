@@ -16,11 +16,11 @@ struct DeleteBatchExplainerSheet: View {
                         .font(.system(size: 50))
                         .foregroundStyle(.orange)
 
-                    Text(String(localized: "review.queue.explainer.title", defaultValue: "iOS Will Ask Once", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.explainer.title", defaultValue: "Confirm in iOS", table: "LocalizableReview"))
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Text(String(localized: "review.queue.explainer.message", defaultValue: "iOS will ask once to confirm deleting \(itemCount) photos. These photos will move to Recently Deleted.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.explainer.message", defaultValue: "PhotoSoap will ask iOS to delete \(itemCount) photos. Nothing is removed until you confirm the next iOS prompt. Deleted photos move to Recently Deleted.", table: "LocalizableReview"))
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -39,7 +39,7 @@ struct DeleteBatchExplainerSheet: View {
                                 Image(systemName: "trash.fill")
                             }
 
-                            Text(String(localized: "review.queue.explainer.confirm", defaultValue: "Continue to Delete", table: "LocalizableReview"))
+                            Text(String(localized: "review.queue.explainer.confirm", defaultValue: "Continue", table: "LocalizableReview"))
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
