@@ -55,6 +55,12 @@ struct PhotoReviewView: View {
                         .padding(.horizontal)
                         .padding(.top, 8)
 
+                    if shouldShowLimitedAccessBanner {
+                        limitedAccessBanner
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                    }
+
                     if viewModel.isLoading {
                         Spacer()
                         loadingView
@@ -87,6 +93,10 @@ struct PhotoReviewView: View {
                 if viewModel.showDeletionCancelledToast {
                     deletionCancelledToast
                 }
+
+                if viewModel.showDeleteListIntroToast {
+                    deleteListIntroToast
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
@@ -111,12 +121,15 @@ struct PhotoReviewView: View {
             .onChange(of: viewModel.showDailyGoalToast) { _, isShowing in
                 viewModel.onDailyGoalToastChanged(isShowing)
             }
+            .onChange(of: photoLibraryService.libraryRevision) { _, _ in
+                viewModel.handleLibraryRevisionChange()
+            }
             .alert(String(localized: "error.title", table: "LocalizableShared"), isPresented: $viewModel.isShowingError) {
                 Button(String(localized: "common.ok", defaultValue: "OK", table: "LocalizableShared")) {}
             } message: {
                 Text(viewModel.error ?? String(localized: "error.unknown", table: "LocalizableShared"))
             }
-            .alert(String(localized: "review.startOver.confirmation.title", defaultValue: "Start over?", table: "LocalizableReview"), isPresented: $viewModel.showStartOverConfirmation) {
+            .alert(String(localized: "review.startOver.confirmation.title", defaultValue: "Review again?", table: "LocalizableReview"), isPresented: $viewModel.showStartOverConfirmation) {
                 Button(String(localized: "common.cancel", table: "LocalizableShared"), role: .cancel) {}
                 Button(String(localized: "review.startOver", table: "LocalizableReview"), role: .destructive) {
                     viewModel.startOver()
@@ -125,7 +138,7 @@ struct PhotoReviewView: View {
                 Text(String(localized: "review.startOver.confirmation", table: "LocalizableReview"))
             }
             .confirmationDialog(
-                String(localized: "review.startOver.withQueue.title", defaultValue: "Start over with queued photos?", table: "LocalizableReview"),
+                String(localized: "review.startOver.withQueue.title", defaultValue: "Review again with photos in your Delete List?", table: "LocalizableReview"),
                 isPresented: $viewModel.showQueuedStartOverConfirmation,
                 titleVisibility: .visible
             ) {
@@ -133,13 +146,13 @@ struct PhotoReviewView: View {
                     viewModel.startOver()
                 }
 
-                Button(String(localized: "review.startOver.reviewQueue", defaultValue: "Review Queue", table: "LocalizableReview")) {
+                Button(String(localized: "review.startOver.reviewQueue", defaultValue: "Review Delete List", table: "LocalizableReview")) {
                     viewModel.reviewPendingDeletionQueue()
                 }
 
                 Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {}
             } message: {
-                Text(String(localized: "review.startOver.withQueue.message", defaultValue: "Your delete queue will stay saved. You can start over now or review the queue first.", table: "LocalizableReview"))
+                Text(String(localized: "review.startOver.withQueue.message", defaultValue: "Your Delete List stays saved. You can review again now or open the Delete List first.", table: "LocalizableReview"))
             }
             .sheet(isPresented: $viewModel.showFilterSheet) {
                 FilterSheet(
@@ -199,7 +212,7 @@ struct PhotoReviewView: View {
             } message: {
                 Text(String(localized: "review.queue.remove.confirmation.message", defaultValue: "This photo will stay in your library and won't be included in the next delete batch.", table: "LocalizableReview"))
             }
-            .alert(String(localized: "review.queue.clear.confirmation.title", defaultValue: "Clear delete queue?", table: "LocalizableReview"), isPresented: $viewModel.isShowingClearQueueConfirmation) {
+            .alert(String(localized: "review.queue.clear.confirmation.title", defaultValue: "Clear Delete List?", table: "LocalizableReview"), isPresented: $viewModel.isShowingClearQueueConfirmation) {
                 Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {
                     viewModel.dismissClearQueueConfirmation()
                 }
@@ -207,7 +220,7 @@ struct PhotoReviewView: View {
                     viewModel.confirmClearQueue()
                 }
             } message: {
-                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All queued photos will be kept. Nothing will be deleted from Photos.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All photos will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
             }
         }
     }
@@ -432,15 +445,11 @@ struct PhotoReviewView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.green)
 
-            Text(String(localized: "review.complete.title", table: "LocalizableReview"))
+            Text(completionTitle)
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text(
-                photoLibraryService.authorizationStatus == .limited
-                    ? String(localized: "review.complete.subtitle.limited", table: "LocalizableReview")
-                    : String(localized: "review.complete.subtitle", table: "LocalizableReview")
-            )
+            Text(completionSubtitle)
             .font(.body)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
@@ -458,6 +467,10 @@ struct PhotoReviewView: View {
             }
             .padding(.top)
 
+            if viewModel.pendingDeletionCount > 0 {
+                deleteListSummaryCard
+            }
+
             if photoLibraryService.authorizationStatus == .limited {
                 LimitedAccessCard(
                     title: String(localized: "review.complete.limited.title", table: "LocalizableReview"),
@@ -471,19 +484,88 @@ struct PhotoReviewView: View {
                 )
             }
 
-            Button {
-                viewModel.requestStartOver()
-            } label: {
-                Label(String(localized: "review.startOver", table: "LocalizableReview"), systemImage: "arrow.counterclockwise")
-                    .font(.headline)
-                    .padding()
-                    .background(.blue)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            VStack(spacing: 12) {
+                if viewModel.pendingDeletionCount > 0 {
+                    Button {
+                        viewModel.isShowingDeleteQueueSheet = true
+                    } label: {
+                        Label(String(localized: "review.startOver.reviewQueue", defaultValue: "Review Delete List", table: "LocalizableReview"), systemImage: "list.bullet")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(.red)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+
+                Button {
+                    viewModel.requestStartOver()
+                } label: {
+                    Label(String(localized: "review.startOver", table: "LocalizableReview"), systemImage: "arrow.counterclockwise")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(viewModel.pendingDeletionCount > 0 ? Color(.secondarySystemGroupedBackground) : .blue)
+                        .foregroundStyle(viewModel.pendingDeletionCount > 0 ? Color.primary : .white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
             }
             .padding(.top)
         }
         .padding()
+    }
+
+    private var shouldShowLimitedAccessBanner: Bool {
+        photoLibraryService.authorizationStatus == .limited
+            && !viewModel.isLoading
+            && !viewModel.noMorePhotos
+            && viewModel.currentPhoto != nil
+    }
+
+    private var limitedAccessBanner: some View {
+        LimitedAccessCard(
+            title: String(localized: "limitedAccess.title", table: "LocalizableShared"),
+            message: String(localized: "limitedAccess.description", table: "LocalizableShared"),
+            buttonTitle: String(localized: "limitedAccess.chooseMore", table: "LocalizableShared"),
+            style: .stats,
+            onManage: {
+                analyticsService.track(.limitedLibraryPickerOpened())
+                photoLibraryService.presentLimitedLibraryPicker()
+            }
+        )
+    }
+
+    private var completionTitle: String {
+        photoLibraryService.authorizationStatus == .limited
+            ? String(localized: "review.complete.title.limited", defaultValue: "Selected Photos Reviewed", table: "LocalizableReview")
+            : String(localized: "review.complete.title", table: "LocalizableReview")
+    }
+
+    private var completionSubtitle: String {
+        photoLibraryService.authorizationStatus == .limited
+            ? String(localized: "review.complete.subtitle.limited", table: "LocalizableReview")
+            : String(localized: "review.complete.subtitle", table: "LocalizableReview")
+    }
+
+    private var deleteListSummaryCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(
+                String.localizedStringWithFormat(
+                    String(localized: "review.queue.pendingSummary", defaultValue: "%lld photos are in your Delete List", table: "LocalizableReview"),
+                    viewModel.pendingDeletionCount
+                )
+            )
+            .font(.headline)
+
+            Text(String(localized: "review.queue.pendingSummary.detail", defaultValue: "These photos stay in Photos until you confirm deletion in iOS.", table: "LocalizableReview"))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     @ViewBuilder
@@ -690,7 +772,7 @@ struct PhotoReviewView: View {
                 VStack(alignment: .leading) {
                     Text(String(localized: "review.queue.cancelled", defaultValue: "Deletion Cancelled", table: "LocalizableReview"))
                         .font(.headline)
-                    Text(String(localized: "review.queue.cancelled.detail", defaultValue: "Your queued photos are still here.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.cancelled.detail", defaultValue: "Your photos are still in your Delete List.", table: "LocalizableReview"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -710,6 +792,37 @@ struct PhotoReviewView: View {
                         viewModel.dismissDeletionCancelledToast()
                     }
                 }
+            }
+        }
+    }
+
+    private var deleteListIntroToast: some View {
+        VStack {
+            Spacer()
+
+            HStack(spacing: 12) {
+                Image(systemName: "list.bullet.clipboard.fill")
+                    .font(.title2)
+                    .foregroundStyle(.blue)
+
+                VStack(alignment: .leading) {
+                    Text(String(localized: "review.queue.added.title", defaultValue: "Added to Delete List", table: "LocalizableReview"))
+                        .font(.headline)
+                    Text(String(localized: "review.queue.added.detail", defaultValue: "Nothing has been deleted yet. iOS will ask before anything is removed.", table: "LocalizableReview"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(radius: 10)
+            .padding()
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .onTapGesture {
+                viewModel.dismissDeleteListIntroToast()
             }
         }
     }

@@ -70,6 +70,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     @Published var isLoading = false
     @Published var error: PhotoLibraryError?
     @Published var currentFilter: PhotoFilter = .all
+    @Published private(set) var libraryRevision = 0
 
     // MARK: - Private State
     private let imageManager = PHCachingImageManager()
@@ -133,6 +134,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             self.cachedAlbums = []
             self.cachedYears = []
             self.cachedMonthsByYear = [:]
+            self.libraryRevision &+= 1
         }
     }
 
@@ -191,6 +193,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: presenter) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.refreshLibraryAccessState()
+                self?.libraryRevision &+= 1
             }
         }
     }

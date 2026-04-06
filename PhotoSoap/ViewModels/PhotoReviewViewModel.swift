@@ -62,6 +62,7 @@ final class PhotoReviewViewModel: ObservableObject {
     @Published var isCommittingDeletionBatch = false
     @Published var showDeletionSuccessToast = false
     @Published var showDeletionCancelledToast = false
+    @Published var showDeleteListIntroToast = false
 
     var pendingDeletionCount: Int {
         pendingDeletionItems.count
@@ -325,6 +326,13 @@ final class PhotoReviewViewModel: ObservableObject {
         }
     }
 
+    func handleLibraryRevisionChange() {
+        guard !isLoading, !isProcessingAction else { return }
+        guard noMorePhotos || currentPhoto == nil else { return }
+
+        refreshLibrary()
+    }
+
     var normalizedSwipeProgress: CGFloat {
         min(max(swipeProgress, 0), 1)
     }
@@ -491,6 +499,18 @@ final class PhotoReviewViewModel: ObservableObject {
         pendingDeletionItems.append(item)
         deletionStack.append(item)
         persistPendingDeletionQueue()
+
+        if !defaults.bool(forKey: UserDefaultsKeys.hasSeenDeleteListIntro) {
+            defaults.set(true, forKey: UserDefaultsKeys.hasSeenDeleteListIntro)
+            showDeleteListIntroToast = true
+
+            Task {
+                try? await Task.sleep(nanoseconds: 3_500_000_000)
+                await MainActor.run {
+                    self.showDeleteListIntroToast = false
+                }
+            }
+        }
 
         hapticsService.impact(.rigid)
         await advanceToNextPhoto()
@@ -663,6 +683,10 @@ final class PhotoReviewViewModel: ObservableObject {
 
     func dismissDeletionCancelledToast() {
         showDeletionCancelledToast = false
+    }
+
+    func dismissDeleteListIntroToast() {
+        showDeleteListIntroToast = false
     }
 
     private func persistReviewProgress(for photoID: String, cacheInSession: Bool) -> Bool {

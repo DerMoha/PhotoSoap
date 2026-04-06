@@ -2,6 +2,8 @@ import SwiftUI
 
 struct FilterSheet: View {
     @EnvironmentObject private var hapticsService: HapticsService
+    @AppStorage(UserDefaultsKeys.filterOldestFirst) private var filterOldestFirst = false
+
     @ObservedObject var photoLibraryService: PhotoLibraryService
     let currentFilter: PhotoFilter
     let onSelect: (PhotoFilter) -> Void
@@ -24,6 +26,7 @@ struct FilterSheet: View {
                     }
                 } else {
                     List {
+                        sortOrderSection
                         allPhotosSection
                         yearsSection
                         monthsSection
@@ -49,6 +52,18 @@ struct FilterSheet: View {
         }
     }
 
+    private var sortOrderSection: some View {
+        Section(String(localized: "filter.order", defaultValue: "Order", table: "LocalizableFilter")) {
+            Picker(String(localized: "filter.order", defaultValue: "Order", table: "LocalizableFilter"), selection: $filterOldestFirst) {
+                Text(String(localized: "filter.order.newestFirst", defaultValue: "Newest First", table: "LocalizableFilter"))
+                    .tag(false)
+                Text(String(localized: "filter.order.oldestFirst", defaultValue: "Oldest First", table: "LocalizableFilter"))
+                    .tag(true)
+            }
+            .pickerStyle(.segmented)
+        }
+    }
+
     private var allPhotosSection: some View {
         Section {
             Button {
@@ -66,10 +81,10 @@ struct FilterSheet: View {
 
     private var yearsSection: some View {
         Section(String(localized: "filter.byYear", defaultValue: "By Year", table: "LocalizableFilter")) {
-            if availableYears.isEmpty {
+            if displayedYears.isEmpty {
                 emptyRow(text: String(localized: "filter.noYears", defaultValue: "No years available", table: "LocalizableFilter"))
             } else {
-                ForEach(availableYears, id: \.self) { year in
+                ForEach(displayedYears, id: \.self) { year in
                     Button {
                         selectFilter(.year(year))
                     } label: {
@@ -87,11 +102,11 @@ struct FilterSheet: View {
 
     private var monthsSection: some View {
         Section(String(localized: "filter.byMonth", defaultValue: "By Month", table: "LocalizableFilter")) {
-            if availableMonths.isEmpty {
+            if displayedMonths.isEmpty {
                 emptyRow(text: String(localized: "filter.noMonths", defaultValue: "No months available", table: "LocalizableFilter"))
             } else {
                 Picker("Year", selection: $selectedYear) {
-                    ForEach(availableYears, id: \.self) { year in
+                    ForEach(displayedYears, id: \.self) { year in
                         Text(String(year)).tag(year)
                     }
                 }
@@ -100,10 +115,10 @@ struct FilterSheet: View {
                     availableMonths = photoLibraryService.getAvailableMonths(for: newValue)
                 }
 
-                if availableMonths.isEmpty {
+                if displayedMonths.isEmpty {
                     emptyRow(text: String(localized: "filter.noMonths", table: "LocalizableFilter"))
                 } else {
-                    ForEach(availableMonths, id: \.self) { month in
+                    ForEach(displayedMonths, id: \.self) { month in
                         let filter = PhotoFilter.month(year: selectedYear, month: month)
                         Button {
                             selectFilter(filter)
@@ -190,6 +205,14 @@ struct FilterSheet: View {
         }
 
         isLoading = false
+    }
+
+    private var displayedYears: [Int] {
+        filterOldestFirst ? availableYears.sorted() : availableYears.sorted(by: >)
+    }
+
+    private var displayedMonths: [Int] {
+        filterOldestFirst ? availableMonths.sorted() : availableMonths.sorted(by: >)
     }
 
     private func monthName(for month: Int) -> String {
