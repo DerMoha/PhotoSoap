@@ -5,7 +5,10 @@ struct PhotoReviewView: View {
     @EnvironmentObject private var hapticsService: HapticsService
     @Environment(\.modelContext) private var modelContext
 
+    @AppStorage(UserDefaultsKeys.hasSeenPhotoPreviewHint) private var hasSeenPhotoPreviewHint = false
+
     @State private var previewPhoto: Photo?
+    @State private var showPreviewHint = false
     @StateObject private var viewModel: PhotoReviewViewModel
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
@@ -236,7 +239,7 @@ struct PhotoReviewView: View {
 
     private func photoCardSection(photo: Photo) -> some View {
         GeometryReader { geometry in
-            ZStack {
+            ZStack(alignment: .bottom) {
                 swipeDecisionBackdrop(cardWidth: geometry.size.width)
 
                 PhotoCardDisplay(
@@ -247,6 +250,12 @@ struct PhotoReviewView: View {
                     swipeProgress: viewModel.swipeProgress,
                     swipeDirection: viewModel.swipeDirection
                 )
+
+                if shouldShowPreviewHint {
+                    previewHintChip
+                        .padding(.bottom, 56)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -267,13 +276,42 @@ struct PhotoReviewView: View {
                     presentPreview(for: photo)
                 }
         )
+        .animation(.easeInOut(duration: 0.2), value: shouldShowPreviewHint)
     }
 
     private func presentPreview(for photo: Photo) {
         guard !viewModel.isProcessingAction else { return }
         guard abs(viewModel.cardOffset.width) < 10, abs(viewModel.cardOffset.height) < 10 else { return }
 
+        hasSeenPhotoPreviewHint = true
+        showPreviewHint = false
         previewPhoto = photo
+    }
+
+    private var shouldShowPreviewHint: Bool {
+        showPreviewHint
+            && previewPhoto == nil
+            && !viewModel.isProcessingAction
+            && viewModel.swipeDirection == nil
+            && abs(viewModel.cardOffset.width) < 8
+    }
+
+    private var previewHintChip: some View {
+        Label(
+            String(localized: "review.preview.tapHint", defaultValue: "Tap to preview", table: "LocalizableReview"),
+            systemImage: "hand.tap"
+        )
+        .font(.caption.weight(.semibold))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.regularMaterial)
+        .clipShape(Capsule())
+        .overlay {
+            Capsule()
+                .stroke(.white.opacity(0.18), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 3)
+        .allowsHitTesting(false)
     }
 
     private func swipeDecisionBackdrop(cardWidth: CGFloat) -> some View {
@@ -330,6 +368,40 @@ struct PhotoReviewView: View {
         photoCardSection(photo: photo)
             .frame(maxHeight: .infinity)
             .animation(.easeInOut(duration: 0.2), value: adCoordinator.adsEnabled)
+            .task(id: photo.id) {
+                await schedulePreviewHintIfNeeded()
+            }
+    }
+
+    private func schedulePreviewHintIfNeeded() async {
+        guard !hasSeenPhotoPreviewHint else {
+            await MainActor.run {
+                showPreviewHint = false
+            }
+            return
+        }
+
+        await MainActor.run {
+            showPreviewHint = false
+        }
+
+        try? await Task.sleep(nanoseconds: 700_000_000)
+        guard !Task.isCancelled, previewPhoto == nil else { return }
+
+        await MainActor.run {
+            withAnimation(.easeOut(duration: 0.2)) {
+                showPreviewHint = true
+            }
+        }
+
+        try? await Task.sleep(nanoseconds: 3_000_000_000)
+        guard !Task.isCancelled else { return }
+
+        await MainActor.run {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showPreviewHint = false
+            }
+        }
     }
 
     private var loadingView: some View {
