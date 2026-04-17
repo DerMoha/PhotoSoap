@@ -3,8 +3,6 @@ import SwiftUI
 
 struct DeveloperOptionsView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
-    @ObservedObject var adCoordinator: AdCoordinator
 
     var body: some View {
         NavigationStack {
@@ -14,39 +12,8 @@ struct DeveloperOptionsView: View {
                         UserDefaults.standard.set(false, forKey: "hasSeenQuickStartInfo")
                     }
 
-                    Button(String(localized: "developer.reset.coupon", defaultValue: "Reset Coupon Redemption", table: "LocalizableShared")) {
-                        adRemovalPurchaseService.applyCouponEntitlement(false)
-                    }
-
                     Button(String(localized: "developer.reset.all", defaultValue: "Reset All Dev Overrides", table: "LocalizableShared"), role: .destructive) {
-                        adRemovalPurchaseService.applyCouponEntitlement(false)
                         UserDefaults.standard.set(false, forKey: "hasSeenQuickStartInfo")
-                    }
-                }
-
-                Section(String(localized: "developer.state.title", defaultValue: "Current State", table: "LocalizableShared")) {
-                    StateRow(label: "hasPurchasedEntitlement", value: adRemovalPurchaseService.hasPurchasedEntitlement)
-                    StateRow(label: "hasEarnedEntitlement", value: adRemovalPurchaseService.hasEarnedEntitlement)
-                    StateRow(label: "hasCouponEntitlement", value: adRemovalPurchaseService.hasCouponEntitlement)
-                    StateRow(label: "hasAdRemovalEntitlement", value: adRemovalPurchaseService.hasAdRemovalEntitlement)
-                    StateRow(label: "adsEnabled", value: adCoordinator.adsEnabled)
-
-                    HStack {
-                        Text("totalDeleted")
-                            .font(.caption.monospaced())
-                        Spacer()
-                        Text("\(adRemovalPurchaseService.currentDeletedCount)")
-                            .font(.caption.monospaced())
-                            .foregroundStyle(.secondary)
-                    }
-
-                    HStack {
-                        Text("unlockSource")
-                            .font(.caption.monospaced())
-                        Spacer()
-                        Text(String(describing: adRemovalPurchaseService.unlockSource))
-                            .font(.caption.monospaced())
-                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -63,28 +30,7 @@ struct DeveloperOptionsView: View {
     }
 }
 
-private struct StateRow: View {
-    let label: String
-    let value: Bool
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.caption.monospaced())
-            Spacer()
-            Image(systemName: value ? "checkmark.circle.fill" : "xmark.circle")
-                .foregroundStyle(value ? .green : .secondary)
-        }
-    }
-}
-
 #Preview {
-    DeveloperOptionsView(
-        adRemovalPurchaseService: AdRemovalPurchaseService(
-            analyticsService: AnalyticsService(),
-            shouldObserveTransactions: false
-        ),
-        adCoordinator: AdCoordinator()
-    )
+    DeveloperOptionsView()
 }
 #endif

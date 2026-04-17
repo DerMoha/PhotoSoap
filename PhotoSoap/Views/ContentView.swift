@@ -14,8 +14,6 @@ struct ContentView: View {
     @EnvironmentObject private var aggregateMetricsService: AggregateMetricsService
     @EnvironmentObject private var photoLibraryService: PhotoLibraryService
     @EnvironmentObject private var gameificationService: GameificationService
-    @EnvironmentObject private var adRemovalPurchaseService: AdRemovalPurchaseService
-    @EnvironmentObject private var adCoordinator: AdCoordinator
     @State private var selectedTab: MainTab = .review
     @State private var showBootstrapAlert = false
     @State private var hasTrackedAppOpen = false
@@ -60,8 +58,6 @@ struct ContentView: View {
             initializeStats()
             refreshPhotoLibraryStateIfNeeded()
             aggregateMetricsService.registerInstallIfNeeded()
-            adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
-            adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
             showBootstrapAlert = bootstrapErrorMessage != nil
             analyticsService.track(.permissionStatusChanged(photoLibraryService.authorizationStatus))
         }
@@ -70,20 +66,11 @@ struct ContentView: View {
             case .active:
                 refreshPhotoLibraryStateIfNeeded()
                 aggregateMetricsService.flushPendingMetricsIfNeeded()
-                adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
-                adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
             case .inactive, .background:
                 aggregateMetricsService.flushPendingMetricsIfNeeded()
             @unknown default:
                 break
             }
-        }
-        .onChange(of: stats.totalDeleted) { _, _ in
-            adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
-            adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
-        }
-        .onChange(of: adRemovalPurchaseService.hasAdRemovalEntitlement) { _, hasEntitlement in
-            adCoordinator.updateEntitlement(hasAdRemovalEntitlement: hasEntitlement)
         }
         .onChange(of: photoLibraryService.authorizationStatus) { _, status in
             analyticsService.track(.permissionStatusChanged(status))
@@ -124,8 +111,6 @@ struct ContentView: View {
                     stats: stats,
                     photoLibraryService: photoLibraryService,
                     gameificationService: gameificationService,
-                    adRemovalPurchaseService: adRemovalPurchaseService,
-                    adCoordinator: adCoordinator,
                     analyticsService: analyticsService
                 )
                 .tabItem {
@@ -138,8 +123,7 @@ struct ContentView: View {
                     gameificationService: gameificationService,
                     stats: stats,
                     analyticsService: analyticsService,
-                    aggregateMetricsService: aggregateMetricsService,
-                    adCoordinator: adCoordinator
+                    aggregateMetricsService: aggregateMetricsService
                 )
                 .tabItem {
                     Label(String(localized: "review.tab", table: "LocalizableReview"), systemImage: "photo.stack")
@@ -614,6 +598,4 @@ private struct SwipeHintBadge: View {
         .environmentObject(AggregateMetricsService())
         .environmentObject(PhotoLibraryService())
         .environmentObject(GameificationService())
-        .environmentObject(AdRemovalPurchaseService(analyticsService: AnalyticsService(), shouldObserveTransactions: false))
-        .environmentObject(AdCoordinator())
 }

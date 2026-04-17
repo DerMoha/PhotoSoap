@@ -57,35 +57,6 @@ struct AnalyticsEvent: Equatable {
     static func statsViewed() -> AnalyticsEvent {
         AnalyticsEvent("stats_viewed")
     }
-
-    static func paywallOpened(source: String) -> AnalyticsEvent {
-        AnalyticsEvent("paywall_opened", properties: ["source": source])
-    }
-
-    static func purchaseStarted(productID: String) -> AnalyticsEvent {
-        AnalyticsEvent("purchase_started", properties: ["product_id": productID])
-    }
-
-    static func purchaseCompleted(productID: String, source: String) -> AnalyticsEvent {
-        AnalyticsEvent("purchase_completed", properties: [
-            "product_id": productID,
-            "source": source
-        ])
-    }
-
-    static func purchaseRestoreStarted() -> AnalyticsEvent {
-        AnalyticsEvent("purchase_restore_started")
-    }
-
-    static func purchaseRestoreCompleted(hasEntitlement: Bool) -> AnalyticsEvent {
-        AnalyticsEvent("purchase_restore_completed", properties: [
-            "has_entitlement": hasEntitlement ? "true" : "false"
-        ])
-    }
-
-    static func loyaltyUnlockEarned(threshold: Int) -> AnalyticsEvent {
-        AnalyticsEvent("loyalty_unlock_earned", properties: ["threshold": String(threshold)])
-    }
 }
 
 final class AnalyticsService: ObservableObject {

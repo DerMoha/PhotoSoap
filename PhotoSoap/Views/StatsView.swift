@@ -5,11 +5,8 @@ struct StatsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
-    @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
-    @ObservedObject var adCoordinator: AdCoordinator
     @ObservedObject var analyticsService: AnalyticsService
     @State private var viewModel = StatsViewModel()
-    @State private var isShowingAdFreeSheet = false
     @State private var isShowingSettings = false
 
     var body: some View {
@@ -23,22 +20,15 @@ struct StatsView: View {
                     overviewSection
                     streaksSection
                     ratioSection
-                    adFreeSection
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle(String(localized: "stats.title", table: "LocalizableStats"))
             .navigationDestination(isPresented: $isShowingSettings) {
-                SettingsView(
-                    analyticsService: analyticsService,
-                    adRemovalPurchaseService: adRemovalPurchaseService,
-                    adCoordinator: adCoordinator
-                )
+                SettingsView(analyticsService: analyticsService)
             }
             .onAppear {
-                adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
-                adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
                 analyticsService.track(.statsViewed())
             }
             .toolbar {
@@ -50,15 +40,6 @@ struct StatsView: View {
                         Image(systemName: "gearshape")
                     }
                 }
-            }
-            .sheet(isPresented: $isShowingAdFreeSheet) {
-                AdFreeUpgradeSheet(
-                    stats: stats,
-                    adRemovalPurchaseService: adRemovalPurchaseService,
-                    adCoordinator: adCoordinator,
-                    analyticsService: analyticsService
-                )
-                .presentationDetents([.medium, .large])
             }
         }
     }
@@ -157,147 +138,6 @@ struct StatsView: View {
         }
     }
 
-    private var adFreeSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(String(localized: "stats.adFreeUnlock", table: "LocalizableStats"))
-                .font(.headline)
-                .foregroundStyle(.secondary)
-
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top) {
-                    Label(adFreeTitle, systemImage: adFreeIcon)
-                        .font(.title3.weight(.semibold))
-
-                    Spacer()
-
-                    Button(String(localized: "adfree.details", table: "LocalizableAdFree")) {
-                        analyticsService.track(.paywallOpened(source: "stats_card"))
-                        isShowingAdFreeSheet = true
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
-
-                Text(adFreeMessage)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                if adRemovalPurchaseService.unlockSource != .coupon {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(String(localized: "adfree.loyalty.progress", table: "LocalizableAdFree").replacingOccurrences(of: "%d", with: "\(AdRemovalConfig.freeUnlockDeletedCount)"))
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.secondary)
-
-                            Spacer()
-
-                            Text("\(stats.totalDeleted)/\(AdRemovalConfig.freeUnlockDeletedCount)")
-                                .font(.caption.weight(.semibold))
-                        }
-
-                        ProgressView(value: adRemovalPurchaseService.deleteProgress)
-                            .tint(.orange)
-
-                        Text(progressMessage)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                if let errorMessage = adRemovalPurchaseService.errorMessage, !errorMessage.isEmpty {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                }
-
-                HStack(spacing: 12) {
-                    Button {
-                        Task {
-                            await adRemovalPurchaseService.purchase()
-                        }
-                    } label: {
-                        if adRemovalPurchaseService.isLoading {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Text(primaryButtonTitle)
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(adRemovalPurchaseService.hasAdRemovalEntitlement || adRemovalPurchaseService.isLoading || adRemovalPurchaseService.product == nil)
-
-                    Button(String(localized: "adfree.restore", table: "LocalizableAdFree")) {
-                        Task {
-                            await adRemovalPurchaseService.restorePurchases()
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(adRemovalPurchaseService.isLoading || adRemovalPurchaseService.hasEarnedEntitlement)
-                }
-
-                if adRemovalPurchaseService.product == nil && !adRemovalPurchaseService.hasAdRemovalEntitlement {
-                    Text(String(localized: "adfree.productUnavailable", table: "LocalizableAdFree"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding()
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-    }
-
-    private var adFreeTitle: String {
-        switch adRemovalPurchaseService.unlockSource {
-        case .purchased:
-            return String(localized: "adfree.purchased", table: "LocalizableAdFree")
-        case .earned:
-            return String(localized: "adfree.loyalty", table: "LocalizableAdFree")
-        case .coupon:
-            return String(localized: "adfree.coupon", table: "LocalizableAdFree")
-        case .none:
-            return String(localized: "adfree.hero.title", table: "LocalizableAdFree")
-        }
-    }
-
-    private var adFreeIcon: String {
-        switch adRemovalPurchaseService.unlockSource {
-        case .none:
-            return "sparkles"
-        case .purchased, .earned, .coupon:
-            return "checkmark.seal.fill"
-        }
-    }
-
-    private var adFreeMessage: String {
-        switch adRemovalPurchaseService.unlockSource {
-        case .purchased:
-            return String(localized: "adfree.hero.purchased", table: "LocalizableAdFree")
-        case .earned:
-            return String(localized: "adfree.earned", table: "LocalizableAdFree")
-        case .coupon:
-            return String(localized: "adfree.hero.coupon", table: "LocalizableAdFree")
-        case .none:
-            return String(localized: "adfree.hero.purchase", table: "LocalizableAdFree")
-        }
-    }
-
-    private var progressMessage: String {
-        if adRemovalPurchaseService.hasEarnedEntitlement {
-            return String(localized: "adfree.loyalty.active", table: "LocalizableAdFree")
-        }
-
-        let remainingDeletes = adRemovalPurchaseService.remainingDeletesForUnlock
-        return remainingDeletes == 1
-            ? String(localized: "adfree.loyalty.oneMore", table: "LocalizableAdFree")
-            : String(localized: "adfree.loyalty.deleteMore", table: "LocalizableAdFree").replacingOccurrences(of: "%d", with: "\(remainingDeletes)")
-    }
-
-    private var primaryButtonTitle: String {
-        adRemovalPurchaseService.hasAdRemovalEntitlement ? String(localized: "adfree.unlocked", table: "LocalizableAdFree") : String(localized: "adfree.buyFor", table: "LocalizableAdFree")
-    }
-
 }
 
 struct StatCard: View {
@@ -330,11 +170,6 @@ struct StatCard: View {
         stats: UserStats(),
         photoLibraryService: PhotoLibraryService(),
         gameificationService: GameificationService(),
-        adRemovalPurchaseService: AdRemovalPurchaseService(
-            analyticsService: AnalyticsService(),
-            shouldObserveTransactions: false
-        ),
-        adCoordinator: AdCoordinator(),
         analyticsService: AnalyticsService()
     )
 }

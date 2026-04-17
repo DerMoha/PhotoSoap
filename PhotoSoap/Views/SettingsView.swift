@@ -4,8 +4,6 @@ struct SettingsView: View {
     @EnvironmentObject private var hapticsService: HapticsService
 
     @ObservedObject var analyticsService: AnalyticsService
-    @ObservedObject var adRemovalPurchaseService: AdRemovalPurchaseService
-    @ObservedObject var adCoordinator: AdCoordinator
 
     @AppStorage(UserDefaultsKeys.deleteQueueEnabled) private var isDeleteQueueEnabled = true
 
@@ -27,10 +25,7 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         #if DEBUG
         .sheet(isPresented: $isShowingDeveloperOptions) {
-            DeveloperOptionsView(
-                adRemovalPurchaseService: adRemovalPurchaseService,
-                adCoordinator: adCoordinator
-            )
+            DeveloperOptionsView()
         }
         #endif
     }
@@ -118,14 +113,7 @@ struct SettingsView: View {
 
 #Preview {
     NavigationStack {
-        SettingsView(
-            analyticsService: AnalyticsService(),
-            adRemovalPurchaseService: AdRemovalPurchaseService(
-                analyticsService: AnalyticsService(),
-                shouldObserveTransactions: false
-            ),
-            adCoordinator: AdCoordinator()
-        )
+        SettingsView(analyticsService: AnalyticsService())
     }
     .environmentObject(HapticsService())
 }

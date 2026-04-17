@@ -84,7 +84,6 @@ final class PhotoReviewViewModel: ObservableObject {
     private let gameificationService: GameificationService
     private let analyticsService: AnalyticsService
     private let aggregateMetricsService: AggregateMetricsService
-    private let adCoordinator: AdCoordinator
     private let hapticsService: HapticsService
     private let defaults: UserDefaults
     private weak var modelContext: ModelContext?
@@ -97,7 +96,6 @@ final class PhotoReviewViewModel: ObservableObject {
         gameificationService: GameificationService,
         analyticsService: AnalyticsService,
         aggregateMetricsService: AggregateMetricsService,
-        adCoordinator: AdCoordinator,
         hapticsService: HapticsService,
         defaults: UserDefaults = .standard
     ) {
@@ -105,7 +103,6 @@ final class PhotoReviewViewModel: ObservableObject {
         self.gameificationService = gameificationService
         self.analyticsService = analyticsService
         self.aggregateMetricsService = aggregateMetricsService
-        self.adCoordinator = adCoordinator
         self.hapticsService = hapticsService
         self.defaults = defaults
     }

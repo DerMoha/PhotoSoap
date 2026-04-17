@@ -15,7 +15,6 @@ struct PhotoReviewView: View {
     @Bindable var stats: UserStats
     @ObservedObject var analyticsService: AnalyticsService
     @ObservedObject var aggregateMetricsService: AggregateMetricsService
-    @ObservedObject var adCoordinator: AdCoordinator
 
     private let dailyGoalOptions = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
@@ -24,21 +23,18 @@ struct PhotoReviewView: View {
         gameificationService: GameificationService,
         stats: UserStats,
         analyticsService: AnalyticsService,
-        aggregateMetricsService: AggregateMetricsService,
-        adCoordinator: AdCoordinator
+        aggregateMetricsService: AggregateMetricsService
     ) {
         self.photoLibraryService = photoLibraryService
         self.gameificationService = gameificationService
         self.stats = stats
         self.analyticsService = analyticsService
         self.aggregateMetricsService = aggregateMetricsService
-        self.adCoordinator = adCoordinator
         self._viewModel = StateObject(wrappedValue: PhotoReviewViewModel(
             photoLibraryService: photoLibraryService,
             gameificationService: gameificationService,
             analyticsService: analyticsService,
             aggregateMetricsService: aggregateMetricsService,
-            adCoordinator: adCoordinator,
             hapticsService: HapticsService(),
             defaults: UserDefaults.standard
         ))
@@ -380,7 +376,6 @@ struct PhotoReviewView: View {
     private func reviewContent(photo: Photo) -> some View {
         photoCardSection(photo: photo)
             .frame(maxHeight: .infinity)
-            .animation(.easeInOut(duration: 0.2), value: adCoordinator.adsEnabled)
             .task(id: photo.id) {
                 await schedulePreviewHintIfNeeded()
             }
@@ -687,41 +682,16 @@ struct PhotoReviewView: View {
     }
 
     @ViewBuilder
-    private var reviewBanner: some View {
-        if let unitID = reviewBannerUnitID {
-            ReviewBannerAdView(adUnitID: unitID)
-                .frame(height: 60)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-        }
-    }
-
-    @ViewBuilder
     private var bottomChrome: some View {
-        if viewModel.pendingDeletionCount > 0 || reviewBannerUnitID != nil {
+        if viewModel.pendingDeletionCount > 0 {
             VStack(spacing: 8) {
-                if viewModel.pendingDeletionCount > 0 {
-                    deleteQueueTray
-                }
-
-                reviewBanner
+                deleteQueueTray
             }
             .padding(.horizontal, 12)
             .padding(.top, 4)
             .padding(.bottom, 8)
             .background(Color(.systemGroupedBackground).opacity(0.96))
         }
-    }
-
-    private var reviewBannerUnitID: String? {
-        guard viewModel.currentPhoto != nil,
-              !viewModel.isLoading,
-              !viewModel.noMorePhotos,
-              adCoordinator.shouldShowBanner(at: .reviewBanner)
-        else {
-            return nil
-        }
-
-        return adCoordinator.unitID(for: .reviewBanner)
     }
 
     private var deletionSuccessToast: some View {
@@ -834,8 +804,7 @@ struct PhotoReviewView: View {
         gameificationService: GameificationService(),
         stats: UserStats(),
         analyticsService: AnalyticsService(),
-        aggregateMetricsService: AggregateMetricsService(),
-        adCoordinator: AdCoordinator()
+        aggregateMetricsService: AggregateMetricsService()
     )
     .environmentObject(HapticsService())
 }
