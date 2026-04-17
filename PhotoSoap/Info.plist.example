@@ -6,10 +6,6 @@
 	<string>PhotoSoap needs access to your photo library to help you review and organize your photos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>PhotoSoap needs access to save photos to your library.</string>
-	<key>GADApplicationIdentifier</key>
-	<string>YOUR_ADMOB_APP_ID</string>
-	<key>PhotoSoapAdMobReviewBannerUnitID</key>
-	<string>YOUR_ADMOB_BANNER_UNIT_ID</string>
 	<key>PhotoSoapAggregateMetricsEndpointURL</key>
 	<string>YOUR_SUPABASE_FUNCTION_ENDPOINT</string>
 	<key>PhotoSoapAggregateMetricsAnonKey</key>
