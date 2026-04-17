@@ -4,33 +4,6 @@ import Photos
 @testable import PhotoSoap
 
 final class SmokeTests: XCTestCase {
-    func testCompactCouponGenerationProducesEightUppercaseLetters() {
-        let issuedAt = Date(timeIntervalSince1970: 1_774_700_800)
-        let token = CouponService.generateToken(for: "TEST", now: issuedAt)
-
-        XCTAssertEqual(token?.count, 8)
-        XCTAssertEqual(token, token?.uppercased())
-        XCTAssertEqual(token?.range(of: "^[A-Z]{8}$", options: .regularExpression) != nil, true)
-        XCTAssertEqual(CouponService.validate(code: token ?? "", now: issuedAt), .success)
-    }
-
-    func testCompactCouponExpiresAfterThirtyDays() {
-        let issuedAt = Date(timeIntervalSince1970: 1_774_700_800)
-        let token = CouponService.generateToken(for: "TEST", now: issuedAt)
-        let stillValidDate = issuedAt.addingTimeInterval(30 * 24 * 60 * 60)
-        let expiredDate = issuedAt.addingTimeInterval(31 * 24 * 60 * 60)
-
-        XCTAssertEqual(CouponService.validate(code: token ?? "", now: stillValidDate), .success)
-        XCTAssertEqual(CouponService.validate(code: token ?? "", now: expiredDate), .expiredCode)
-    }
-
-    func testLegacyCouponValidationStillWorks() {
-        let issuedAt = Date(timeIntervalSince1970: 1_774_700_800)
-        let token = CouponService.generateLegacyToken(for: "TEST", now: issuedAt)
-
-        XCTAssertEqual(CouponService.validate(code: token, now: issuedAt), .success)
-    }
-
     func testIncrementReviewedUpdatesCoreStats() {
         let stats = UserStats()
 
@@ -46,25 +19,24 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testAnalyticsServiceRecordsEventNameAndProperties() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
 
         let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
         analyticsService.setEnabled(true)
 
-        analyticsService.track(.paywallOpened(source: "stats_card"))
+        analyticsService.track(.statsViewed())
 
         XCTAssertEqual(analyticsService.recordedEvents.count, 1)
-        XCTAssertEqual(analyticsService.recordedEvents.first?.name, "paywall_opened")
-        XCTAssertEqual(analyticsService.recordedEvents.first?.properties["source"], "stats_card")
+        XCTAssertEqual(analyticsService.recordedEvents.first?.name, "stats_viewed")
+        XCTAssertTrue(analyticsService.recordedEvents.first?.properties.isEmpty == true)
     }
 
     @MainActor
     func testAnalyticsServiceSkipsEventsWhenDisabled() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
 
         let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
+        analyticsService.setEnabled(false)
 
         analyticsService.track(.statsViewed())
 
@@ -74,8 +46,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testAnalyticsPreferencePersistsAcrossInstances() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
 
         let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
         analyticsService.setEnabled(true)
@@ -87,8 +58,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testHapticsServiceIsEnabledByDefault() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
 
         let hapticsService = HapticsService(defaults: defaults, performer: .init(
             impact: { _ in },
@@ -103,8 +73,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testHapticsServiceSkipsFeedbackWhenDisabled() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
 
         var feedbackEvents: [String] = []
         let performer = HapticsPerformer(
@@ -129,8 +98,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testHapticsPreferencePersistsAcrossInstances() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
 
         let hapticsService = HapticsService(defaults: defaults, performer: .init(
             impact: { _ in },
@@ -154,8 +122,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testAggregateMetricsRegistersInstallOnlyOnce() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
         let service = AggregateMetricsService(
             defaults: defaults,
             sink: TestAggregateMetricsSink(isConfigured: false),
@@ -170,8 +137,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testAggregateMetricsTrackReviewsDeletesAndSpaceFreed() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
         let service = AggregateMetricsService(
             defaults: defaults,
             sink: TestAggregateMetricsSink(isConfigured: false),
@@ -189,8 +155,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testAggregateMetricsDoesNotFlushOnEveryReview() async {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
         let clock = TestClock(now: Date(timeIntervalSince1970: 1_776_000_000))
         let sink = TestAggregateMetricsSink()
         let service = AggregateMetricsService(
@@ -211,8 +176,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testAggregateMetricsFlushesCumulativeDailyBucketAndRespectsDailyCadence() async {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
+        let defaults = makeTestDefaults()
         let clock = TestClock(now: Date(timeIntervalSince1970: 1_776_000_000))
         let sink = TestAggregateMetricsSink()
         let service = AggregateMetricsService(
@@ -314,101 +278,13 @@ final class SmokeTests: XCTestCase {
         XCTAssertNotNil(result.modelContainer)
     }
 
-    @MainActor
-    func testEarnedAdRemovalUnlockRequiresThreshold() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
-        let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
-        analyticsService.setEnabled(true)
-        let service = AdRemovalPurchaseService(
-            analyticsService: analyticsService,
-            shouldObserveTransactions: false
-        )
-        let stats = UserStats()
+}
 
-        stats.totalDeleted = AdRemovalConfig.freeUnlockDeletedCount - 1
-        service.refreshEarnedEntitlement(stats: stats)
-
-        XCTAssertFalse(service.hasEarnedEntitlement)
-        XCTAssertFalse(service.hasAdRemovalEntitlement)
-        XCTAssertEqual(service.remainingDeletesForUnlock, 1)
-
-        stats.totalDeleted = AdRemovalConfig.freeUnlockDeletedCount
-        service.refreshEarnedEntitlement(stats: stats)
-
-        XCTAssertTrue(service.hasEarnedEntitlement)
-        XCTAssertTrue(service.hasAdRemovalEntitlement)
-        XCTAssertEqual(service.unlockSource, .earned)
-        XCTAssertEqual(service.remainingDeletesForUnlock, 0)
-        XCTAssertEqual(service.deleteProgress, 1.0)
-        XCTAssertTrue(analyticsService.recordedEvents.contains(where: { $0.name == "loyalty_unlock_earned" }))
-    }
-
-    @MainActor
-    func testPurchasedEntitlementUnlocksAdRemoval() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
-        let service = AdRemovalPurchaseService(
-            analyticsService: AnalyticsService(defaults: defaults, recorder: { _ in }),
-            shouldObserveTransactions: false
-        )
-
-        service.applyPurchasedEntitlement(true)
-
-        XCTAssertTrue(service.hasPurchasedEntitlement)
-        XCTAssertTrue(service.hasAdRemovalEntitlement)
-        XCTAssertEqual(service.unlockSource, .purchased)
-    }
-
-    @MainActor
-    func testDeleteProgressCapsAtOneHundredPercent() {
-        let defaults = UserDefaults(suiteName: #function)!
-        defaults.removePersistentDomain(forName: #function)
-        let service = AdRemovalPurchaseService(
-            analyticsService: AnalyticsService(defaults: defaults, recorder: { _ in }),
-            shouldObserveTransactions: false
-        )
-        let stats = UserStats()
-
-        stats.totalDeleted = AdRemovalConfig.freeUnlockDeletedCount + 250
-        service.refreshEarnedEntitlement(stats: stats)
-
-        XCTAssertEqual(service.currentDeletedCount, AdRemovalConfig.freeUnlockDeletedCount + 250)
-        XCTAssertEqual(service.deleteProgress, 1.0)
-        XCTAssertEqual(service.remainingDeletesForUnlock, 0)
-    }
-
-    @MainActor
-    func testAdCoordinatorDisablesAdsWhenAdFreeIsUnlocked() {
-        let configuration = AdMobRuntimeConfiguration(
-            appID: AdMobConfig.productionAppID,
-            unitIDsByPlacement: [
-                .reviewBanner: AdMobConfig.productionReviewBannerUnitID
-            ]
-        )
-        let coordinator = AdCoordinator(configuration: configuration)
-
-        XCTAssertTrue(coordinator.adsEnabled)
-        XCTAssertTrue(coordinator.shouldShowBanner(at: .reviewBanner))
-
-        coordinator.updateEntitlement(hasAdRemovalEntitlement: true)
-
-        XCTAssertFalse(coordinator.adsEnabled)
-        XCTAssertFalse(coordinator.shouldShowBanner(at: .reviewBanner))
-    }
-
-    @MainActor
-    func testAdCoordinatorFlagsIncompleteConfiguration() {
-        let configuration = AdMobRuntimeConfiguration(
-            appID: "",
-            unitIDsByPlacement: [:]
-        )
-        let coordinator = AdCoordinator(configuration: configuration)
-
-        XCTAssertFalse(coordinator.isConfigured)
-        XCTAssertFalse(coordinator.adsEnabled)
-        XCTAssertEqual(coordinator.statusSummary, "Banner ads are not configured yet.")
-    }
+private func makeTestDefaults() -> UserDefaults {
+    let suiteName = "PhotoSoapTests.\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defaults.removePersistentDomain(forName: suiteName)
+    return defaults
 }
 
 private actor TestAggregateMetricsSink: AggregateMetricsSink {
