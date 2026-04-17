@@ -6,27 +6,15 @@ import Combine
 final class ServiceContainer: ObservableObject {
     let photoLibraryService: PhotoLibraryService
     let gamificationService: GameificationService
-    let adRemovalPurchaseService: AdRemovalPurchaseService
-    let adCoordinator: AdCoordinator
     let aggregateMetricsService: AggregateMetricsService
     let analyticsService: AnalyticsService
     let hapticsService: HapticsService
 
-    init(modelContext: ModelContext) {
+    init(modelContext _: ModelContext) {
         self.analyticsService = AnalyticsService()
         self.hapticsService = HapticsService()
         self.aggregateMetricsService = AggregateMetricsService()
         self.photoLibraryService = PhotoLibraryService()
         self.gamificationService = GameificationService()
-        self.adRemovalPurchaseService = AdRemovalPurchaseService(
-            analyticsService: analyticsService,
-            shouldObserveTransactions: true
-        )
-        self.adCoordinator = AdCoordinator()
-    }
-
-    func refreshEarnedEntitlement(stats: UserStats) {
-        adRemovalPurchaseService.refreshEarnedEntitlement(stats: stats)
-        adCoordinator.updateEntitlement(hasAdRemovalEntitlement: adRemovalPurchaseService.hasAdRemovalEntitlement)
     }
 }

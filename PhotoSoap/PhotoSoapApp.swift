@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import GoogleMobileAds
 
 @main
 struct PhotoSoapApp: App {
@@ -10,8 +9,6 @@ struct PhotoSoapApp: App {
     let serviceContainer: ServiceContainer
 
     init() {
-        MobileAds.shared.start(completionHandler: nil)
-
         let bootstrap = Self.bootstrapContainer()
         modelContainer = bootstrap.modelContainer
         bootstrapErrorMessage = bootstrap.bootstrapErrorMessage
@@ -26,8 +23,6 @@ struct PhotoSoapApp: App {
                 .environmentObject(serviceContainer)
                 .environmentObject(serviceContainer.photoLibraryService)
                 .environmentObject(serviceContainer.gamificationService)
-                .environmentObject(serviceContainer.adRemovalPurchaseService)
-                .environmentObject(serviceContainer.adCoordinator)
                 .environmentObject(serviceContainer.aggregateMetricsService)
                 .environmentObject(serviceContainer.analyticsService)
                 .environmentObject(serviceContainer.hapticsService)
@@ -35,7 +30,7 @@ struct PhotoSoapApp: App {
         .modelContainer(modelContainer)
     }
 
-    private static func bootstrapContainer(
+    static func bootstrapContainer(
         makeContainer: (Schema, ModelConfiguration) throws -> ModelContainer = { schema, configuration in
             try ModelContainer(for: schema, configurations: [configuration])
         }
