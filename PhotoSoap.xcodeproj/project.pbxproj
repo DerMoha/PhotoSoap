@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		71A10000000000000000000E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71A10000000000000000000D /* XCTest.framework */; };
-		A62C54EB1E2A6AC2233184F2 /* Pods_PhotoSoap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F01735C0E8CE87EF44AFBD7D /* Pods_PhotoSoap.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,12 +21,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		62330C4B1DC0A66CF987B4CF /* Pods-PhotoSoap.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PhotoSoap.release.xcconfig"; path = "Target Support Files/Pods-PhotoSoap/Pods-PhotoSoap.release.xcconfig"; sourceTree = "<group>"; };
 		715E1CA72F21612300CD8842 /* PhotoSoap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoSoap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		71A100000000000000000001 /* PhotoSoapTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PhotoSoapTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		71A10000000000000000000D /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = System/Library/Frameworks/XCTest.framework; sourceTree = SDKROOT; };
-		E5E4F1AE1D439161FC998B30 /* Pods-PhotoSoap.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PhotoSoap.debug.xcconfig"; path = "Target Support Files/Pods-PhotoSoap/Pods-PhotoSoap.debug.xcconfig"; sourceTree = "<group>"; };
-		F01735C0E8CE87EF44AFBD7D /* Pods_PhotoSoap.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PhotoSoap.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -63,7 +59,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A62C54EB1E2A6AC2233184F2 /* Pods_PhotoSoap.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,7 +80,6 @@
 				71A100000000000000000002 /* PhotoSoapTests */,
 				71A10000000000000000000C /* Frameworks */,
 				715E1CA82F21612300CD8842 /* Products */,
-				F88BDE3EEE1367EF2A6145A7 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -102,18 +96,8 @@
 			isa = PBXGroup;
 			children = (
 				71A10000000000000000000D /* XCTest.framework */,
-				F01735C0E8CE87EF44AFBD7D /* Pods_PhotoSoap.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		F88BDE3EEE1367EF2A6145A7 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				E5E4F1AE1D439161FC998B30 /* Pods-PhotoSoap.debug.xcconfig */,
-				62330C4B1DC0A66CF987B4CF /* Pods-PhotoSoap.release.xcconfig */,
-			);
-			path = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -123,7 +107,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 715E1CB42F21612400CD8842 /* Build configuration list for PBXNativeTarget "PhotoSoap" */;
 			buildPhases = (
-				5C189E56DC3BFFAAC75E14D2 /* [CP] Check Pods Manifest.lock */,
 				715E1CA32F21612300CD8842 /* Sources */,
 				715E1CA42F21612300CD8842 /* Frameworks */,
 				715E1CA52F21612300CD8842 /* Resources */,
@@ -217,31 +200,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		5C189E56DC3BFFAAC75E14D2 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-PhotoSoap-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		715E1CA32F21612300CD8842 /* Sources */ = {
@@ -394,7 +352,6 @@
 		};
 		715E1CB52F21612400CD8842 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E5E4F1AE1D439161FC998B30 /* Pods-PhotoSoap.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -434,7 +391,6 @@
 		};
 		715E1CB62F21612400CD8842 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 62330C4B1DC0A66CF987B4CF /* Pods-PhotoSoap.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
