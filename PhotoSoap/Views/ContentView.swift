@@ -17,20 +17,15 @@ struct ContentView: View {
     @State private var selectedTab: MainTab = .review
     @State private var showBootstrapAlert = false
     @State private var hasTrackedAppOpen = false
+    @State private var activeStats: UserStats?
 
     init(bootstrapErrorMessage: String?, migrationErrorMessage: String? = nil) {
         self.bootstrapErrorMessage = bootstrapErrorMessage
         self.migrationErrorMessage = migrationErrorMessage
     }
 
-    private var stats: UserStats {
-        if let existingStats = statsArray.first {
-            return existingStats
-        } else {
-            let newStats = UserStats()
-            modelContext.insert(newStats)
-            return newStats
-        }
+    private var resolvedStats: UserStats? {
+        activeStats ?? statsArray.first
     }
 
     var body: some View {
@@ -92,7 +87,20 @@ struct ContentView: View {
         !hasSeenQuickStartInfo
     }
 
+    @ViewBuilder
     private var mainTabView: some View {
+        if let stats = resolvedStats {
+            mainTabContent(stats: stats)
+        } else {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .task {
+                    initializeStats()
+                }
+        }
+    }
+
+    private func mainTabContent(stats: UserStats) -> some View {
         VStack(spacing: 0) {
             if let bootstrapErrorMessage {
                 RecoveryModeBanner(message: bootstrapErrorMessage)
@@ -141,7 +149,15 @@ struct ContentView: View {
     }
 
     private func initializeStats() {
-        gameificationService.ensureDailyChallengeIsSet(stats: stats)
+        do {
+            let stats = try UserStats.fetchOrCreateSingleton(in: modelContext)
+            gameificationService.ensureDailyChallengeIsSet(stats: stats)
+            try modelContext.save()
+            activeStats = stats
+        } catch {
+            print("PhotoSoap: failed to initialize user stats: \(error.localizedDescription)")
+            activeStats = resolvedStats
+        }
     }
 
     private func refreshPhotoLibraryStateIfNeeded() {

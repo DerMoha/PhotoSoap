@@ -270,6 +270,54 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
+    func testUserStatsFetchOrCreateSingletonCreatesOneStatsRecord() throws {
+        let container = try ModelContainer(
+            for: UserStats.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let stats = try UserStats.fetchOrCreateSingleton(in: context)
+        try context.save()
+
+        let allStats = try context.fetch(FetchDescriptor<UserStats>())
+
+        XCTAssertEqual(allStats.count, 1)
+        XCTAssertTrue(allStats.first === stats)
+    }
+
+    @MainActor
+    func testUserStatsFetchOrCreateSingletonMergesDuplicateStatsRecords() throws {
+        let container = try ModelContainer(
+            for: UserStats.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+        let firstStats = UserStats()
+        firstStats.totalReviewed = 3
+        firstStats.totalDeleted = 1
+        firstStats.storageFreed = 1_024
+        let duplicateStats = UserStats()
+        duplicateStats.totalReviewed = 2
+        duplicateStats.totalKept = 2
+        duplicateStats.storageFreed = 2_048
+
+        context.insert(firstStats)
+        context.insert(duplicateStats)
+        try context.save()
+
+        let stats = try UserStats.fetchOrCreateSingleton(in: context)
+        try context.save()
+        let allStats = try context.fetch(FetchDescriptor<UserStats>())
+
+        XCTAssertEqual(allStats.count, 1)
+        XCTAssertEqual(stats.totalReviewed, 5)
+        XCTAssertEqual(stats.totalDeleted, 1)
+        XCTAssertEqual(stats.totalKept, 2)
+        XCTAssertEqual(stats.storageFreed, 3_072)
+    }
+
+    @MainActor
     func testReviewedPhotoPersistsInMemoryStore() throws {
         let container = try ModelContainer(
             for: ReviewedPhoto.self,

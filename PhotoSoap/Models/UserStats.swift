@@ -149,6 +149,76 @@ class UserStats {
         formatter.countStyle = .file
         return formatter.string(fromByteCount: storageFreed)
     }
+
+    static func fetchOrCreateSingleton(in context: ModelContext) throws -> UserStats {
+        let descriptor = FetchDescriptor<UserStats>()
+        let allStats = try context.fetch(descriptor)
+
+        guard let primaryStats = allStats.first else {
+            let newStats = UserStats()
+            context.insert(newStats)
+            return newStats
+        }
+
+        for duplicateStats in allStats.dropFirst() {
+            primaryStats.mergeDuplicate(duplicateStats)
+            context.delete(duplicateStats)
+        }
+
+        return primaryStats
+    }
+
+    private func mergeDuplicate(_ duplicate: UserStats) {
+        totalReviewed += duplicate.totalReviewed
+        totalDeleted += duplicate.totalDeleted
+        totalKept += duplicate.totalKept
+        storageFreed += duplicate.storageFreed
+        sessionReviewCount += duplicate.sessionReviewCount
+
+        currentStreak = max(currentStreak, duplicate.currentStreak)
+        bestStreak = max(bestStreak, duplicate.bestStreak)
+        dayStreak = max(dayStreak, duplicate.dayStreak)
+        lastReviewDate = latestDate(lastReviewDate, duplicate.lastReviewDate)
+
+        if isSameDay(todayDate, duplicate.todayDate) {
+            todayReviewCount += duplicate.todayReviewCount
+        } else if isLaterDate(duplicate.todayDate, than: todayDate) {
+            todayDate = duplicate.todayDate
+            todayReviewCount = duplicate.todayReviewCount
+        }
+        bestDayReviewCount = max(max(bestDayReviewCount, duplicate.bestDayReviewCount), todayReviewCount)
+
+        mergeDailyChallenge(from: duplicate)
+    }
+
+    private func mergeDailyChallenge(from duplicate: UserStats) {
+        if isSameDay(dailyChallengeDate, duplicate.dailyChallengeDate), dailyChallengeType == duplicate.dailyChallengeType {
+            dailyChallengeProgress = max(dailyChallengeProgress, duplicate.dailyChallengeProgress)
+            dailyChallengeTarget = max(dailyChallengeTarget, duplicate.dailyChallengeTarget)
+        } else if isLaterDate(duplicate.dailyChallengeDate, than: dailyChallengeDate) {
+            dailyChallengeProgress = duplicate.dailyChallengeProgress
+            dailyChallengeTarget = duplicate.dailyChallengeTarget
+            dailyChallengeType = duplicate.dailyChallengeType
+            dailyChallengeDate = duplicate.dailyChallengeDate
+        }
+    }
+
+    private func isSameDay(_ lhs: Date?, _ rhs: Date?) -> Bool {
+        guard let lhs, let rhs else { return false }
+        return Calendar.current.isDate(lhs, inSameDayAs: rhs)
+    }
+
+    private func isLaterDate(_ lhs: Date?, than rhs: Date?) -> Bool {
+        guard let lhs else { return false }
+        guard let rhs else { return true }
+        return lhs > rhs
+    }
+
+    private func latestDate(_ lhs: Date?, _ rhs: Date?) -> Date? {
+        guard let lhs else { return rhs }
+        guard let rhs else { return lhs }
+        return max(lhs, rhs)
+    }
 }
 
 extension UserStats: DailyChallengeStats {}
