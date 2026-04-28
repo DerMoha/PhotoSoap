@@ -26,6 +26,69 @@ private enum PendingDeleteBatchAction {
     case commit
 }
 
+private struct ReviewPersistenceSnapshot {
+    let stats: UserStatsSnapshot
+    let reviewedPhotoIDs: Set<String>
+    let unlockedAchievementIDs: Set<String>
+}
+
+private struct UserStatsSnapshot {
+    let totalReviewed: Int
+    let totalDeleted: Int
+    let totalKept: Int
+    let storageFreed: Int64
+    let sessionReviewCount: Int
+    let currentStreak: Int
+    let bestStreak: Int
+    let dayStreak: Int
+    let lastReviewDate: Date?
+    let todayReviewCount: Int
+    let todayDate: Date?
+    let bestDayReviewCount: Int
+    let dailyChallengeProgress: Int
+    let dailyChallengeTarget: Int
+    let dailyChallengeType: String
+    let dailyChallengeDate: Date?
+
+    init(stats: UserStats) {
+        self.totalReviewed = stats.totalReviewed
+        self.totalDeleted = stats.totalDeleted
+        self.totalKept = stats.totalKept
+        self.storageFreed = stats.storageFreed
+        self.sessionReviewCount = stats.sessionReviewCount
+        self.currentStreak = stats.currentStreak
+        self.bestStreak = stats.bestStreak
+        self.dayStreak = stats.dayStreak
+        self.lastReviewDate = stats.lastReviewDate
+        self.todayReviewCount = stats.todayReviewCount
+        self.todayDate = stats.todayDate
+        self.bestDayReviewCount = stats.bestDayReviewCount
+        self.dailyChallengeProgress = stats.dailyChallengeProgress
+        self.dailyChallengeTarget = stats.dailyChallengeTarget
+        self.dailyChallengeType = stats.dailyChallengeType
+        self.dailyChallengeDate = stats.dailyChallengeDate
+    }
+
+    func restore(to stats: UserStats) {
+        stats.totalReviewed = totalReviewed
+        stats.totalDeleted = totalDeleted
+        stats.totalKept = totalKept
+        stats.storageFreed = storageFreed
+        stats.sessionReviewCount = sessionReviewCount
+        stats.currentStreak = currentStreak
+        stats.bestStreak = bestStreak
+        stats.dayStreak = dayStreak
+        stats.lastReviewDate = lastReviewDate
+        stats.todayReviewCount = todayReviewCount
+        stats.todayDate = todayDate
+        stats.bestDayReviewCount = bestDayReviewCount
+        stats.dailyChallengeProgress = dailyChallengeProgress
+        stats.dailyChallengeTarget = dailyChallengeTarget
+        stats.dailyChallengeType = dailyChallengeType
+        stats.dailyChallengeDate = dailyChallengeDate
+    }
+}
+
 @MainActor
 final class PhotoReviewViewModel: ObservableObject {
     @Published var currentPhoto: Photo?
@@ -441,11 +504,14 @@ final class PhotoReviewViewModel: ObservableObject {
                 resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo.asset)
             }
 
-            try await photoLibraryService.deletePhoto(photo)
-
+            let snapshot = makeReviewPersistenceSnapshot(
+                for: [photo.id],
+                stats: stats,
+                context: modelContext
+            )
             let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
 
-            do {
+            if !snapshot.reviewedPhotoIDs.contains(photo.id) {
                 try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
                 gameificationService.processPhotoReview(
                     action: .delete,
@@ -454,28 +520,40 @@ final class PhotoReviewViewModel: ObservableObject {
                     challengeType: challengeType,
                     context: modelContext
                 )
-            } catch {
-                presentError("Failed to update review history: \(error.localizedDescription)")
-                return
             }
 
             guard persistReviewProgress(for: photo.id, cacheInSession: false) else {
                 return
             }
 
+            do {
+                try await photoLibraryService.deletePhoto(photo)
+            } catch {
+                restoreReviewPersistence(
+                    snapshot,
+                    for: [photo.id],
+                    stats: stats,
+                    context: modelContext
+                )
+
+                if isPhotosDeletionCancellation(error) {
+                    showDeletionCancelledFeedback()
+                } else {
+                    presentError("Failed to delete photo: \(error.localizedDescription)")
+                }
+                return
+            }
+
+            photoLibraryService.markReviewed(photo.id)
             cycleDeletedCount += 1
             analyticsService.track(.photoDeleted(filter: currentFilter))
             aggregateMetricsService.recordDeletion(bytesFreed: resolvedFileSize)
             hapticsService.impact(.rigid)
 
             await advanceToNextPhoto()
-        } catch let error as NSError {
-            if error.code == 3072 {
-                aggregateMetricsService.recordReview()
-                await advanceToNextPhoto()
-            } else {
-                presentError("Failed to delete photo: \(error.localizedDescription)")
-            }
+        } catch {
+            modelContext.rollback()
+            presentError("Failed to update review history: \(error.localizedDescription)")
         }
     }
 
@@ -614,37 +692,57 @@ final class PhotoReviewViewModel: ObservableObject {
             isShowingDeleteBatchExplainer = false
         }
 
-        let photosToDelete = pendingDeletionItems.map { $0.photo }
-        let totalBytes = pendingDeletionItems.reduce(0) { $0 + $1.fileSize }
+        let itemsToDelete = pendingDeletionItems
+        let photosToDelete = itemsToDelete.map { $0.photo }
+        let totalBytes = itemsToDelete.reduce(0) { $0 + $1.fileSize }
+        let photoIDs = itemsToDelete.map(\.id)
+        let snapshot = makeReviewPersistenceSnapshot(
+            for: photoIDs,
+            stats: stats,
+            context: modelContext
+        )
 
         do {
-            try await photoLibraryService.deletePhotos(photosToDelete)
-
             let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
 
-            for item in pendingDeletionItems {
-                do {
-                    try gameificationService.markPhotoReviewed(id: item.id, context: modelContext)
-                    gameificationService.processPhotoReview(
-                        action: .delete,
-                        fileSize: item.fileSize,
-                        stats: stats,
-                        challengeType: challengeType,
-                        context: modelContext
-                    )
-                } catch {
-                    continue
-                }
-
-                _ = persistReviewProgress(for: item.id, cacheInSession: false)
+            for item in itemsToDelete where !snapshot.reviewedPhotoIDs.contains(item.id) {
+                try gameificationService.markPhotoReviewed(id: item.id, context: modelContext)
+                gameificationService.processPhotoReview(
+                    action: .delete,
+                    fileSize: item.fileSize,
+                    stats: stats,
+                    challengeType: challengeType,
+                    context: modelContext
+                )
             }
 
-            try modelContext.save()
+            guard savePreparedReviewProgress(for: photoIDs, cacheInSession: false) else {
+                return
+            }
 
-            let deletedCount = pendingDeletionItems.count
+            do {
+                try await photoLibraryService.deletePhotos(photosToDelete)
+            } catch {
+                restoreReviewPersistence(
+                    snapshot,
+                    for: photoIDs,
+                    stats: stats,
+                    context: modelContext
+                )
+
+                if isPhotosDeletionCancellation(error) {
+                    showDeletionCancelledFeedback()
+                } else {
+                    presentError("Failed to delete photos: \(error.localizedDescription)")
+                }
+                return
+            }
+
+            let deletedCount = itemsToDelete.count
             cycleDeletedCount += deletedCount
             analyticsService.track(.photoDeleted(filter: currentFilter))
-            aggregateMetricsService.recordDeletion(bytesFreed: totalBytes)
+            aggregateMetricsService.recordDeletion(bytesFreed: totalBytes, count: deletedCount)
+            photoIDs.forEach { photoLibraryService.markReviewed($0) }
 
             pendingDeletionItems.removeAll()
             deletionStack.removeAll()
@@ -659,18 +757,9 @@ final class PhotoReviewViewModel: ObservableObject {
                     self.showDeletionSuccessToast = false
                 }
             }
-        } catch let error as NSError {
-            if error.code == 3072 {
-                showDeletionCancelledToast = true
-                Task {
-                    try? await Task.sleep(nanoseconds: 3_000_000_000)
-                    await MainActor.run {
-                        self.showDeletionCancelledToast = false
-                    }
-                }
-            } else {
-                presentError("Failed to delete photos: \(error.localizedDescription)")
-            }
+        } catch {
+            modelContext.rollback()
+            presentError("Failed to update review history: \(error.localizedDescription)")
         }
     }
 
@@ -687,15 +776,21 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     private func persistReviewProgress(for photoID: String, cacheInSession: Bool) -> Bool {
+        savePreparedReviewProgress(for: [photoID], cacheInSession: cacheInSession)
+    }
+
+    private func savePreparedReviewProgress(for photoIDs: [String], cacheInSession: Bool) -> Bool {
         guard let modelContext else { return false }
 
         do {
             try modelContext.save()
-            persistedReviewedIDs.insert(photoID)
-            knownUnreviewedIDs.remove(photoID)
+            for photoID in photoIDs {
+                persistedReviewedIDs.insert(photoID)
+                knownUnreviewedIDs.remove(photoID)
 
-            if cacheInSession {
-                photoLibraryService.markReviewed(photoID)
+                if cacheInSession {
+                    photoLibraryService.markReviewed(photoID)
+                }
             }
 
             return true
@@ -703,6 +798,84 @@ final class PhotoReviewViewModel: ObservableObject {
             modelContext.rollback()
             presentError("Failed to save your progress: \(error.localizedDescription)")
             return false
+        }
+    }
+
+    private func makeReviewPersistenceSnapshot(
+        for photoIDs: [String],
+        stats: UserStats,
+        context: ModelContext
+    ) -> ReviewPersistenceSnapshot {
+        let reviewedPhotoIDs = Set(photoIDs.filter { gameificationService.isPhotoReviewed(id: $0, context: context) })
+        let unlockedAchievementIDs = (try? context.fetch(FetchDescriptor<UnlockedAchievement>())) ?? []
+
+        return ReviewPersistenceSnapshot(
+            stats: UserStatsSnapshot(stats: stats),
+            reviewedPhotoIDs: reviewedPhotoIDs,
+            unlockedAchievementIDs: Set(unlockedAchievementIDs.map(\.achievementId))
+        )
+    }
+
+    private func restoreReviewPersistence(
+        _ snapshot: ReviewPersistenceSnapshot,
+        for photoIDs: [String],
+        stats: UserStats,
+        context: ModelContext
+    ) {
+        do {
+            snapshot.stats.restore(to: stats)
+
+            for photoID in photoIDs where !snapshot.reviewedPhotoIDs.contains(photoID) {
+                if let reviewedPhoto = try fetchReviewedPhoto(id: photoID, context: context) {
+                    context.delete(reviewedPhoto)
+                }
+            }
+
+            let unlockedAchievements = try context.fetch(FetchDescriptor<UnlockedAchievement>())
+            for unlockedAchievement in unlockedAchievements where !snapshot.unlockedAchievementIDs.contains(unlockedAchievement.achievementId) {
+                context.delete(unlockedAchievement)
+            }
+
+            try context.save()
+
+            for photoID in photoIDs {
+                if snapshot.reviewedPhotoIDs.contains(photoID) {
+                    persistedReviewedIDs.insert(photoID)
+                    knownUnreviewedIDs.remove(photoID)
+                } else {
+                    persistedReviewedIDs.remove(photoID)
+                    knownUnreviewedIDs.insert(photoID)
+                }
+            }
+        } catch {
+            context.rollback()
+            presentError("Failed to restore review progress: \(error.localizedDescription)")
+        }
+    }
+
+    private func fetchReviewedPhoto(id: String, context: ModelContext) throws -> ReviewedPhoto? {
+        var descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
+    private func isPhotosDeletionCancellation(_ error: Error) -> Bool {
+        (error as NSError).code == 3072
+    }
+
+    private func showDeletionCancelledFeedback() {
+        showDeletionCancelledToast = true
+        hapticsService.warning()
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            resetSwipeState()
+        }
+
+        Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            await MainActor.run {
+                self.showDeletionCancelledToast = false
+            }
         }
     }
 

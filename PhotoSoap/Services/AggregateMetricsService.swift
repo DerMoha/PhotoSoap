@@ -300,12 +300,14 @@ final class AggregateMetricsService: ObservableObject {
         }
     }
 
-    func recordDeletion(bytesFreed: Int64) {
+    func recordDeletion(bytesFreed: Int64, count: Int = 1) {
         guard isMetricsCollectionEnabled else { return }
+        let sanitizedCount = max(0, count)
+        guard sanitizedCount > 0 else { return }
 
         mutateCurrentBucket { bucket in
-            bucket.reviewedPhotos += 1
-            bucket.deletedPhotos += 1
+            bucket.reviewedPhotos += sanitizedCount
+            bucket.deletedPhotos += sanitizedCount
             bucket.bytesFreed += max(0, bytesFreed)
         }
     }

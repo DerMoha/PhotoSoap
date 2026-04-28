@@ -165,6 +165,24 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
+    func testAggregateMetricsTrackBatchDeletesByCount() {
+        let defaults = makeTestDefaults()
+        let service = AggregateMetricsService(
+            defaults: defaults,
+            sink: TestAggregateMetricsSink(isConfigured: false),
+            allowsAutomaticFlush: false
+        )
+        service.setEnabled(true)
+
+        service.recordDeletion(bytesFreed: 12_288, count: 3)
+
+        XCTAssertEqual(service.pendingMetrics.reviewedPhotos, 3)
+        XCTAssertEqual(service.pendingMetrics.deletedPhotos, 3)
+        XCTAssertEqual(service.pendingMetrics.keptPhotos, 0)
+        XCTAssertEqual(service.pendingMetrics.bytesFreed, 12_288)
+    }
+
+    @MainActor
     func testAggregateMetricsDoesNotFlushOnEveryReview() async {
         let defaults = makeTestDefaults()
         let clock = TestClock(now: Date(timeIntervalSince1970: 1_776_000_000))
