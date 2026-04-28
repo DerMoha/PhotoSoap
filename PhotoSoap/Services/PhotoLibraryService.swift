@@ -54,7 +54,6 @@ struct FilterData {
 // MARK: - Constants
 
 private enum Constants {
-    static let baseMaxRetries = 50
     static let sessionReviewedIDsLimit = 10000
     static let maxPreviewDimension: CGFloat = 800
     static let maxZoomPreviewDimension: CGFloat = 2800
@@ -71,6 +70,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     @Published var error: PhotoLibraryError?
     @Published var currentFilter: PhotoFilter = .all
     @Published private(set) var libraryRevision = 0
+    @Published private(set) var isOldestFirst = false
 
     // MARK: - Private State
     private let imageManager = PHCachingImageManager()
@@ -218,15 +218,15 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         switch currentFilter {
         case .all:
-            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
+            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
             cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
         case .year(let year):
             let interval = dateIntervalForYear(year)
-            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false)
+            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
             cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
         case .month(let year, let month):
             let interval = dateIntervalForMonth(year: year, month: month)
-            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false)
+            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
             cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
         case .album(let identifier, _):
             guard let collection = fetchAssetCollection(identifier: identifier) else {
@@ -234,7 +234,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 totalAssetCount = 0
                 return
             }
-            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true)
+            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true, oldestFirst: isOldestFirst)
             cachedAssets = PHAsset.fetchAssets(in: collection, options: options)
         }
 
@@ -248,19 +248,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             return nil
         }
 
-        let reviewedCount = sessionReviewedIDs.count
-        let excludedRatio = Double(reviewedCount) / Double(totalAssetCount)
-        let scaledRetries = max(Constants.baseMaxRetries, Int(Double(Constants.baseMaxRetries) * (1.0 + excludedRatio * 4.0)))
-        let retries = min(500, scaledRetries)
-
         var failedAssetIDs = Set<String>()
 
-        for _ in 0..<retries {
-            let randomIndex = Int.random(in: 0..<totalAssetCount)
-
-            guard randomIndex < assets.count else { continue }
-
-            let asset = assets.object(at: randomIndex)
+        for index in 0..<assets.count {
+            let asset = assets.object(at: index)
 
             if sessionReviewedIDs.contains(asset.localIdentifier)
                 || excludedIDs.contains(asset.localIdentifier)
@@ -535,6 +526,13 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         totalAssetCount = 0
     }
 
+    func setSortOrder(oldestFirst: Bool) {
+        guard oldestFirst != isOldestFirst else { return }
+        isOldestFirst = oldestFirst
+        cachedAssets = nil
+        totalAssetCount = 0
+    }
+
     func loadFilterData() async -> FilterData {
         if !cachedAlbums.isEmpty && !cachedYears.isEmpty {
             return FilterData(
@@ -668,10 +666,11 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     private nonisolated static func makeFetchOptions(
         dateInterval: DateInterval?,
-        includeMediaTypePredicate: Bool
+        includeMediaTypePredicate: Bool,
+        oldestFirst: Bool = false
     ) -> PHFetchOptions {
         let fetchOptions = PHFetchOptions()
-        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: oldestFirst)]
         fetchOptions.includeHiddenAssets = false
 
         var predicates: [NSPredicate] = []

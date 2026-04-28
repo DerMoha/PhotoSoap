@@ -7,6 +7,7 @@ struct FilterSheet: View {
     @ObservedObject var photoLibraryService: PhotoLibraryService
     let currentFilter: PhotoFilter
     let onSelect: (PhotoFilter) -> Void
+    let onSortOrderChange: (Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var albums: [AlbumInfo] = []
@@ -49,6 +50,10 @@ struct FilterSheet: View {
         }
         .task {
             await loadData()
+        }
+        .onChange(of: filterOldestFirst) { _, oldestFirst in
+            hapticsService.selection()
+            onSortOrderChange(oldestFirst)
         }
     }
 
@@ -276,6 +281,7 @@ private struct FilterRow: View {
     FilterSheet(
         photoLibraryService: PhotoLibraryService(),
         currentFilter: .all,
-        onSelect: { _ in }
+        onSelect: { _ in },
+        onSortOrderChange: { _ in }
     )
 }

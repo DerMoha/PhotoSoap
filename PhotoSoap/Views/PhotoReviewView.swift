@@ -156,6 +156,9 @@ struct PhotoReviewView: View {
                     currentFilter: viewModel.currentFilter,
                     onSelect: { filter in
                         viewModel.applyFilter(filter)
+                    },
+                    onSortOrderChange: { oldestFirst in
+                        viewModel.applySortOrder(oldestFirst: oldestFirst)
                     }
                 )
             }

@@ -307,11 +307,24 @@ final class PhotoReviewViewModel: ObservableObject {
 
     func applyFilter(_ filter: PhotoFilter) {
         currentFilter = filter
+        syncSortOrderPreference()
         photoLibraryService.setFilter(filter)
         currentPhoto = nil
         nextPhoto = nil
         noMorePhotos = false
         analyticsService.track(.filterApplied(filter))
+
+        Task {
+            await loadInitialPhoto()
+        }
+    }
+
+    func applySortOrder(oldestFirst: Bool) {
+        defaults.set(oldestFirst, forKey: UserDefaultsKeys.filterOldestFirst)
+        photoLibraryService.setSortOrder(oldestFirst: oldestFirst)
+        currentPhoto = nil
+        nextPhoto = nil
+        noMorePhotos = false
 
         Task {
             await loadInitialPhoto()
@@ -434,8 +447,10 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     private func nextAvailablePhoto(excluding excludedIDs: Set<String> = []) async throws -> Photo? {
+        syncSortOrderPreference()
+
         var attemptedIDs = excludedIDs
-        let maxAttempts = 80
+        let maxAttempts = max(80, photoLibraryService.getTotalPhotoCount())
 
         for _ in 0..<maxAttempts {
             guard let photo = try await photoLibraryService.getNextPhoto(excluding: attemptedIDs) else {
@@ -452,6 +467,10 @@ final class PhotoReviewViewModel: ObservableObject {
         }
 
         return nil
+    }
+
+    private func syncSortOrderPreference() {
+        photoLibraryService.setSortOrder(oldestFirst: defaults.bool(forKey: UserDefaultsKeys.filterOldestFirst))
     }
 
     private func keepPhoto() async {
