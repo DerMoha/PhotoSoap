@@ -4,6 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject private var hapticsService: HapticsService
 
     @ObservedObject var analyticsService: AnalyticsService
+    @ObservedObject var aggregateMetricsService: AggregateMetricsService
 
     @AppStorage(UserDefaultsKeys.deleteQueueEnabled) private var isDeleteQueueEnabled = true
 
@@ -99,7 +100,10 @@ struct SettingsView: View {
     private var analyticsToggleBinding: Binding<Bool> {
         Binding(
             get: { analyticsService.isEnabled },
-            set: { analyticsService.setEnabled($0) }
+            set: {
+                analyticsService.setEnabled($0)
+                aggregateMetricsService.setEnabled($0)
+            }
         )
     }
 
@@ -113,7 +117,10 @@ struct SettingsView: View {
 
 #Preview {
     NavigationStack {
-        SettingsView(analyticsService: AnalyticsService())
+        SettingsView(
+            analyticsService: AnalyticsService(),
+            aggregateMetricsService: AggregateMetricsService()
+        )
     }
     .environmentObject(HapticsService())
 }

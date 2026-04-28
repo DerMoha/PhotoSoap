@@ -18,6 +18,15 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
+    func testAnalyticsServiceIsDisabledByDefault() {
+        let defaults = makeTestDefaults()
+
+        let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
+
+        XCTAssertFalse(analyticsService.isEnabled)
+    }
+
+    @MainActor
     func testAnalyticsServiceRecordsEventNameAndProperties() {
         let defaults = makeTestDefaults()
 
@@ -128,6 +137,7 @@ final class SmokeTests: XCTestCase {
             sink: TestAggregateMetricsSink(isConfigured: false),
             allowsAutomaticFlush: false
         )
+        service.setEnabled(true)
 
         service.registerInstallIfNeeded()
         service.registerInstallIfNeeded()
@@ -143,6 +153,7 @@ final class SmokeTests: XCTestCase {
             sink: TestAggregateMetricsSink(isConfigured: false),
             allowsAutomaticFlush: false
         )
+        service.setEnabled(true)
 
         service.recordReview()
         service.recordDeletion(bytesFreed: 4_096)
@@ -164,6 +175,7 @@ final class SmokeTests: XCTestCase {
             allowsAutomaticFlush: true,
             now: { clock.now }
         )
+        service.setEnabled(true)
 
         service.recordReview()
         await Task.yield()
@@ -185,6 +197,7 @@ final class SmokeTests: XCTestCase {
             allowsAutomaticFlush: true,
             now: { clock.now }
         )
+        service.setEnabled(true)
 
         service.registerInstallIfNeeded()
         service.recordDeletion(bytesFreed: 2_048)
@@ -220,6 +233,29 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(payloads.last?.dailyBuckets.first?.keptPhotos, 1)
         XCTAssertEqual(payloads.last?.dailyBuckets.first?.bytesFreed, 2_048)
         XCTAssertTrue(service.pendingMetrics.isEmpty)
+    }
+
+    @MainActor
+    func testAggregateMetricsIgnoreCollectionWhenAnalyticsDisabled() async {
+        let defaults = makeTestDefaults()
+        let sink = TestAggregateMetricsSink()
+        let service = AggregateMetricsService(
+            defaults: defaults,
+            sink: sink,
+            allowsAutomaticFlush: false
+        )
+
+        service.registerInstallIfNeeded()
+        service.recordReview()
+        service.recordDeletion(bytesFreed: 1_024)
+        await service.flushForTesting()
+
+        let payloads = await sink.payloads
+
+        XCTAssertFalse(service.isEnabled)
+        XCTAssertTrue(service.pendingMetrics.isEmpty)
+        XCTAssertTrue(payloads.isEmpty)
+        XCTAssertNil(defaults.string(forKey: AggregateMetricsService.installIDKey))
     }
 
     func testIncrementDeletedTracksStorageFreed() {

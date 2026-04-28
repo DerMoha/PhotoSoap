@@ -111,7 +111,8 @@ struct ContentView: View {
                     stats: stats,
                     photoLibraryService: photoLibraryService,
                     gameificationService: gameificationService,
-                    analyticsService: analyticsService
+                    analyticsService: analyticsService,
+                    aggregateMetricsService: aggregateMetricsService
                 )
                 .tabItem {
                     Label(String(localized: "stats.tab", table: "LocalizableStats"), systemImage: "chart.bar")

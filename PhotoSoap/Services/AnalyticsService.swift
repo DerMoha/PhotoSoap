@@ -61,6 +61,7 @@ struct AnalyticsEvent: Equatable {
 
 final class AnalyticsService: ObservableObject {
     static let analyticsEnabledKey = "isAnalyticsEnabled"
+    static let defaultAnalyticsEnabled = false
 
     @Published private(set) var recordedEvents: [AnalyticsEvent] = []
     @Published private(set) var isEnabled: Bool
@@ -70,8 +71,12 @@ final class AnalyticsService: ObservableObject {
 
     init(defaults: UserDefaults = .standard, recorder: ((AnalyticsEvent) -> Void)? = nil) {
         self.defaults = defaults
-        self.isEnabled = defaults.object(forKey: Self.analyticsEnabledKey) as? Bool ?? true
+        self.isEnabled = Self.isEnabled(in: defaults)
         self.recorder = recorder ?? Self.defaultRecorder
+    }
+
+    static func isEnabled(in defaults: UserDefaults) -> Bool {
+        defaults.object(forKey: analyticsEnabledKey) as? Bool ?? defaultAnalyticsEnabled
     }
 
     func track(_ event: AnalyticsEvent) {

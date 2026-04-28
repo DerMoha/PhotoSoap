@@ -220,8 +220,7 @@ final class AggregateMetricsService: ObservableObject {
     }()
 
     @Published private(set) var pendingMetrics: AggregateMetrics
-
-    let installID: String
+    @Published private(set) var isEnabled: Bool
 
     private let defaults: UserDefaults
     private let bundle: Bundle
@@ -245,14 +244,7 @@ final class AggregateMetricsService: ObservableObject {
         self.bundle = bundle
         self.allowsAutomaticFlush = allowsAutomaticFlush
         self.now = now
-
-        if let existingInstallID = defaults.string(forKey: Self.installIDKey), !existingInstallID.isEmpty {
-            self.installID = existingInstallID
-        } else {
-            let newInstallID = UUID().uuidString.lowercased()
-            defaults.set(newInstallID, forKey: Self.installIDKey)
-            self.installID = newInstallID
-        }
+        self.isEnabled = AnalyticsService.isEnabled(in: defaults)
 
         let config = AggregateMetricsConfiguration.from(bundle: bundle)
 
@@ -267,15 +259,31 @@ final class AggregateMetricsService: ObservableObject {
         self.state = Self.loadState(from: defaults, now: now())
         self.pendingMetrics = Self.pendingMetrics(from: state)
 
-        pruneSyncedHistory(referenceDate: now())
-        persistState()
+        if isEnabled {
+            pruneSyncedHistory(referenceDate: now())
+            persistState()
+        } else {
+            clearCollectedMetrics()
+        }
     }
 
     var isConfigured: Bool {
         sink.isConfigured
     }
 
+    func setEnabled(_ isEnabled: Bool) {
+        self.isEnabled = isEnabled
+        defaults.set(isEnabled, forKey: AnalyticsService.analyticsEnabledKey)
+
+        if isEnabled {
+            registerInstallIfNeeded()
+        } else {
+            clearCollectedMetrics()
+        }
+    }
+
     func registerInstallIfNeeded() {
+        guard isMetricsCollectionEnabled else { return }
         guard !defaults.bool(forKey: Self.installRegisteredKey) else { return }
 
         defaults.set(true, forKey: Self.installRegisteredKey)
@@ -284,6 +292,8 @@ final class AggregateMetricsService: ObservableObject {
     }
 
     func recordReview() {
+        guard isMetricsCollectionEnabled else { return }
+
         mutateCurrentBucket { bucket in
             bucket.reviewedPhotos += 1
             bucket.keptPhotos += 1
@@ -291,6 +301,8 @@ final class AggregateMetricsService: ObservableObject {
     }
 
     func recordDeletion(bytesFreed: Int64) {
+        guard isMetricsCollectionEnabled else { return }
+
         mutateCurrentBucket { bucket in
             bucket.reviewedPhotos += 1
             bucket.deletedPhotos += 1
@@ -299,6 +311,7 @@ final class AggregateMetricsService: ObservableObject {
     }
 
     func flushPendingMetricsIfNeeded() {
+        guard isMetricsCollectionEnabled else { return }
         guard shouldFlushNow(at: now()) else { return }
 
         Task {
@@ -307,7 +320,27 @@ final class AggregateMetricsService: ObservableObject {
     }
 
     func flushForTesting() async {
+        guard isMetricsCollectionEnabled else { return }
         await flushPendingMetrics(force: true, ignoreRetryWindow: true)
+    }
+
+    private var isMetricsCollectionEnabled: Bool {
+        let currentValue = AnalyticsService.isEnabled(in: defaults)
+        if isEnabled != currentValue {
+            isEnabled = currentValue
+        }
+        return currentValue
+    }
+
+    private func clearCollectedMetrics() {
+        state = PersistedAggregateMetricsState()
+        pendingMetrics = AggregateMetrics()
+        isFlushDisabledForSession = false
+        shouldFlushAgain = false
+
+        defaults.removeObject(forKey: Self.pendingMetricsKey)
+        defaults.removeObject(forKey: Self.installRegisteredKey)
+        defaults.removeObject(forKey: Self.installIDKey)
     }
 
     private func mutateCurrentBucket(_ mutation: (inout PersistedDailyMetricsBucket) -> Void) {
@@ -374,7 +407,7 @@ final class AggregateMetricsService: ObservableObject {
         isFlushing = true
 
         let payload = AggregateMetricsPayload(
-            installID: installID,
+            installID: installIDForUpload(),
             appVersion: bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             buildNumber: bundle.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "unknown",
             platform: "ios",
@@ -459,7 +492,18 @@ final class AggregateMetricsService: ObservableObject {
         return referenceDate.timeIntervalSince(lastSuccessfulFlushAt) >= Self.dailyFlushInterval
     }
 
+    private func installIDForUpload() -> String {
+        if let existingInstallID = defaults.string(forKey: Self.installIDKey), !existingInstallID.isEmpty {
+            return existingInstallID
+        }
+
+        let newInstallID = UUID().uuidString.lowercased()
+        defaults.set(newInstallID, forKey: Self.installIDKey)
+        return newInstallID
+    }
+
     private func canAttemptFlush(at referenceDate: Date, ignoreRetryWindow: Bool) -> Bool {
+        guard isMetricsCollectionEnabled else { return false }
         guard sink.isConfigured, !isFlushDisabledForSession, hasPendingUploads else { return false }
 
         if ignoreRetryWindow {

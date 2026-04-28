@@ -6,6 +6,7 @@ struct StatsView: View {
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gameificationService: GameificationService
     @ObservedObject var analyticsService: AnalyticsService
+    @ObservedObject var aggregateMetricsService: AggregateMetricsService
     @State private var viewModel = StatsViewModel()
     @State private var isShowingSettings = false
 
@@ -26,7 +27,10 @@ struct StatsView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle(String(localized: "stats.title", table: "LocalizableStats"))
             .navigationDestination(isPresented: $isShowingSettings) {
-                SettingsView(analyticsService: analyticsService)
+                SettingsView(
+                    analyticsService: analyticsService,
+                    aggregateMetricsService: aggregateMetricsService
+                )
             }
             .onAppear {
                 analyticsService.track(.statsViewed())
@@ -170,6 +174,7 @@ struct StatCard: View {
         stats: UserStats(),
         photoLibraryService: PhotoLibraryService(),
         gameificationService: GameificationService(),
-        analyticsService: AnalyticsService()
+        analyticsService: AnalyticsService(),
+        aggregateMetricsService: AggregateMetricsService()
     )
 }
