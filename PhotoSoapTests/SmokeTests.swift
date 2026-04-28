@@ -288,6 +288,29 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
+    func testAchievementUnlockShowsBannerState() throws {
+        let schema = Schema([UserStats.self, ReviewedPhoto.self, UnlockedAchievement.self])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let context = container.mainContext
+        let stats = UserStats()
+        stats.totalReviewed = 49
+        context.insert(stats)
+
+        let service = GameificationService()
+        service.processPhotoReview(
+            action: .keep,
+            fileSize: 0,
+            stats: stats,
+            challengeType: .review,
+            context: context
+        )
+
+        XCTAssertEqual(service.newlyUnlockedAchievement?.id, "first_steps")
+        XCTAssertTrue(service.showAchievementBanner)
+    }
+
+    @MainActor
     func testUserStatsFetchOrCreateSingletonCreatesOneStatsRecord() throws {
         let container = try ModelContainer(
             for: UserStats.self,

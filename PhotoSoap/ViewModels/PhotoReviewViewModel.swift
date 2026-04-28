@@ -30,6 +30,28 @@ private struct ReviewPersistenceSnapshot {
     let stats: UserStatsSnapshot
     let reviewedPhotoIDs: Set<String>
     let unlockedAchievementIDs: Set<String>
+    let feedback: GameificationFeedbackSnapshot
+}
+
+private struct GameificationFeedbackSnapshot {
+    let newlyUnlockedAchievement: Achievement?
+    let showAchievementBanner: Bool
+    let streakMilestoneReached: Int?
+    let showStreakCelebration: Bool
+
+    init(service: GameificationService) {
+        self.newlyUnlockedAchievement = service.newlyUnlockedAchievement
+        self.showAchievementBanner = service.showAchievementBanner
+        self.streakMilestoneReached = service.streakMilestoneReached
+        self.showStreakCelebration = service.showStreakCelebration
+    }
+
+    func restore(to service: GameificationService) {
+        service.newlyUnlockedAchievement = newlyUnlockedAchievement
+        service.showAchievementBanner = showAchievementBanner
+        service.streakMilestoneReached = streakMilestoneReached
+        service.showStreakCelebration = showStreakCelebration
+    }
 }
 
 private struct UserStatsSnapshot {
@@ -831,7 +853,8 @@ final class PhotoReviewViewModel: ObservableObject {
         return ReviewPersistenceSnapshot(
             stats: UserStatsSnapshot(stats: stats),
             reviewedPhotoIDs: reviewedPhotoIDs,
-            unlockedAchievementIDs: Set(unlockedAchievementIDs.map(\.achievementId))
+            unlockedAchievementIDs: Set(unlockedAchievementIDs.map(\.achievementId)),
+            feedback: GameificationFeedbackSnapshot(service: gameificationService)
         )
     }
 
@@ -843,6 +866,7 @@ final class PhotoReviewViewModel: ObservableObject {
     ) {
         do {
             snapshot.stats.restore(to: stats)
+            snapshot.feedback.restore(to: gameificationService)
 
             for photoID in photoIDs where !snapshot.reviewedPhotoIDs.contains(photoID) {
                 if let reviewedPhoto = try fetchReviewedPhoto(id: photoID, context: context) {

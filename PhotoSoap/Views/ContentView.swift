@@ -14,6 +14,7 @@ struct ContentView: View {
     @EnvironmentObject private var aggregateMetricsService: AggregateMetricsService
     @EnvironmentObject private var photoLibraryService: PhotoLibraryService
     @EnvironmentObject private var gameificationService: GameificationService
+    @EnvironmentObject private var hapticsService: HapticsService
     @State private var selectedTab: MainTab = .review
     @State private var showBootstrapAlert = false
     @State private var hasTrackedAppOpen = false
@@ -132,7 +133,8 @@ struct ContentView: View {
                     gameificationService: gameificationService,
                     stats: stats,
                     analyticsService: analyticsService,
-                    aggregateMetricsService: aggregateMetricsService
+                    aggregateMetricsService: aggregateMetricsService,
+                    hapticsService: hapticsService
                 )
                 .tabItem {
                     Label(String(localized: "review.tab", table: "LocalizableReview"), systemImage: "photo.stack")

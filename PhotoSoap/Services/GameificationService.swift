@@ -76,10 +76,34 @@ class GameificationService: ObservableObject {
     }
 
     private func checkAchievements(stats: UserStats, context: ModelContext) {
+        var firstUnlockedAchievement: Achievement?
+
         for achievement in Achievement.allAchievements {
             if !isAchievementUnlocked(achievement.id, context: context) && meetsRequirement(achievement, stats: stats) {
                 let unlocked = UnlockedAchievement(achievementId: achievement.id)
                 context.insert(unlocked)
+
+                if firstUnlockedAchievement == nil {
+                    firstUnlockedAchievement = achievement
+                }
+            }
+        }
+
+        if let firstUnlockedAchievement {
+            presentAchievementBanner(for: firstUnlockedAchievement)
+        }
+    }
+
+    private func presentAchievementBanner(for achievement: Achievement) {
+        newlyUnlockedAchievement = achievement
+        showAchievementBanner = true
+
+        Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            await MainActor.run {
+                guard self.newlyUnlockedAchievement?.id == achievement.id else { return }
+                self.showAchievementBanner = false
+                self.newlyUnlockedAchievement = nil
             }
         }
     }

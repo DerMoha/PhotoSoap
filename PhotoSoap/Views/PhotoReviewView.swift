@@ -23,7 +23,8 @@ struct PhotoReviewView: View {
         gameificationService: GameificationService,
         stats: UserStats,
         analyticsService: AnalyticsService,
-        aggregateMetricsService: AggregateMetricsService
+        aggregateMetricsService: AggregateMetricsService,
+        hapticsService: HapticsService
     ) {
         self.photoLibraryService = photoLibraryService
         self.gameificationService = gameificationService
@@ -35,7 +36,7 @@ struct PhotoReviewView: View {
             gameificationService: gameificationService,
             analyticsService: analyticsService,
             aggregateMetricsService: aggregateMetricsService,
-            hapticsService: HapticsService(),
+            hapticsService: hapticsService,
             defaults: UserDefaults.standard
         ))
     }
@@ -802,12 +803,15 @@ struct PhotoReviewView: View {
 }
 
 #Preview {
+    let hapticsService = HapticsService()
+
     PhotoReviewView(
         photoLibraryService: PhotoLibraryService(),
         gameificationService: GameificationService(),
         stats: UserStats(),
         analyticsService: AnalyticsService(),
-        aggregateMetricsService: AggregateMetricsService()
+        aggregateMetricsService: AggregateMetricsService(),
+        hapticsService: hapticsService
     )
-    .environmentObject(HapticsService())
+    .environmentObject(hapticsService)
 }
