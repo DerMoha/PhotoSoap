@@ -286,6 +286,7 @@ final class PhotoReviewViewModel: ObservableObject {
             try modelContext.save()
         } catch {
             presentError("Failed to clear review history: \(error.localizedDescription)")
+            isLoading = false
             return
         }
 

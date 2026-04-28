@@ -333,15 +333,31 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 options: options
             ) { image, info in
                 guard !hasResumed else { return }
-                hasResumed = true
+
+                let isCancelled = info?[PHImageCancelledKey] as? Bool ?? false
+                if isCancelled {
+                    hasResumed = true
+                    continuation.resume(throwing: PhotoLibraryError.loadingFailed)
+                    return
+                }
 
                 if let error = info?[PHImageErrorKey] as? Error {
+                    hasResumed = true
                     continuation.resume(throwing: error)
                     return
                 }
 
-                let photo = Photo(asset: asset, image: image, fileSize: 0)
-                continuation.resume(returning: photo)
+                let isDegraded = info?[PHImageResultIsDegradedKey] as? Bool ?? false
+                guard !isDegraded else { return }
+
+                guard let image else {
+                    hasResumed = true
+                    continuation.resume(throwing: PhotoLibraryError.loadingFailed)
+                    return
+                }
+
+                hasResumed = true
+                continuation.resume(returning: Photo(asset: asset, image: image, fileSize: 0))
             }
         }
     }
