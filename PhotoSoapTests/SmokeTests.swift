@@ -311,6 +311,112 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
+    func testQueuedDeletionReviewCountsReviewButNotDeletionUntilCommit() throws {
+        let container = try makeInMemoryReviewContainer()
+        let context = container.mainContext
+        let stats = UserStats()
+        stats.dailyChallengeType = DailyChallengeType.review.rawValue
+        stats.dailyChallengeDate = Date()
+        context.insert(stats)
+
+        let service = GameificationService()
+        try service.markPhotoReviewed(id: "queued-photo", context: context)
+        service.processQueuedDeletionReview(
+            stats: stats,
+            challengeType: .review,
+            context: context
+        )
+        try context.save()
+
+        XCTAssertEqual(stats.totalReviewed, 1)
+        XCTAssertEqual(stats.totalDeleted, 0)
+        XCTAssertEqual(stats.storageFreed, 0)
+        XCTAssertEqual(stats.dailyChallengeProgress, 1)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<ReviewedPhoto>()), 1)
+
+        service.processQueuedDeletionCommit(
+            fileSize: 2_048,
+            stats: stats,
+            challengeType: .review,
+            context: context
+        )
+
+        XCTAssertEqual(stats.totalReviewed, 1)
+        XCTAssertEqual(stats.totalDeleted, 1)
+        XCTAssertEqual(stats.storageFreed, 2_048)
+        XCTAssertEqual(stats.dailyChallengeProgress, 1)
+    }
+
+    @MainActor
+    func testQueuedDeletionCommitAdvancesDeleteChallengeOnlyOnCommit() throws {
+        let container = try makeInMemoryReviewContainer()
+        let context = container.mainContext
+        let stats = UserStats()
+        stats.dailyChallengeType = DailyChallengeType.delete.rawValue
+        stats.dailyChallengeDate = Date()
+        context.insert(stats)
+
+        let service = GameificationService()
+        try service.markPhotoReviewed(id: "queued-photo", context: context)
+        service.processQueuedDeletionReview(
+            stats: stats,
+            challengeType: .delete,
+            context: context
+        )
+
+        XCTAssertEqual(stats.totalReviewed, 1)
+        XCTAssertEqual(stats.totalDeleted, 0)
+        XCTAssertEqual(stats.dailyChallengeProgress, 0)
+
+        service.processQueuedDeletionCommit(
+            fileSize: 1_024,
+            stats: stats,
+            challengeType: .delete,
+            context: context
+        )
+
+        XCTAssertEqual(stats.totalReviewed, 1)
+        XCTAssertEqual(stats.totalDeleted, 1)
+        XCTAssertEqual(stats.storageFreed, 1_024)
+        XCTAssertEqual(stats.dailyChallengeProgress, 1)
+    }
+
+    @MainActor
+    func testQueuedDeletionReviewRollbackRemovesReviewState() throws {
+        let container = try makeInMemoryReviewContainer()
+        let context = container.mainContext
+        let stats = UserStats()
+        stats.dailyChallengeType = DailyChallengeType.review.rawValue
+        stats.dailyChallengeDate = Date()
+        context.insert(stats)
+
+        let service = GameificationService()
+        try service.markPhotoReviewed(id: "queued-photo", context: context)
+        service.processQueuedDeletionReview(
+            stats: stats,
+            challengeType: .review,
+            context: context
+        )
+        try context.save()
+
+        try service.rollbackQueuedDeletionReview(
+            id: "queued-photo",
+            stats: stats,
+            challengeType: .review,
+            context: context
+        )
+        try context.save()
+
+        XCTAssertEqual(stats.totalReviewed, 0)
+        XCTAssertEqual(stats.totalDeleted, 0)
+        XCTAssertEqual(stats.currentStreak, 0)
+        XCTAssertEqual(stats.sessionReviewCount, 0)
+        XCTAssertEqual(stats.todayReviewCount, 0)
+        XCTAssertEqual(stats.dailyChallengeProgress, 0)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<ReviewedPhoto>()), 0)
+    }
+
+    @MainActor
     func testUserStatsFetchOrCreateSingletonCreatesOneStatsRecord() throws {
         let container = try ModelContainer(
             for: UserStats.self,
@@ -403,6 +509,29 @@ final class SmokeTests: XCTestCase {
         XCTAssertNotNil(result.modelContainer)
     }
 
+    func testPrivacyManifestDeclaresOptInAggregateMetricsCollection() throws {
+        let manifestURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("PhotoSoap/PrivacyInfo.xcprivacy")
+        let data = try Data(contentsOf: manifestURL)
+        let plist = try XCTUnwrap(PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+        let collectedTypes = try XCTUnwrap(plist["NSPrivacyCollectedDataTypes"] as? [[String: Any]])
+        let collectedTypeNames = Set(collectedTypes.compactMap { $0["NSPrivacyCollectedDataType"] as? String })
+
+        XCTAssertFalse(collectedTypes.isEmpty)
+        XCTAssertEqual(plist["NSPrivacyTracking"] as? Bool, false)
+        XCTAssertTrue(collectedTypeNames.contains("NSPrivacyCollectedDataTypeProductInteraction"))
+        XCTAssertTrue(collectedTypeNames.contains("NSPrivacyCollectedDataTypeUserID"))
+        XCTAssertTrue(collectedTypes.allSatisfy { ($0["NSPrivacyCollectedDataTypeTracking"] as? Bool) == false })
+    }
+
+}
+
+private func makeInMemoryReviewContainer() throws -> ModelContainer {
+    let schema = Schema([UserStats.self, ReviewedPhoto.self, UnlockedAchievement.self])
+    let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+    return try ModelContainer(for: schema, configurations: [configuration])
 }
 
 private func makeTestDefaults() -> UserDefaults {

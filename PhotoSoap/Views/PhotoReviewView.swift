@@ -94,6 +94,10 @@ struct PhotoReviewView: View {
                 if viewModel.showDeleteListIntroToast {
                     deleteListIntroToast
                 }
+
+                if viewModel.showQueuePrunedToast {
+                    queuePrunedToast
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
@@ -797,6 +801,37 @@ struct PhotoReviewView: View {
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .onTapGesture {
                 viewModel.dismissDeleteListIntroToast()
+            }
+        }
+    }
+
+    private var queuePrunedToast: some View {
+        VStack {
+            Spacer()
+
+            HStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.orange)
+
+                VStack(alignment: .leading) {
+                    Text(String(localized: "review.queue.pruned.title", defaultValue: "Delete List Updated", table: "LocalizableReview"))
+                        .font(.headline)
+                    Text(String(localized: "review.queue.pruned.detail", defaultValue: "Some queued photos were no longer available and were removed.", table: "LocalizableReview"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(radius: 10)
+            .padding()
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .onTapGesture {
+                viewModel.dismissQueuePrunedToast()
             }
         }
     }
