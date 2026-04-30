@@ -18,12 +18,12 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
-    func testAnalyticsServiceIsDisabledByDefault() {
+    func testAnalyticsServiceIsEnabledByDefault() {
         let defaults = makeTestDefaults()
 
         let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
 
-        XCTAssertFalse(analyticsService.isEnabled)
+        XCTAssertTrue(analyticsService.isEnabled)
     }
 
     @MainActor
@@ -262,6 +262,7 @@ final class SmokeTests: XCTestCase {
             sink: sink,
             allowsAutomaticFlush: false
         )
+        service.setEnabled(false)
 
         service.registerInstallIfNeeded()
         service.recordReview()
