@@ -117,6 +117,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         sessionReviewedIDs.insert(id)
     }
 
+    func unmarkReviewed(_ id: String) {
+        sessionReviewedIDs.remove(id)
+    }
+
     func isReviewed(_ id: String) -> Bool {
         sessionReviewedIDs.contains(id)
     }

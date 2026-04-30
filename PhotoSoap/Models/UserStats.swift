@@ -61,9 +61,27 @@ class UserStats {
         updateDayTracking()
     }
 
+    func decrementQueuedReview() {
+        totalReviewed = max(0, totalReviewed - 1)
+        currentStreak = max(0, currentStreak - 1)
+        sessionReviewCount = max(0, sessionReviewCount - 1)
+
+        if let todayDate, Calendar.current.isDateInToday(todayDate) {
+            todayReviewCount = max(0, todayReviewCount - 1)
+            if todayReviewCount == 0 {
+                self.todayDate = nil
+                dayStreak = max(0, dayStreak - 1)
+            }
+        }
+    }
+
     func incrementDeleted(fileSize: Int64 = 0) {
         totalDeleted += 1
         storageFreed += fileSize
+    }
+
+    func incrementQueuedDeletionCommit(fileSize: Int64 = 0) {
+        incrementDeleted(fileSize: fileSize)
     }
 
     func incrementKept() {
@@ -123,6 +141,11 @@ class UserStats {
         if dailyChallengeType == type.rawValue {
             dailyChallengeProgress += 1
         }
+    }
+
+    func decrementDailyChallengeProgress(for type: DailyChallengeType) {
+        guard dailyChallengeType == type.rawValue else { return }
+        dailyChallengeProgress = max(0, dailyChallengeProgress - 1)
     }
 
     func resetDailyChallenge() {

@@ -33,6 +33,55 @@ class GameificationService: ObservableObject {
         checkAchievements(stats: stats, context: context)
     }
 
+    func processQueuedDeletionReview(
+        stats: UserStats,
+        challengeType: DailyChallengeType,
+        context: ModelContext
+    ) {
+        stats.incrementReviewed()
+
+        if challengeType == .review {
+            stats.updateDailyChallengeProgress(for: .review)
+        }
+
+        checkStreakMilestone(currentStreak: stats.currentStreak)
+        checkAchievements(stats: stats, context: context)
+    }
+
+    func processQueuedDeletionCommit(
+        fileSize: Int64,
+        stats: UserStats,
+        challengeType: DailyChallengeType,
+        context: ModelContext
+    ) {
+        stats.incrementQueuedDeletionCommit(fileSize: fileSize)
+
+        if challengeType == .delete {
+            stats.updateDailyChallengeProgress(for: .delete)
+        }
+
+        checkAchievements(stats: stats, context: context)
+    }
+
+    func rollbackQueuedDeletionReview(
+        id: String,
+        stats: UserStats,
+        challengeType: DailyChallengeType,
+        context: ModelContext
+    ) throws {
+        let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
+        for reviewedPhoto in try context.fetch(descriptor) {
+            context.delete(reviewedPhoto)
+        }
+
+        stats.decrementQueuedReview()
+        if challengeType == .review {
+            stats.decrementDailyChallengeProgress(for: .review)
+        }
+
+        removeAchievementsNoLongerMet(stats: stats, context: context)
+    }
+
     func processSkip(stats: UserStats) {
         stats.resetStreak()
     }
@@ -91,6 +140,18 @@ class GameificationService: ObservableObject {
 
         if let firstUnlockedAchievement {
             presentAchievementBanner(for: firstUnlockedAchievement)
+        }
+    }
+
+    private func removeAchievementsNoLongerMet(stats: UserStats, context: ModelContext) {
+        guard let unlockedAchievements = try? context.fetch(FetchDescriptor<UnlockedAchievement>()) else { return }
+        let achievementsByID = Dictionary(uniqueKeysWithValues: Achievement.allAchievements.map { ($0.id, $0) })
+
+        for unlockedAchievement in unlockedAchievements {
+            guard let achievement = achievementsByID[unlockedAchievement.achievementId] else { continue }
+            if !meetsRequirement(achievement, stats: stats) {
+                context.delete(unlockedAchievement)
+            }
         }
     }
 
