@@ -346,13 +346,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nutzungsanalysen helfen, PhotoSoap zu verbessern, und sind standardmäßig deaktiviert. Wenn du sie aktivierst, teilt PhotoSoap Nutzungs-Gesamtzahlen wie Installationen, überprüfte und gelöschte Fotos mit einer zufälligen App-Installationskennung — niemals Fotoinhalte, Asset-IDs oder Standortdaten."
+            "value" : "Nutzungsanalysen helfen, PhotoSoap zu verbessern, und sind standardmäßig deaktiviert. Wenn du sie aktivierst, teilt PhotoSoap Nutzungs-Gesamtzahlen wie Installationen, überprüfte und gelöschte Fotos mit einer zufälligen App-Installationskennung; niemals Fotoinhalte, Asset-IDs oder Standortdaten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Usage analytics help improve PhotoSoap and are off by default. If you turn them on, PhotoSoap shares usage totals like installs, photos reviewed, and deleted with a random app install identifier — never photo contents, asset IDs, or location data."
+            "value" : "Usage analytics help improve PhotoSoap and are off by default. If you turn them on, PhotoSoap shares usage totals like installs, photos reviewed, and photos deleted with a random app install identifier; never photo contents, asset IDs, or location data."
           }
         }
       }
@@ -378,13 +378,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anonyme Nutzungsanalysen teilen"
+            "value" : "Nutzungsanalysen teilen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share Anonymous Usage Analytics"
+            "value" : "Share Usage Analytics"
           }
         }
       }
