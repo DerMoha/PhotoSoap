@@ -69,6 +69,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     @Published var isLoading = false
     @Published var error: PhotoLibraryError?
     @Published var currentFilter: PhotoFilter = .all
+    @Published private(set) var currentMediaKind: ReviewMediaKind = .photos
     @Published private(set) var libraryRevision = 0
     @Published private(set) var isOldestFirst = false
 
@@ -222,23 +223,23 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         switch currentFilter {
         case .all:
-            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
-            cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
+            cachedAssets = PHAsset.fetchAssets(with: options)
         case .year(let year):
             let interval = dateIntervalForYear(year)
-            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
-            cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
+            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
+            cachedAssets = PHAsset.fetchAssets(with: options)
         case .month(let year, let month):
             let interval = dateIntervalForMonth(year: year, month: month)
-            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
-            cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
+            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
+            cachedAssets = PHAsset.fetchAssets(with: options)
         case .album(let identifier, _):
             guard let collection = fetchAssetCollection(identifier: identifier) else {
                 cachedAssets = nil
                 totalAssetCount = 0
                 return
             }
-            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true, oldestFirst: isOldestFirst)
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
             cachedAssets = PHAsset.fetchAssets(in: collection, options: options)
         }
 
@@ -553,6 +554,12 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         totalAssetCount = 0
     }
 
+    func setMediaKind(_ mediaKind: ReviewMediaKind) {
+        guard mediaKind != currentMediaKind else { return }
+        currentMediaKind = mediaKind
+        invalidateCaches()
+    }
+
     func loadFilterData() async -> FilterData {
         if !cachedAlbums.isEmpty && !cachedYears.isEmpty {
             return FilterData(
@@ -563,8 +570,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         let excludedSubtypes = excludedSmartAlbumSubtypes
+        let mediaKind = currentMediaKind
         let filterData = await Task.detached(priority: .userInitiated) {
-            Self.buildFilterData(excludedSmartAlbumSubtypes: excludedSubtypes)
+            Self.buildFilterData(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSubtypes)
         }.value
 
         cachedAlbums = filterData.albums
@@ -574,7 +582,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     func fetchAlbums() -> [AlbumInfo] {
-        Self.buildAlbums(excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
+        Self.buildAlbums(mediaKind: currentMediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
     }
 
     func getAvailableYears() -> [Int] {
@@ -593,8 +601,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         Task.detached(priority: .userInitiated) { [weak self] in
             guard let self = self else { return }
 
-            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
-            let assets = PHAsset.fetchAssets(with: .image, options: options)
+            let mediaKind = await self.currentMediaKind
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: mediaKind)
+            let assets = PHAsset.fetchAssets(with: options)
             let calendar = Calendar.current
             var years = Set<Int>()
             var monthsByYear: [Int: Set<Int>] = [:]
@@ -619,10 +628,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     // MARK: - Static Helpers
 
-    private nonisolated static func buildFilterData(excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> FilterData {
-        let albums = buildAlbums(excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
-        let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
-        let assets = PHAsset.fetchAssets(with: .image, options: options)
+    private nonisolated static func buildFilterData(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> FilterData {
+        let albums = buildAlbums(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
+        let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind)
+        let assets = PHAsset.fetchAssets(with: options)
         let calendar = Calendar.current
         var years = Set<Int>()
         var monthsByYear: [Int: Set<Int>] = [:]
@@ -642,9 +651,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         )
     }
 
-    private nonisolated static func buildAlbums(excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> [AlbumInfo] {
+    private nonisolated static func buildAlbums(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> [AlbumInfo] {
         var albums: [AlbumInfo] = []
-        let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true)
+        let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind)
 
         let userAlbumCollections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
         userAlbumCollections.enumerateObjects { collection, _, _ in
@@ -686,7 +695,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     private nonisolated static func makeFetchOptions(
         dateInterval: DateInterval?,
-        includeMediaTypePredicate: Bool,
+        mediaKind: ReviewMediaKind,
         oldestFirst: Bool = false
     ) -> PHFetchOptions {
         let fetchOptions = PHFetchOptions()
@@ -695,9 +704,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         var predicates: [NSPredicate] = []
 
-        if includeMediaTypePredicate {
-            predicates.append(NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue))
-        }
+        predicates.append(mediaTypePredicate(for: mediaKind))
 
         if let interval = dateInterval {
             predicates.append(
@@ -714,6 +721,21 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         return fetchOptions
+    }
+
+    private nonisolated static func mediaTypePredicate(for mediaKind: ReviewMediaKind) -> NSPredicate {
+        switch mediaKind {
+        case .photos:
+            return NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
+        case .videos:
+            return NSPredicate(format: "mediaType == %d", PHAssetMediaType.video.rawValue)
+        case .all:
+            return NSPredicate(
+                format: "mediaType == %d OR mediaType == %d",
+                PHAssetMediaType.image.rawValue,
+                PHAssetMediaType.video.rawValue
+            )
+        }
     }
 
     // MARK: - Private Helpers
@@ -760,6 +782,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     private func preferredResource(from resources: [PHAssetResource]) -> PHAssetResource? {
         resources.first {
+            $0.type == .fullSizeVideo || $0.type == .video || $0.type == .pairedVideo
+        } ?? resources.first {
             $0.type == .fullSizePhoto || $0.type == .photo
         } ?? resources.first
     }

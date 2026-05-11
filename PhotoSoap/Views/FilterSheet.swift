@@ -6,7 +6,9 @@ struct FilterSheet: View {
 
     @ObservedObject var photoLibraryService: PhotoLibraryService
     let currentFilter: PhotoFilter
+    let currentMediaKind: ReviewMediaKind
     let onSelect: (PhotoFilter) -> Void
+    let onMediaKindChange: (ReviewMediaKind) -> Void
     let onSortOrderChange: (Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -14,6 +16,7 @@ struct FilterSheet: View {
     @State private var availableYears: [Int] = []
     @State private var availableMonths: [Int] = []
     @State private var selectedYear = Calendar.current.component(.year, from: Date())
+    @State private var selectedMediaKind: ReviewMediaKind = .photos
     @State private var isLoading = true
 
     var body: some View {
@@ -27,6 +30,7 @@ struct FilterSheet: View {
                     }
                 } else {
                     List {
+                        mediaKindSection
                         sortOrderSection
                         allPhotosSection
                         yearsSection
@@ -49,11 +53,36 @@ struct FilterSheet: View {
             }
         }
         .task {
+            selectedMediaKind = currentMediaKind
             await loadData()
+        }
+        .onChange(of: selectedMediaKind) { _, mediaKind in
+            hapticsService.selection()
+            onMediaKindChange(mediaKind)
+
+            Task {
+                await loadData()
+            }
         }
         .onChange(of: filterOldestFirst) { _, oldestFirst in
             hapticsService.selection()
             onSortOrderChange(oldestFirst)
+        }
+    }
+
+    private var mediaKindSection: some View {
+        Section(String(localized: "filter.media", defaultValue: "Media", table: "LocalizableFilter")) {
+            Picker(String(localized: "filter.media", defaultValue: "Media", table: "LocalizableFilter"), selection: $selectedMediaKind) {
+                ForEach(ReviewMediaKind.allCases) { mediaKind in
+                    Label(mediaKind.displayName, systemImage: symbolName(for: mediaKind))
+                        .tag(mediaKind)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Text(mediaHelpText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -75,8 +104,8 @@ struct FilterSheet: View {
                 selectFilter(.all)
             } label: {
                 FilterRow(
-                    title: String(localized: "filter.allPhotos", defaultValue: "All Photos", table: "LocalizableFilter"),
-                    subtitle: String(localized: "filter.entireLibrary", defaultValue: "Your entire library", table: "LocalizableFilter"),
+                    title: selectedMediaKind.allFilterTitle,
+                    subtitle: selectedMediaKind.libraryDescription,
                     count: nil,
                     isSelected: currentFilter.isAll
                 )
@@ -196,6 +225,7 @@ struct FilterSheet: View {
     }
 
     private func loadData() async {
+        isLoading = true
         let filterData = await photoLibraryService.loadFilterData()
         albums = filterData.albums
         availableYears = filterData.availableYears
@@ -210,6 +240,28 @@ struct FilterSheet: View {
         }
 
         isLoading = false
+    }
+
+    private var mediaHelpText: String {
+        switch selectedMediaKind {
+        case .photos:
+            return String(localized: "filter.media.photos.help", defaultValue: "Start with photos. Switch when you want to review videos.", table: "LocalizableFilter")
+        case .videos:
+            return String(localized: "filter.media.videos.help", defaultValue: "Review only videos from the same filters.", table: "LocalizableFilter")
+        case .all:
+            return String(localized: "filter.media.all.help", defaultValue: "Mix photos and videos in one review pass.", table: "LocalizableFilter")
+        }
+    }
+
+    private func symbolName(for mediaKind: ReviewMediaKind) -> String {
+        switch mediaKind {
+        case .photos:
+            return "photo"
+        case .videos:
+            return "play.rectangle"
+        case .all:
+            return "square.grid.2x2"
+        }
     }
 
     private var displayedYears: [Int] {
@@ -281,7 +333,9 @@ private struct FilterRow: View {
     FilterSheet(
         photoLibraryService: PhotoLibraryService(),
         currentFilter: .all,
+        currentMediaKind: .photos,
         onSelect: { _ in },
+        onMediaKindChange: { _ in },
         onSortOrderChange: { _ in }
     )
 }

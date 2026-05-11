@@ -8,4 +8,5 @@ enum UserDefaultsKeys {
     static let hasSeenPhotoPreviewHint = "hasSeenPhotoPreviewHint"
     static let hasSeenPhotoZoomHint = "hasSeenPhotoZoomHint"
     static let filterOldestFirst = "filterOldestFirst"
+    static let reviewMediaKind = "reviewMediaKind"
 }

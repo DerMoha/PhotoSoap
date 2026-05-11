@@ -159,8 +159,12 @@ struct PhotoReviewView: View {
                 FilterSheet(
                     photoLibraryService: photoLibraryService,
                     currentFilter: viewModel.currentFilter,
+                    currentMediaKind: viewModel.currentMediaKind,
                     onSelect: { filter in
                         viewModel.applyFilter(filter)
+                    },
+                    onMediaKindChange: { mediaKind in
+                        viewModel.applyMediaKind(mediaKind)
                     },
                     onSortOrderChange: { oldestFirst in
                         viewModel.applySortOrder(oldestFirst: oldestFirst)
@@ -239,7 +243,7 @@ struct PhotoReviewView: View {
             progress: progress,
             current: current,
             target: stats.dailyChallengeTarget,
-            isFilterActive: !viewModel.currentFilter.isAll,
+            isFilterActive: !viewModel.currentFilter.isAll || viewModel.currentMediaKind != .photos,
             goalOptions: dailyGoalOptions,
             onFilterTap: {
                 viewModel.showFilterSheet = true

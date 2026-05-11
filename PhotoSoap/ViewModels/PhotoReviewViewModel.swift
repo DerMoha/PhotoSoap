@@ -143,6 +143,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
     @Published var isProcessingAction = false
     @Published var currentFilter: PhotoFilter = .all
+    @Published var currentMediaKind: ReviewMediaKind = .photos
     @Published var showFilterSheet = false
     @Published var persistedReviewedIDs: Set<String> = []
     @Published var knownUnreviewedIDs: Set<String> = []
@@ -208,6 +209,9 @@ final class PhotoReviewViewModel: ObservableObject {
         self.aggregateMetricsService = aggregateMetricsService
         self.hapticsService = hapticsService
         self.defaults = defaults
+
+        self.currentMediaKind = Self.storedMediaKind(in: defaults)
+        self.photoLibraryService.setMediaKind(currentMediaKind)
     }
 
     func setModelContext(_ context: ModelContext) {
@@ -224,7 +228,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
     func onViewAppear() {
         guard !hasTrackedReviewStart else { return }
-        analyticsService.track(.reviewStarted(filter: currentFilter))
+        analyticsService.track(.reviewStarted(filter: currentFilter, mediaKind: currentMediaKind))
         hasTrackedReviewStart = true
     }
 
@@ -359,7 +363,24 @@ final class PhotoReviewViewModel: ObservableObject {
         currentPhoto = nil
         nextPhoto = nil
         noMorePhotos = false
-        analyticsService.track(.filterApplied(filter))
+        analyticsService.track(.filterApplied(filter, mediaKind: currentMediaKind))
+
+        Task {
+            await loadInitialPhoto()
+        }
+    }
+
+    func applyMediaKind(_ mediaKind: ReviewMediaKind) {
+        guard mediaKind != currentMediaKind else { return }
+
+        currentMediaKind = mediaKind
+        defaults.set(mediaKind.rawValue, forKey: UserDefaultsKeys.reviewMediaKind)
+        syncSortOrderPreference()
+        photoLibraryService.setMediaKind(mediaKind)
+        currentPhoto = nil
+        nextPhoto = nil
+        noMorePhotos = false
+        analyticsService.track(.filterApplied(currentFilter, mediaKind: mediaKind))
 
         Task {
             await loadInitialPhoto()
@@ -520,6 +541,15 @@ final class PhotoReviewViewModel: ObservableObject {
         photoLibraryService.setSortOrder(oldestFirst: defaults.bool(forKey: UserDefaultsKeys.filterOldestFirst))
     }
 
+    private static func storedMediaKind(in defaults: UserDefaults) -> ReviewMediaKind {
+        guard let rawValue = defaults.string(forKey: UserDefaultsKeys.reviewMediaKind),
+              let mediaKind = ReviewMediaKind(rawValue: rawValue) else {
+            return .photos
+        }
+
+        return mediaKind
+    }
+
     private func keepPhoto() async {
         guard !isProcessingAction else { return }
         guard let photo = currentPhoto, let stats, let modelContext else { return }
@@ -548,7 +578,7 @@ final class PhotoReviewViewModel: ObservableObject {
         }
 
         cycleKeptCount += 1
-        analyticsService.track(.photoKept(filter: currentFilter))
+        analyticsService.track(.photoKept(filter: currentFilter, mediaKind: currentMediaKind))
         aggregateMetricsService.recordReview()
         hapticsService.impact(.medium)
 
@@ -612,7 +642,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
             photoLibraryService.markReviewed(photo.id)
             cycleDeletedCount += 1
-            analyticsService.track(.photoDeleted(filter: currentFilter))
+            analyticsService.track(.photoDeleted(filter: currentFilter, mediaKind: currentMediaKind))
             aggregateMetricsService.recordDeletion(bytesFreed: resolvedFileSize)
             hapticsService.impact(.rigid)
 
@@ -841,7 +871,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
             let deletedCount = itemsToDelete.count
             cycleDeletedCount += deletedCount
-            analyticsService.track(.photoDeleted(filter: currentFilter))
+            analyticsService.track(.photoDeleted(filter: currentFilter, mediaKind: currentMediaKind))
             aggregateMetricsService.recordDeletion(bytesFreed: totalBytes, count: deletedCount)
             photoIDs.forEach { photoLibraryService.markReviewed($0) }
 
@@ -1083,7 +1113,7 @@ final class PhotoReviewViewModel: ObservableObject {
         } else {
             currentPhoto = nil
             noMorePhotos = true
-            analyticsService.track(.reviewBatchCompleted(filter: currentFilter))
+            analyticsService.track(.reviewBatchCompleted(filter: currentFilter, mediaKind: currentMediaKind))
         }
     }
 

@@ -34,28 +34,35 @@ struct AnalyticsEvent: Equatable {
         AnalyticsEvent("tab_selected", properties: ["tab": tab])
     }
 
-    static func reviewStarted(filter: PhotoFilter) -> AnalyticsEvent {
-        AnalyticsEvent("review_started", properties: ["filter": filter.analyticsValue])
+    static func reviewStarted(filter: PhotoFilter, mediaKind: ReviewMediaKind) -> AnalyticsEvent {
+        reviewEvent("review_started", filter: filter, mediaKind: mediaKind)
     }
 
-    static func photoKept(filter: PhotoFilter) -> AnalyticsEvent {
-        AnalyticsEvent("photo_kept", properties: ["filter": filter.analyticsValue])
+    static func photoKept(filter: PhotoFilter, mediaKind: ReviewMediaKind) -> AnalyticsEvent {
+        reviewEvent("photo_kept", filter: filter, mediaKind: mediaKind)
     }
 
-    static func photoDeleted(filter: PhotoFilter) -> AnalyticsEvent {
-        AnalyticsEvent("photo_deleted", properties: ["filter": filter.analyticsValue])
+    static func photoDeleted(filter: PhotoFilter, mediaKind: ReviewMediaKind) -> AnalyticsEvent {
+        reviewEvent("photo_deleted", filter: filter, mediaKind: mediaKind)
     }
 
-    static func reviewBatchCompleted(filter: PhotoFilter) -> AnalyticsEvent {
-        AnalyticsEvent("review_batch_completed", properties: ["filter": filter.analyticsValue])
+    static func reviewBatchCompleted(filter: PhotoFilter, mediaKind: ReviewMediaKind) -> AnalyticsEvent {
+        reviewEvent("review_batch_completed", filter: filter, mediaKind: mediaKind)
     }
 
-    static func filterApplied(_ filter: PhotoFilter) -> AnalyticsEvent {
-        AnalyticsEvent("filter_applied", properties: ["filter": filter.analyticsValue])
+    static func filterApplied(_ filter: PhotoFilter, mediaKind: ReviewMediaKind) -> AnalyticsEvent {
+        reviewEvent("filter_applied", filter: filter, mediaKind: mediaKind)
     }
 
     static func statsViewed() -> AnalyticsEvent {
         AnalyticsEvent("stats_viewed")
+    }
+
+    private static func reviewEvent(_ name: String, filter: PhotoFilter, mediaKind: ReviewMediaKind) -> AnalyticsEvent {
+        AnalyticsEvent(name, properties: [
+            "filter": filter.analyticsValue,
+            "media_type": mediaKind.analyticsValue
+        ])
     }
 }
 
@@ -101,6 +108,19 @@ final class AnalyticsService: ObservableObject {
             print("PhotoSoap: analytics \(event.name)")
         } else {
             print("PhotoSoap: analytics \(event.name) [\(properties)]")
+        }
+    }
+}
+
+private extension ReviewMediaKind {
+    var analyticsValue: String {
+        switch self {
+        case .photos:
+            return "photo"
+        case .videos:
+            return "video"
+        case .all:
+            return "all"
         }
     }
 }
