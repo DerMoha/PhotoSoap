@@ -1,4 +1,5 @@
 import SwiftUI
+import AVKit
 import UIKit
 
 struct PhotoPreviewSheet: View {
@@ -18,6 +19,7 @@ struct PhotoPreviewSheet: View {
     @State private var isContentVisible = false
     @State private var isDismissing = false
     @State private var previewImage: UIImage?
+    @State private var videoPlayer: AVPlayer?
     @State private var zoomScale: CGFloat = 1
     @State private var showZoomHint = false
     @State private var dismissDragOffset: CGFloat = 0
@@ -29,32 +31,9 @@ struct PhotoPreviewSheet: View {
                     .opacity(backdropOpacity)
                     .ignoresSafeArea()
 
-                if let previewImage {
-                    ZoomablePhotoView(
-                        image: previewImage,
-                        zoomScale: $zoomScale,
-                        onDismissDragChanged: handleDismissDragChanged,
-                        onDismissDragEnded: { translation, velocity in
-                            handleDismissDragEnded(
-                                translation: translation,
-                                velocity: velocity,
-                                containerHeight: geometry.size.height
-                            )
-                        }
-                    )
-                    .scaleEffect(contentScale)
-                    .opacity(contentOpacity)
-                    .offset(y: dismissDragOffset)
-                    .ignoresSafeArea()
-                } else {
-                    ProgressView()
-                        .tint(.white)
-                        .scaleEffect(isContentVisible ? max(1.2 - (dismissDragProgress * 0.08), 1.08) : 1.08)
-                        .opacity(contentOpacity)
-                        .offset(y: dismissDragOffset)
-                }
+                previewContent(containerHeight: geometry.size.height)
 
-                if showZoomHint {
+                if showZoomHint && !photo.isVideo {
                     zoomHintChip
                         .padding(.bottom, geometry.safeAreaInsets.bottom + 28)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -83,12 +62,20 @@ struct PhotoPreviewSheet: View {
             .animation(.easeInOut(duration: 0.2), value: showZoomHint)
         }
         .task(id: photo.id) {
-            await loadPreviewImage()
+            if photo.isVideo {
+                await loadVideoPreview()
+            } else {
+                await loadPreviewImage()
+            }
         }
         .task {
             await presentHintsAndTransition()
         }
+        .onDisappear {
+            videoPlayer?.pause()
+        }
         .onChange(of: zoomScale) { _, newValue in
+            guard !photo.isVideo else { return }
             guard newValue > 1.02 else { return }
 
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -97,12 +84,90 @@ struct PhotoPreviewSheet: View {
         }
     }
 
+    @ViewBuilder
+    private func previewContent(containerHeight: CGFloat) -> some View {
+        if photo.isVideo {
+            videoPreview
+                .scaleEffect(contentScale)
+                .opacity(contentOpacity)
+                .offset(y: dismissDragOffset)
+        } else if let previewImage {
+            ZoomablePhotoView(
+                image: previewImage,
+                zoomScale: $zoomScale,
+                onDismissDragChanged: handleDismissDragChanged,
+                onDismissDragEnded: { translation, velocity in
+                    handleDismissDragEnded(
+                        translation: translation,
+                        velocity: velocity,
+                        containerHeight: containerHeight
+                    )
+                }
+            )
+            .scaleEffect(contentScale)
+            .opacity(contentOpacity)
+            .offset(y: dismissDragOffset)
+            .ignoresSafeArea()
+        } else {
+            loadingView
+        }
+    }
+
+    @ViewBuilder
+    private var videoPreview: some View {
+        if let videoPlayer {
+            VideoPlayer(player: videoPlayer)
+                .ignoresSafeArea()
+                .onAppear {
+                    videoPlayer.play()
+                }
+                .overlay(alignment: .bottomLeading) {
+                    videoMetadataBadge
+                        .padding(.leading, 16)
+                        .padding(.bottom, 28)
+                }
+        } else {
+            loadingView
+        }
+    }
+
+    private var loadingView: some View {
+        ProgressView()
+            .tint(.white)
+            .scaleEffect(isContentVisible ? max(1.2 - (dismissDragProgress * 0.08), 1.08) : 1.08)
+            .opacity(contentOpacity)
+            .offset(y: dismissDragOffset)
+    }
+
     private func loadPreviewImage() async {
         previewImage = photo.image
 
         if let highResolutionImage = await photoLibraryService.fetchHighResolutionPreviewImage(for: photo.asset) {
             previewImage = highResolutionImage
         }
+    }
+
+    private func loadVideoPreview() async {
+        guard let playerItem = await photoLibraryService.fetchVideoPlayerItem(for: photo.asset) else { return }
+        videoPlayer = AVPlayer(playerItem: playerItem)
+    }
+
+    private var videoMetadataBadge: some View {
+        Label(videoDurationText, systemImage: "play.fill")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.black.opacity(0.55))
+            .clipShape(Capsule())
+            .overlay {
+                Capsule()
+                    .stroke(.white.opacity(0.14), lineWidth: 1)
+            }
+    }
+
+    private var videoDurationText: String {
+        photo.formattedDuration ?? String(localized: "review.preview.video", defaultValue: "Video", table: "LocalizableReview")
     }
 
     private var zoomHintChip: some View {
@@ -154,6 +219,7 @@ struct PhotoPreviewSheet: View {
             }
         }
 
+        guard !photo.isVideo else { return }
         guard !hasSeenPhotoZoomHint else { return }
 
         try? await Task.sleep(nanoseconds: 500_000_000)

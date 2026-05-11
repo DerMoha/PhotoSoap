@@ -33,20 +33,64 @@ struct PhotoCard: View {
 
     @ViewBuilder
     private func photoImage(size: CGSize) -> some View {
-        if let image = photo.image {
-            Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: size.width, height: size.height)
-                .clipped()
-        } else {
-            Rectangle()
-                .fill(Color(.systemGray4))
-                .frame(width: size.width, height: size.height)
-                .overlay {
-                    ProgressView()
+        ZStack {
+            if let image = photo.image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: size.width, height: size.height)
+                    .clipped()
+            } else {
+                Rectangle()
+                    .fill(Color(.systemGray4))
+                    .frame(width: size.width, height: size.height)
+                    .overlay {
+                        ProgressView()
+                    }
+            }
+
+            if photo.isVideo {
+                videoPlayBadge
+
+                VStack {
+                    HStack {
+                        videoDurationBadge
+                        Spacer()
+                    }
+                    Spacer()
                 }
+                .padding(12)
+            }
         }
+        .frame(width: size.width, height: size.height)
+    }
+
+    private var videoPlayBadge: some View {
+        Image(systemName: "play.fill")
+            .font(.system(size: 26, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 64, height: 64)
+            .background(.black.opacity(0.42))
+            .clipShape(Circle())
+            .overlay {
+                Circle()
+                    .stroke(.white.opacity(0.18), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.28), radius: 12, x: 0, y: 6)
+    }
+
+    private var videoDurationBadge: some View {
+        Label(photo.formattedDuration ?? String(localized: "review.preview.video", defaultValue: "Video", table: "LocalizableReview"), systemImage: "video.fill")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(.black.opacity(0.5))
+            .clipShape(Capsule())
+            .overlay {
+                Capsule()
+                    .stroke(.white.opacity(0.14), lineWidth: 1)
+            }
     }
 
     // Compact single-line metadata
@@ -68,13 +112,20 @@ struct PhotoCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            // Dimensions
-            Text(photo.compactDimensions)
+            Text(photo.isVideo ? videoMetadataText : photo.compactDimensions)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
+    }
+
+    private var videoMetadataText: String {
+        if let formattedDuration = photo.formattedDuration {
+            return formattedDuration
+        }
+
+        return photo.compactDimensions
     }
 
     private func formatFileSize(_ bytes: Int64) -> String {

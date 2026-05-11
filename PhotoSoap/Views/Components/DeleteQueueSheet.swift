@@ -107,29 +107,22 @@ struct DeleteQueueItemRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 60, height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(.systemGray5))
-                    .frame(width: 60, height: 60)
-                    .overlay {
-                        ProgressView()
-                    }
-            }
+            thumbnail
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.photo.formattedDate)
                     .font(.subheadline)
                     .fontWeight(.medium)
 
-                Text(fileSizeText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    if item.photo.isVideo {
+                        Label(videoDurationText, systemImage: "video.fill")
+                    }
+
+                    Text(fileSizeText)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -145,6 +138,35 @@ struct DeleteQueueItemRow: View {
         .task {
             await loadImage()
         }
+    }
+
+    private var thumbnail: some View {
+        ZStack {
+            if let image = image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 60, height: 60)
+                    .overlay {
+                        ProgressView()
+                    }
+            }
+
+            if item.photo.isVideo {
+                Image(systemName: "play.fill")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(.black.opacity(0.45))
+                    .clipShape(Circle())
+            }
+        }
+        .frame(width: 60, height: 60)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private func loadImage() async {
@@ -174,6 +196,10 @@ struct DeleteQueueItemRow: View {
         }
 
         return item.fileSize.formattedBytes
+    }
+
+    private var videoDurationText: String {
+        item.photo.formattedDuration ?? String(localized: "review.preview.video", defaultValue: "Video", table: "LocalizableReview")
     }
 }
 

@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 import Photos
 import PhotosUI
 import UIKit
@@ -406,6 +407,24 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
                 hasResumed = true
                 continuation.resume(returning: image)
+            }
+        }
+    }
+
+    func fetchVideoPlayerItem(for asset: PHAsset) async -> AVPlayerItem? {
+        guard asset.mediaType == .video else { return nil }
+
+        let options = PHVideoRequestOptions()
+        options.deliveryMode = .automatic
+        options.isNetworkAccessAllowed = true
+
+        return await withCheckedContinuation { (continuation: CheckedContinuation<AVPlayerItem?, Never>) in
+            imageManager.requestPlayerItem(forVideo: asset, options: options) { playerItem, info in
+                if let error = info?[PHImageErrorKey] as? Error {
+                    print("PhotoSoap: Failed to load video preview: \(error.localizedDescription)")
+                }
+
+                continuation.resume(returning: playerItem)
             }
         }
     }
