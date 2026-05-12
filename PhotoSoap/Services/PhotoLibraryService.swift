@@ -21,11 +21,11 @@ enum PhotoLibraryError: Error, LocalizedError {
         case .accessRestricted:
             return String(localized: "error.accessRestricted", defaultValue: "Photo library access is restricted.", table: "LocalizableShared")
         case .noPhotosAvailable:
-            return String(localized: "error.noPhotosAvailable", defaultValue: "No photos available to review.", table: "LocalizableShared")
+            return String(localized: "error.noPhotosAvailable", defaultValue: "No media available to review.", table: "LocalizableShared")
         case .deletionFailed:
-            return String(localized: "error.deletionFailed", defaultValue: "Failed to delete the photo.", table: "LocalizableShared")
+            return String(localized: "error.deletionFailed", defaultValue: "Failed to delete the item.", table: "LocalizableShared")
         case .loadingFailed:
-            return String(localized: "error.loadingFailed", defaultValue: "Failed to load photo.", table: "LocalizableShared")
+            return String(localized: "error.loadingFailed", defaultValue: "Failed to load item.", table: "LocalizableShared")
         }
     }
 }

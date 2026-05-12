@@ -27,7 +27,7 @@ struct DeleteQueueSheet: View {
                     .listStyle(.plain)
 
                     VStack(spacing: 12) {
-                        Text(String(localized: "review.queue.sheet.note", defaultValue: "Photos in your Delete List stay in Photos until you confirm the iOS deletion prompt.", table: "LocalizableReview"))
+                        Text(String(localized: "review.queue.sheet.note", defaultValue: "Items in your Delete List stay in Photos until you confirm the iOS deletion prompt.", table: "LocalizableReview"))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -44,7 +44,7 @@ struct DeleteQueueSheet: View {
                             HStack {
                                 Image(systemName: "trash.fill")
 
-                                Text(String(localized: "review.queue.deleteInPhotos", defaultValue: "Delete These Photos", table: "LocalizableReview"))
+                                Text(String(localized: "review.queue.deleteInPhotos", defaultValue: "Delete These Items", table: "LocalizableReview"))
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -75,7 +75,7 @@ struct DeleteQueueSheet: View {
                     onDismiss()
                 }
             } message: {
-                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All photos will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All items will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
             }
         }
     }
@@ -86,11 +86,11 @@ struct DeleteQueueSheet: View {
                 .font(.system(size: 50))
                 .foregroundStyle(.secondary)
 
-            Text(String(localized: "review.queue.empty.title", defaultValue: "No photos in Delete List", table: "LocalizableReview"))
+            Text(String(localized: "review.queue.empty.title", defaultValue: "No items in Delete List", table: "LocalizableReview"))
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            Text(String(localized: "reviewqueue.empty.description", defaultValue: "Swipe left on photos to add them to your Delete List.", table: "LocalizableReview"))
+            Text(String(localized: "reviewqueue.empty.description", defaultValue: "Swipe left on photos or videos to add them to your Delete List.", table: "LocalizableReview"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

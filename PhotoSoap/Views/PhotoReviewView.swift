@@ -139,7 +139,7 @@ struct PhotoReviewView: View {
                 Text(String(localized: "review.startOver.confirmation", table: "LocalizableReview"))
             }
             .confirmationDialog(
-                String(localized: "review.startOver.withQueue.title", defaultValue: "Review again with photos in your Delete List?", table: "LocalizableReview"),
+                String(localized: "review.startOver.withQueue.title", defaultValue: "Review again with items in your Delete List?", table: "LocalizableReview"),
                 isPresented: $viewModel.showQueuedStartOverConfirmation,
                 titleVisibility: .visible
             ) {
@@ -218,7 +218,7 @@ struct PhotoReviewView: View {
                     viewModel.confirmRemoveFromQueue()
                 }
             } message: {
-                Text(String(localized: "review.queue.remove.confirmation.message", defaultValue: "This photo will stay in your library and won't be included in the next delete batch.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.remove.confirmation.message", defaultValue: "This item will stay in your library and won't be included in the next delete batch.", table: "LocalizableReview"))
             }
             .alert(String(localized: "review.queue.clear.confirmation.title", defaultValue: "Clear Delete List?", table: "LocalizableReview"), isPresented: $viewModel.isShowingClearQueueConfirmation) {
                 Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {
@@ -228,7 +228,7 @@ struct PhotoReviewView: View {
                     viewModel.confirmClearQueue()
                 }
             } message: {
-                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All photos will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All items will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
             }
         }
     }
@@ -428,20 +428,20 @@ struct PhotoReviewView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text(String(localized: "review.loading", table: "LocalizableReview"))
+            Text(loadingText)
                 .foregroundStyle(.secondary)
         }
     }
 
     private var emptyStateView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "photo.badge.plus")
+            Image(systemName: emptyStateSymbolName)
                 .font(.system(size: 60))
                 .foregroundStyle(.secondary)
-            Text(String(localized: "review.empty", table: "LocalizableReview"))
+            Text(emptyStateTitle)
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text(String(localized: "review.empty.description", table: "LocalizableReview"))
+            Text(emptyStateDescription)
                 .foregroundStyle(.secondary)
         }
     }
@@ -462,7 +462,7 @@ struct PhotoReviewView: View {
             .multilineTextAlignment(.center)
 
             VStack(spacing: 8) {
-                Text(String(localized: "review.stats", defaultValue: "%d photos reviewed", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(viewModel.persistedReviewedIDs.count)"))
+                Text(reviewedCountSummary)
                     .foregroundStyle(.secondary)
 
                 Text(
@@ -530,6 +530,50 @@ struct PhotoReviewView: View {
             && viewModel.currentPhoto != nil
     }
 
+    private var loadingText: String {
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String(localized: "review.loading", defaultValue: "Loading photos...", table: "LocalizableReview")
+        case .videos:
+            return String(localized: "review.loading.videos", defaultValue: "Loading videos...", table: "LocalizableReview")
+        case .all:
+            return String(localized: "review.loading.media", defaultValue: "Loading your library...", table: "LocalizableReview")
+        }
+    }
+
+    private var emptyStateSymbolName: String {
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return "photo.badge.plus"
+        case .videos:
+            return "video.badge.plus"
+        case .all:
+            return "rectangle.stack.badge.plus"
+        }
+    }
+
+    private var emptyStateTitle: String {
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String(localized: "review.empty", defaultValue: "No photos to review", table: "LocalizableReview")
+        case .videos:
+            return String(localized: "review.empty.videos", defaultValue: "No videos to review", table: "LocalizableReview")
+        case .all:
+            return String(localized: "review.empty.media", defaultValue: "No media to review", table: "LocalizableReview")
+        }
+    }
+
+    private var emptyStateDescription: String {
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String(localized: "review.empty.description", defaultValue: "Your photo library appears to be empty", table: "LocalizableReview")
+        case .videos:
+            return String(localized: "review.empty.videos.description", defaultValue: "Your video library appears to be empty", table: "LocalizableReview")
+        case .all:
+            return String(localized: "review.empty.media.description", defaultValue: "Your photo and video library appears to be empty", table: "LocalizableReview")
+        }
+    }
+
     private var limitedAccessBanner: some View {
         LimitedAccessCard(
             title: String(localized: "limitedAccess.title", table: "LocalizableShared"),
@@ -544,28 +588,68 @@ struct PhotoReviewView: View {
     }
 
     private var completionTitle: String {
-        photoLibraryService.authorizationStatus == .limited
-            ? String(localized: "review.complete.title.limited", defaultValue: "Selected Photos Reviewed", table: "LocalizableReview")
-            : String(localized: "review.complete.title", table: "LocalizableReview")
+        if photoLibraryService.authorizationStatus == .limited {
+            switch viewModel.currentMediaKind {
+            case .photos:
+                return String(localized: "review.complete.title.limited", defaultValue: "Selected Photos Reviewed", table: "LocalizableReview")
+            case .videos:
+                return String(localized: "review.complete.title.limited.videos", defaultValue: "Selected Videos Reviewed", table: "LocalizableReview")
+            case .all:
+                return String(localized: "review.complete.title.limited.media", defaultValue: "Selected Media Reviewed", table: "LocalizableReview")
+            }
+        }
+
+        return String(localized: "review.complete.title", table: "LocalizableReview")
     }
 
     private var completionSubtitle: String {
-        photoLibraryService.authorizationStatus == .limited
-            ? String(localized: "review.complete.subtitle.limited", table: "LocalizableReview")
-            : String(localized: "review.complete.subtitle", table: "LocalizableReview")
+        if photoLibraryService.authorizationStatus == .limited {
+            return String(localized: "review.complete.subtitle.limited", defaultValue: "You've reviewed everything in your current selection. Add more items if you want to keep going.", table: "LocalizableReview")
+        }
+
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String(localized: "review.complete.subtitle", defaultValue: "You've reviewed all available photos.", table: "LocalizableReview")
+        case .videos:
+            return String(localized: "review.complete.subtitle.videos", defaultValue: "You've reviewed all available videos.", table: "LocalizableReview")
+        case .all:
+            return String(localized: "review.complete.subtitle.media", defaultValue: "You've reviewed all available photos and videos.", table: "LocalizableReview")
+        }
+    }
+
+    private var reviewedCountSummary: String {
+        let count = viewModel.persistedReviewedIDs.count
+
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String.localizedStringWithFormat(
+                String(localized: "review.stats", defaultValue: "%d photos reviewed", table: "LocalizableReview"),
+                count
+            )
+        case .videos:
+            return String.localizedStringWithFormat(
+                String(localized: "review.stats.videos", defaultValue: "%d videos reviewed", table: "LocalizableReview"),
+                count
+            )
+        case .all:
+            return String.localizedStringWithFormat(
+                String(localized: "review.stats.media", defaultValue: "%d items reviewed", table: "LocalizableReview"),
+                count
+            )
+        }
     }
 
     private var deleteListSummaryCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(
                 String.localizedStringWithFormat(
-                    String(localized: "review.queue.pendingSummary", defaultValue: "%lld photos are in your Delete List", table: "LocalizableReview"),
+                    String(localized: "review.queue.pendingSummary", defaultValue: "%lld items are in your Delete List", table: "LocalizableReview"),
                     viewModel.pendingDeletionCount
                 )
             )
             .font(.headline)
 
-            Text(String(localized: "review.queue.pendingSummary.detail", defaultValue: "These photos stay in Photos until you confirm deletion in iOS.", table: "LocalizableReview"))
+            Text(String(localized: "review.queue.pendingSummary.detail", defaultValue: "These items stay in Photos until you confirm deletion in iOS.", table: "LocalizableReview"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -718,7 +802,7 @@ struct PhotoReviewView: View {
                 VStack(alignment: .leading) {
                     Text(String(localized: "review.queue.deletedSuccess", defaultValue: "Deleted!", table: "LocalizableReview"))
                         .font(.headline)
-                    Text(String(localized: "review.queue.deletedSuccess.detail", defaultValue: "Photos removed from your library.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.deletedSuccess.detail", defaultValue: "Items removed from your library.", table: "LocalizableReview"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -754,7 +838,7 @@ struct PhotoReviewView: View {
                 VStack(alignment: .leading) {
                     Text(String(localized: "review.queue.cancelled", defaultValue: "Deletion Cancelled", table: "LocalizableReview"))
                         .font(.headline)
-                    Text(String(localized: "review.queue.cancelled.detail", defaultValue: "Your photos are still in your Delete List.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.cancelled.detail", defaultValue: "Your items are still in your Delete List.", table: "LocalizableReview"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -821,7 +905,7 @@ struct PhotoReviewView: View {
                 VStack(alignment: .leading) {
                     Text(String(localized: "review.queue.pruned.title", defaultValue: "Delete List Updated", table: "LocalizableReview"))
                         .font(.headline)
-                    Text(String(localized: "review.queue.pruned.detail", defaultValue: "Some queued photos were no longer available and were removed.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.pruned.detail", defaultValue: "Some queued items were no longer available and were removed.", table: "LocalizableReview"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

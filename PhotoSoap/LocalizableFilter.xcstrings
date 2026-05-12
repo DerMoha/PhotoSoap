@@ -33,6 +33,38 @@
         }
       }
     },
+    "filter.allMedia" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Medien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Media"
+          }
+        }
+      }
+    },
+    "filter.allVideos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Videos"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Videos"
+          }
+        }
+      }
+    },
     "filter.byMonth" : {
       "localizations" : {
         "de" : {
@@ -97,6 +129,54 @@
         }
       }
     },
+    "filter.entireMediaLibrary" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Fotos und Videos"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your photos and videos"
+          }
+        }
+      }
+    },
+    "filter.entirePhotoLibrary" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Fotomediathek"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your photo library"
+          }
+        }
+      }
+    },
+    "filter.entireVideoLibrary" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Videomediathek"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your video library"
+          }
+        }
+      }
+    },
     "filter.loading" : {
       "localizations" : {
         "de" : {
@@ -125,6 +205,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Month %d"
+          }
+        }
+      }
+    },
+    "filter.media" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media"
+          }
+        }
+      }
+    },
+    "filter.media.all" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
+          }
+        }
+      }
+    },
+    "filter.media.all.help" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfe Fotos und Videos gemeinsam in einem Durchgang."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mix photos and videos in one review pass."
+          }
+        }
+      }
+    },
+    "filter.media.photos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotos"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos"
+          }
+        }
+      }
+    },
+    "filter.media.photos.help" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starte mit Fotos. Wechsle, wenn du Videos prüfen möchtest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with photos. Switch when you want to review videos."
+          }
+        }
+      }
+    },
+    "filter.media.videos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Videos"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Videos"
+          }
+        }
+      }
+    },
+    "filter.media.videos.help" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfe nur Videos mit denselben Filtern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review only videos from the same filters."
           }
         }
       }

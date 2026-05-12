@@ -72,13 +72,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wenn du Ausgewählte Fotos wählst, zeigt PhotoSoap nur diese Fotos. Du kannst später mehr hinzufügen. Videos erscheinen nicht."
+            "value" : "Wenn du Ausgewählte Fotos wählst, prüft PhotoSoap nur diese Auswahl. Du kannst später mehr hinzufügen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If you choose Selected Photos, PhotoSoap reviews only those photos. You can add more later. Videos will not appear."
+            "value" : "If you choose Selected Photos, PhotoSoap reviews only that selection. You can add more later."
           }
         }
       }
@@ -396,13 +396,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap braucht Zugriff auf deine Fotobibliothek.\n\nAlle Fotos ist am einfachsten. Mit Ausgewählte Fotos prüfst du nur diese Auswahl und kannst später mehr hinzufügen.\n\nPhotoSoap prüft nur Fotos. Ausgewählte Videos erscheinen nicht."
+            "value" : "PhotoSoap braucht Zugriff auf deine Fotobibliothek.\n\nAlle Fotos ist am einfachsten. Mit Ausgewählte Fotos prüfst du nur diese Auswahl und kannst später mehr hinzufügen.\n\nPhotoSoap startet mit Fotos. Videos kannst du später im Filter einschalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap needs access to your photo library.\n\nAll Photos is the simplest option. If you choose Selected Photos, PhotoSoap reviews only that selection and you can add more later.\n\nPhotoSoap reviews photos only. Videos you select will not appear."
+            "value" : "PhotoSoap needs access to your photo library.\n\nAll Photos is the simplest option. If you choose Selected Photos, PhotoSoap reviews only that selection and you can add more later.\n\nPhotoSoap starts with photos. You can turn on videos later from filters."
           }
         }
       }

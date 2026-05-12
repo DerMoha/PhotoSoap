@@ -293,13 +293,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Foto konnte nicht gelöscht werden: %@"
+            "value" : "Objekt konnte nicht gelöscht werden: %@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failed to delete photo: %@"
+            "value" : "Failed to delete item: %@"
           }
         }
       }
@@ -310,13 +310,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Foto konnte nicht gelöscht werden."
+            "value" : "Das Objekt konnte nicht gelöscht werden."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failed to delete the photo."
+            "value" : "Failed to delete the item."
           }
         }
       }
@@ -327,13 +327,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Foto konnte nicht geladen werden."
+            "value" : "Das Objekt konnte nicht geladen werden."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failed to load photo."
+            "value" : "Failed to load item."
           }
         }
       }
@@ -427,13 +427,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keine Fotos zum Überprüfen verfügbar."
+            "value" : "Keine Medien zum Überprüfen verfügbar."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No photos available to review."
+            "value" : "No media available to review."
           }
         }
       }
@@ -509,13 +509,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mehr Fotos hinzufügen"
+            "value" : "Mehr Medien hinzufügen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add More Photos"
+            "value" : "Add More Media"
           }
         }
       }
@@ -525,13 +525,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap kann nur die Fotos prüfen, die du ausgewählt hast. Du kannst jederzeit mehr hinzufügen. Ausgewählte Videos erscheinen nicht."
+            "value" : "PhotoSoap kann nur die ausgewählten Objekte prüfen. Du kannst jederzeit mehr hinzufügen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap can review only the photos you selected. You can add more anytime. Videos you choose will not appear."
+            "value" : "PhotoSoap can review only the items you selected. You can add more anytime."
           }
         }
       }
@@ -541,13 +541,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nur ausgewählte Fotos werden überprüft"
+            "value" : "Nur ausgewählte Medien werden überprüft"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reviewing selected photos only"
+            "value" : "Reviewing selected media only"
           }
         }
       }

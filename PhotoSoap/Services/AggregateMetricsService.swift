@@ -312,13 +312,15 @@ final class AggregateMetricsService: ObservableObject {
         }
     }
 
-    func flushPendingMetricsIfNeeded() {
-        guard isMetricsCollectionEnabled else { return }
-        guard shouldFlushNow(at: now()) else { return }
+    @discardableResult
+    func flushPendingMetricsIfNeeded() -> Task<Void, Never>? {
+        guard isMetricsCollectionEnabled else { return nil }
+        guard shouldFlushNow(at: now()) else { return nil }
 
-        Task {
+        let flushTask = Task {
             await flushPendingMetrics(force: false, ignoreRetryWindow: false)
         }
+        return flushTask
     }
 
     func flushForTesting() async {

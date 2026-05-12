@@ -499,13 +499,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap kann nur die Fotos prüfen, die du ausgewählt hast. Du kannst mehr Fotos hinzufügen. Ausgewählte Videos erscheinen nicht."
+            "value" : "PhotoSoap kann nur die ausgewählten Objekte prüfen. Füge mehr Medien hinzu, wenn du weitermachen möchtest."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap can review only the photos you selected. You can add more photos to keep going. Videos you choose will not appear."
+            "value" : "PhotoSoap can review only the items you selected. Add more media if you want to keep going."
           }
         }
       }
@@ -515,13 +515,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mehr Fotos zum Prüfen hinzufügen"
+            "value" : "Mehr Medien zum Prüfen hinzufügen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add More Photos to Review"
+            "value" : "Add More Media to Review"
           }
         }
       }
@@ -542,18 +542,50 @@
         }
       }
     },
-    "review.complete.subtitle.limited" : {
+    "review.complete.subtitle.media" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du hast alle Fotos aus deiner aktuellen Auswahl überprüft. Füge mehr Fotos hinzu, wenn du weitermachen möchtest."
+            "value" : "Du hast alle verfügbaren Fotos und Videos überprüft."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You've reviewed everything in your current selection. Add more photos if you want to keep going."
+            "value" : "You've reviewed all available photos and videos."
+          }
+        }
+      }
+    },
+    "review.complete.subtitle.limited" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast alles aus deiner aktuellen Auswahl überprüft. Füge mehr Medien hinzu, wenn du weitermachen möchtest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've reviewed everything in your current selection. Add more media if you want to keep going."
+          }
+        }
+      }
+    },
+    "review.complete.subtitle.videos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast alle verfügbaren Videos überprüft."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've reviewed all available videos."
           }
         }
       }
@@ -590,6 +622,38 @@
         }
       }
     },
+    "review.complete.title.limited.media" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählte Medien geprüft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected Media Reviewed"
+          }
+        }
+      }
+    },
+    "review.complete.title.limited.videos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählte Videos geprüft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected Videos Reviewed"
+          }
+        }
+      }
+    },
     "review.empty" : {
       "localizations" : {
         "de" : {
@@ -622,6 +686,70 @@
         }
       }
     },
+    "review.empty.media" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Medien zum Überprüfen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No media to review"
+          }
+        }
+      }
+    },
+    "review.empty.media.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Foto- und Videomediathek scheint leer zu sein"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your photo and video library appears to be empty"
+          }
+        }
+      }
+    },
+    "review.empty.videos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Videos zum Überprüfen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No videos to review"
+          }
+        }
+      }
+    },
+    "review.empty.videos.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Videomediathek scheint leer zu sein"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your video library appears to be empty"
+          }
+        }
+      }
+    },
     "review.loading" : {
       "localizations" : {
         "de" : {
@@ -638,6 +766,38 @@
         }
       }
     },
+    "review.loading.media" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mediathek wird geladen..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading your library..."
+          }
+        }
+      }
+    },
+    "review.loading.videos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Videos werden geladen..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading videos..."
+          }
+        }
+      }
+    },
     "review.preview.tapHint" : {
       "comment" : "A hint to tap on a photo to see its preview.",
       "extractionState" : "extracted_with_value",
@@ -647,6 +807,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Tap to preview"
+          }
+        }
+      }
+    },
+    "review.preview.video" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video"
           }
         }
       }
@@ -708,13 +884,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine Fotos bleiben in der Löschliste."
+            "value" : "Deine Objekte bleiben in der Löschliste."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Your photos are still in your Delete List."
+            "value" : "Your items are still in your Delete List."
           }
         }
       }
@@ -746,13 +922,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle Fotos werden aus deiner Löschliste entfernt und in Fotos behalten."
+            "value" : "Alle Objekte werden aus deiner Löschliste entfernt und in Fotos behalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "All photos will be removed from your Delete List and kept in Photos."
+            "value" : "All items will be removed from your Delete List and kept in Photos."
           }
         }
       }
@@ -800,13 +976,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld Fotos sind in deiner Löschliste"
+            "value" : "%lld Objekte sind in deiner Löschliste"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld photos are in your Delete List"
+            "value" : "%lld items are in your Delete List"
           }
         }
       }
@@ -816,13 +992,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Fotos bleiben in Fotos, bis du das Löschen in iOS bestätigst."
+            "value" : "Diese Objekte bleiben in Fotos, bis du das Löschen in iOS bestätigst."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "These photos stay in Photos until you confirm deletion in iOS."
+            "value" : "These items stay in Photos until you confirm deletion in iOS."
           }
         }
       }
@@ -905,13 +1081,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Fotos löschen"
+            "value" : "Diese Objekte löschen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Delete These Photos"
+            "value" : "Delete These Items"
           }
         }
       }
@@ -924,13 +1100,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keine Fotos in der Liste"
+            "value" : "Keine Objekte in der Liste"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "No photos in Delete List"
+            "value" : "No items in Delete List"
           }
         }
       }
@@ -940,13 +1116,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fotos in deiner Löschliste bleiben in Fotos, bis du die iOS-Abfrage zum Löschen bestätigst."
+            "value" : "Objekte in deiner Löschliste bleiben in Fotos, bis du die iOS-Abfrage zum Löschen bestätigst."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Photos in your Delete List stay in Photos until you confirm the iOS deletion prompt."
+            "value" : "Items in your Delete List stay in Photos until you confirm the iOS deletion prompt."
           }
         }
       }
@@ -978,13 +1154,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap bittet iOS darum, %lld Fotos zu löschen. Nichts wird entfernt, bis du die nächste iOS-Abfrage bestätigst. Gelöschte Fotos landen in Zuletzt gelöscht."
+            "value" : "PhotoSoap bittet iOS darum, %lld Objekte zu löschen. Nichts wird entfernt, bis du die nächste iOS-Abfrage bestätigst. Gelöschte Objekte landen in Zuletzt gelöscht."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "PhotoSoap will ask iOS to delete %lld photos. Nothing is removed until you confirm the next iOS prompt. Deleted photos move to Recently Deleted."
+            "value" : "PhotoSoap will ask iOS to delete %lld items. Nothing is removed until you confirm the next iOS prompt. Deleted items move to Recently Deleted."
           }
         }
       }
@@ -1014,13 +1190,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dieses Foto bleibt in deiner Mediathek und wird nicht in den nächsten Löschvorgang aufgenommen."
+            "value" : "Dieses Objekt bleibt in deiner Mediathek und wird nicht in den nächsten Löschvorgang aufgenommen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "This photo will stay in your library and won't be included in the next delete batch."
+            "value" : "This item will stay in your library and won't be included in the next delete batch."
           }
         }
       }
@@ -1120,13 +1296,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du prüfst alle verfügbaren Fotos erneut. Dein Fortschritt wird zurückgesetzt."
+            "value" : "Du prüfst alle verfügbaren Medien erneut. Dein Fortschritt wird zurückgesetzt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You will review all available photos again. Your progress will reset."
+            "value" : "You will review all available media again. Your progress will reset."
           }
         }
       }
@@ -1184,13 +1360,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mit Fotos in der Löschliste erneut prüfen?"
+            "value" : "Mit Objekten in der Löschliste erneut prüfen?"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Review again with photos in your Delete List?"
+            "value" : "Review again with items in your Delete List?"
           }
         }
       }
@@ -1207,6 +1383,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%d photos reviewed"
+          }
+        }
+      }
+    },
+    "review.stats.media" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d Objekte überprüft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d items reviewed"
+          }
+        }
+      }
+    },
+    "review.stats.videos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d Videos überprüft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d videos reviewed"
           }
         }
       }
@@ -1283,13 +1491,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wische bei Fotos nach links, um sie zur Löschliste hinzuzufügen."
+            "value" : "Wische bei Fotos oder Videos nach links, um sie zur Löschliste hinzuzufügen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Swipe left on photos to queue them for deletion."
+            "value" : "Swipe left on photos or videos to queue them for deletion."
           }
         }
       }

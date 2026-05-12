@@ -40,6 +40,18 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(analyticsService.recordedEvents.first?.properties.isEmpty == true)
     }
 
+    func testReviewMediaKindDefaultsToPhotosFirst() {
+        XCTAssertEqual(ReviewMediaKind.allCases.map(\.rawValue), ["photos", "videos", "all"])
+    }
+
+    func testReviewAnalyticsIncludesMediaTypeWithoutRenamingEvents() {
+        let event = AnalyticsEvent.filterApplied(.all, mediaKind: .videos)
+
+        XCTAssertEqual(event.name, "filter_applied")
+        XCTAssertEqual(event.properties["filter"], "all")
+        XCTAssertEqual(event.properties["media_type"], "video")
+    }
+
     @MainActor
     func testAnalyticsServiceSkipsEventsWhenDisabled() {
         let defaults = makeTestDefaults()
@@ -232,15 +244,17 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(service.pendingMetrics.isEmpty)
 
         service.recordReview()
-        service.flushPendingMetricsIfNeeded()
-        await Task.yield()
+        if let flushTask = service.flushPendingMetricsIfNeeded() {
+            await flushTask.value
+        }
 
         payloads = await sink.payloads
         XCTAssertEqual(payloads.count, 1)
 
         clock.now = clock.now.addingTimeInterval(24 * 60 * 60 + 1)
-        service.flushPendingMetricsIfNeeded()
-        await Task.yield()
+        if let flushTask = service.flushPendingMetricsIfNeeded() {
+            await flushTask.value
+        }
 
         payloads = await sink.payloads
         XCTAssertEqual(payloads.count, 2)
