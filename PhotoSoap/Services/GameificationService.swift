@@ -189,7 +189,7 @@ class GameificationService: ObservableObject {
         case "daily_devotee":
             return stats.dayStreak >= 14
         case "storage_saver":
-            return stats.storageFreed >= 5_368_709_120
+            return stats.storageFreed >= 5_000_000_000
         case "century_club":
             return stats.sessionReviewCount >= 500
         case "photo_pro":
@@ -253,7 +253,7 @@ class GameificationService: ObservableObject {
         case "daily_devotee":
             return min(1.0, Double(stats.dayStreak) / 14.0)
         case "storage_saver":
-            return min(1.0, Double(stats.storageFreed) / 5_368_709_120.0)
+            return min(1.0, Double(stats.storageFreed) / 5_000_000_000.0)
         case "century_club":
             return min(1.0, Double(stats.sessionReviewCount) / 500.0)
         case "photo_pro":
