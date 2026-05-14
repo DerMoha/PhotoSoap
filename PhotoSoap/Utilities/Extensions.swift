@@ -86,6 +86,7 @@ extension Date {
 
 extension Int64 {
     var formattedBytes: String {
+        guard self > 0 else { return String(localized: "photo.unknownSize", defaultValue: "Unknown size", table: "LocalizableShared") }
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useKB, .useMB, .useGB]
         formatter.countStyle = .file

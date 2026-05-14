@@ -167,10 +167,7 @@ class UserStats {
     // MARK: - Formatting
 
     var storageFreedFormatted: String {
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useKB, .useMB, .useGB]
-        formatter.countStyle = .file
-        return formatter.string(fromByteCount: storageFreed)
+        storageFreed.formattedBytes
     }
 
     static func fetchOrCreateSingleton(in context: ModelContext) throws -> UserStats {

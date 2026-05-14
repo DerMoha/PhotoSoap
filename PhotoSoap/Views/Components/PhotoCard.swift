@@ -129,11 +129,7 @@ struct PhotoCard: View {
     }
 
     private func formatFileSize(_ bytes: Int64) -> String {
-        guard bytes > 0 else { return String(localized: "photo.unknownSize", defaultValue: "Unknown size", table: "LocalizableShared") }
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useKB, .useMB]
-        formatter.countStyle = .file
-        return formatter.string(fromByteCount: bytes)
+        bytes.formattedBytes
     }
 
     private var overlays: some View {

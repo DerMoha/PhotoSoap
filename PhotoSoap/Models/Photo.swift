@@ -56,17 +56,15 @@ struct Photo: Identifiable {
         let width = asset.pixelWidth
         let height = asset.pixelHeight
         if width >= 1000 || height >= 1000 {
-            return "\(width/1000)K×\(height/1000)K"
+            let w = Int((Double(width) / 1000.0).rounded())
+            let h = Int((Double(height) / 1000.0).rounded())
+            return "\(w)K×\(h)K"
         }
         return "\(width)×\(height)"
     }
 
     var fileSizeFormatted: String {
-        guard fileSize > 0 else { return String(localized: "photo.unknownSize", defaultValue: "Unknown size", table: "LocalizableShared") }
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useKB, .useMB]
-        formatter.countStyle = .file
-        return formatter.string(fromByteCount: fileSize)
+        fileSize.formattedBytes
     }
 
     var mediaType: PHAssetMediaType {
