@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PhotoSoap needs photo library access so you can review photos and choose which ones to delete.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>PhotoSoap needs permission to make changes when you choose to delete photos.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>PhotoSoapAggregateMetricsEndpointURL</key>
+	<string>$(PHOTOSOAP_METRICS_ENDPOINT_URL)</string>
+	<key>PhotoSoapAggregateMetricsAnonKey</key>
+	<string>$(PHOTOSOAP_METRICS_ANON_KEY)</string>
+</dict>
+</plist>
