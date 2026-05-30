@@ -6,7 +6,6 @@ Keep guidance short, practical, and aligned with the current SwiftUI codebase.
 - Main app target and shared scheme: `PhotoSoap`.
 - Open `PhotoSoap.xcodeproj` directly for local development; the workspace no longer has dependency-specific setup.
 - A `PhotoSoapTests` XCTest target is configured in the project.
-- Historical references to `Bommel` are stale and only appear in user-specific Xcode metadata and git history.
 ## Repository Layout
 - `PhotoSoap/PhotoSoapApp.swift`: app entry, model container bootstrap, migration helpers.
 - `PhotoSoap/Models/`: SwiftData models and small domain enums.
