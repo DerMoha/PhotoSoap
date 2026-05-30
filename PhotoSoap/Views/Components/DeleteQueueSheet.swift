@@ -1,5 +1,4 @@
 import SwiftUI
-import PhotosUI
 import Photos
 
 struct DeleteQueueSheet: View {
@@ -191,11 +190,9 @@ struct DeleteQueueItemRow: View {
     }
 
     private var fileSizeText: String {
-        guard item.fileSize > 0 else {
-            return item.photo.fileSizeFormatted
-        }
-
-        return item.fileSize.formattedBytes
+        Photo.formattedFileSizeText(item.fileSize)
+            ?? item.photo.fileSizeDisplayText
+            ?? Int64(0).formattedBytes
     }
 
     private var videoDurationText: String {

@@ -1127,6 +1127,8 @@ final class PhotoReviewViewModel: ObservableObject {
 
     private func reloadPhotoAfterQueueChange() async {
         noMorePhotos = false
+        photoLibraryService.resetAssetCursor()
+
         if let photo = try? await nextAvailablePhoto(excluding: pendingDeletionIDs) {
             currentPhoto = photo
             await preloadNextPhoto()

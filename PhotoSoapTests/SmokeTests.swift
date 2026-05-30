@@ -44,6 +44,12 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(ReviewMediaKind.allCases.map(\.rawValue), ["photos", "videos", "all"])
     }
 
+    func testPhotoFileSizeDisplayTextTreatsNonPositiveSizesAsUnknown() {
+        XCTAssertNil(Photo.formattedFileSizeText(0))
+        XCTAssertNil(Photo.formattedFileSizeText(-1))
+        XCTAssertEqual(Photo.formattedFileSizeText(4_096), Int64(4_096).formattedBytes)
+    }
+
     func testReviewAnalyticsIncludesMediaTypeWithoutRenamingEvents() {
         let event = AnalyticsEvent.filterApplied(.all, mediaKind: .videos)
 

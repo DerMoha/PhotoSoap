@@ -20,6 +20,8 @@ struct PhotoPreviewSheet: View {
     @State private var isDismissing = false
     @State private var previewImage: UIImage?
     @State private var videoPlayer: AVPlayer?
+    @State private var isVideoPreviewLoading = false
+    @State private var videoPreviewFailed = false
     @State private var zoomScale: CGFloat = 1
     @State private var showZoomHint = false
     @State private var dismissDragOffset: CGFloat = 0
@@ -73,6 +75,8 @@ struct PhotoPreviewSheet: View {
         }
         .onDisappear {
             videoPlayer?.pause()
+            videoPlayer?.replaceCurrentItem(with: nil)
+            videoPlayer = nil
         }
         .onChange(of: zoomScale) { _, newValue in
             guard !photo.isVideo else { return }
@@ -126,9 +130,66 @@ struct PhotoPreviewSheet: View {
                         .padding(.leading, 16)
                         .padding(.bottom, 28)
                 }
+        } else if videoPreviewFailed {
+            videoPreviewFailureView
+        } else if isVideoPreviewLoading {
+            loadingView
         } else {
             loadingView
         }
+    }
+
+    private var videoPreviewFailureView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "video.slash")
+                .font(.system(size: 44, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.86))
+
+            VStack(spacing: 6) {
+                Text(String(localized: "review.preview.videoUnavailable.title", defaultValue: "Video Preview Unavailable", table: "LocalizableReview"))
+                    .font(.headline)
+                    .foregroundStyle(.white)
+
+                Text(String(localized: "review.preview.videoUnavailable.message", defaultValue: "PhotoSoap couldn't load this video preview right now.", table: "LocalizableReview"))
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.72))
+                    .multilineTextAlignment(.center)
+            }
+
+            HStack(spacing: 12) {
+                Button {
+                    Task {
+                        await loadVideoPreview()
+                    }
+                } label: {
+                    Text(String(localized: "common.retry", defaultValue: "Retry", table: "LocalizableShared"))
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.white.opacity(0.16))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    dismissPreview()
+                } label: {
+                    Text(String(localized: "common.done", defaultValue: "Done", table: "LocalizableShared"))
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.white)
+                        .foregroundStyle(.black)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.top, 4)
+        }
+        .padding(28)
+        .frame(maxWidth: 360)
+        .opacity(contentOpacity)
+        .offset(y: dismissDragOffset)
     }
 
     private var loadingView: some View {
@@ -148,7 +209,26 @@ struct PhotoPreviewSheet: View {
     }
 
     private func loadVideoPreview() async {
-        guard let playerItem = await photoLibraryService.fetchVideoPlayerItem(for: photo.asset) else { return }
+        videoPlayer?.pause()
+        videoPlayer?.replaceCurrentItem(with: nil)
+        videoPlayer = nil
+        isVideoPreviewLoading = true
+        videoPreviewFailed = false
+
+        defer {
+            if !Task.isCancelled {
+                isVideoPreviewLoading = false
+            }
+        }
+
+        guard let playerItem = await photoLibraryService.fetchVideoPlayerItem(for: photo.asset) else {
+            if !Task.isCancelled {
+                videoPreviewFailed = true
+            }
+            return
+        }
+
+        guard !Task.isCancelled else { return }
         videoPlayer = AVPlayer(playerItem: playerItem)
     }
 

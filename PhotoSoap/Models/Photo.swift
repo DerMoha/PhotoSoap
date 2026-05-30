@@ -67,6 +67,15 @@ struct Photo: Identifiable {
         fileSize.formattedBytes
     }
 
+    var fileSizeDisplayText: String? {
+        Self.formattedFileSizeText(fileSize)
+    }
+
+    static func formattedFileSizeText(_ bytes: Int64) -> String? {
+        guard bytes > 0 else { return nil }
+        return bytes.formattedBytes
+    }
+
     var mediaType: PHAssetMediaType {
         asset.mediaType
     }

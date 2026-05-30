@@ -107,10 +107,11 @@ struct PhotoCard: View {
 
             Spacer()
 
-            // File size
-            Text(fileSizeOverride.map { formatFileSize($0) } ?? photo.fileSizeFormatted)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if let fileSizeText {
+                Text(fileSizeText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Text(photo.isVideo ? videoMetadataText : photo.compactDimensions)
                 .font(.caption)
@@ -128,8 +129,8 @@ struct PhotoCard: View {
         return photo.compactDimensions
     }
 
-    private func formatFileSize(_ bytes: Int64) -> String {
-        bytes.formattedBytes
+    private var fileSizeText: String? {
+        Photo.formattedFileSizeText(fileSizeOverride ?? photo.fileSize)
     }
 
     private var overlays: some View {

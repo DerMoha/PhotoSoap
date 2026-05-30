@@ -61,6 +61,78 @@ private enum Constants {
     static let cachingThumbnailSize = CGSize(width: 400, height: 400)
 }
 
+private final class PhotoLibraryRequestState<Result>: @unchecked Sendable {
+    private let lock = NSLock()
+    private let cancelValue: Result
+    private var requestID: PHImageRequestID = PHInvalidImageRequestID
+    private var continuation: CheckedContinuation<Result, Never>?
+    private var isFinished = false
+
+    init(cancelValue: Result) {
+        self.cancelValue = cancelValue
+    }
+
+    func setContinuation(_ continuation: CheckedContinuation<Result, Never>) {
+        var shouldResume = false
+
+        lock.lock()
+        if isFinished {
+            shouldResume = true
+        } else {
+            self.continuation = continuation
+        }
+        lock.unlock()
+
+        if shouldResume {
+            continuation.resume(returning: cancelValue)
+        }
+    }
+
+    func setRequestID(_ requestID: PHImageRequestID) -> Bool {
+        lock.lock()
+        self.requestID = requestID
+        let shouldCancelRequest = isFinished
+        lock.unlock()
+        return shouldCancelRequest
+    }
+
+    func complete(_ value: Result) {
+        let continuationToResume: CheckedContinuation<Result, Never>?
+
+        lock.lock()
+        if isFinished {
+            continuationToResume = nil
+        } else {
+            isFinished = true
+            continuationToResume = continuation
+            continuation = nil
+        }
+        lock.unlock()
+
+        continuationToResume?.resume(returning: value)
+    }
+
+    func cancel() -> PHImageRequestID {
+        let continuationToResume: CheckedContinuation<Result, Never>?
+        let requestIDToCancel: PHImageRequestID
+
+        lock.lock()
+        if isFinished {
+            continuationToResume = nil
+            requestIDToCancel = PHInvalidImageRequestID
+        } else {
+            isFinished = true
+            continuationToResume = continuation
+            continuation = nil
+            requestIDToCancel = requestID
+        }
+        lock.unlock()
+
+        continuationToResume?.resume(returning: cancelValue)
+        return requestIDToCancel
+    }
+}
+
 // MARK: - PhotoLibraryService
 
 @MainActor
@@ -78,6 +150,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     private let imageManager = PHCachingImageManager()
     private var cachedAssets: PHFetchResult<PHAsset>?
     private var totalAssetCount: Int = 0
+    private var nextAssetIndex = 0
 
     private var cachedAlbums: [AlbumInfo] = []
     private var cachedYears: [Int] = []
@@ -108,6 +181,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     func setSessionReviewedIDs(_ ids: Set<String>) {
         sessionReviewedIDs = ids
+        resetAssetCursor()
     }
 
     func markReviewed(_ id: String) {
@@ -127,6 +201,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         sessionReviewedIDs.contains(id)
     }
 
+    func resetAssetCursor() {
+        nextAssetIndex = 0
+    }
+
     // MARK: - PHPhotoLibraryChangeObserver
 
     nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
@@ -140,7 +218,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             self.cachedAlbums = []
             self.cachedYears = []
             self.cachedMonthsByYear = [:]
-            self.libraryRevision &+= 1
+            self.resetAssetCursor()
+            self.libraryRevision += 1
         }
     }
 
@@ -199,7 +278,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: presenter) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.refreshLibraryAccessState()
-                self?.libraryRevision &+= 1
+                self?.libraryRevision += 1
             }
         }
     }
@@ -217,10 +296,13 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         guard authorizationStatus.hasPhotoAccess else {
             cachedAssets = nil
             totalAssetCount = 0
+            resetAssetCursor()
             return
         }
 
         guard cachedAssets == nil else { return }
+
+        resetAssetCursor()
 
         switch currentFilter {
         case .all:
@@ -238,6 +320,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             guard let collection = fetchAssetCollection(identifier: identifier) else {
                 cachedAssets = nil
                 totalAssetCount = 0
+                resetAssetCursor()
                 return
             }
             let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
@@ -256,8 +339,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         var failedAssetIDs = Set<String>()
 
-        for index in 0..<assets.count {
+        for index in min(nextAssetIndex, assets.count)..<assets.count {
             let asset = assets.object(at: index)
+            nextAssetIndex = index + 1
 
             if sessionReviewedIDs.contains(asset.localIdentifier)
                 || excludedIDs.contains(asset.localIdentifier)
@@ -394,7 +478,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 }
 
                 if let error = info?[PHImageErrorKey] as? Error {
+#if DEBUG
                     print("PhotoSoap: Failed to load high-resolution preview: \(error.localizedDescription)")
+#endif
                     guard !hasResumed else { return }
                     hasResumed = true
                     continuation.resume(returning: nil)
@@ -417,14 +503,41 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         let options = PHVideoRequestOptions()
         options.deliveryMode = .automatic
         options.isNetworkAccessAllowed = true
+        let requestState = PhotoLibraryRequestState<AVPlayerItem?>(cancelValue: nil)
 
-        return await withCheckedContinuation { (continuation: CheckedContinuation<AVPlayerItem?, Never>) in
-            imageManager.requestPlayerItem(forVideo: asset, options: options) { playerItem, info in
-                if let error = info?[PHImageErrorKey] as? Error {
-                    print("PhotoSoap: Failed to load video preview: \(error.localizedDescription)")
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<AVPlayerItem?, Never>) in
+                requestState.setContinuation(continuation)
+
+                guard !Task.isCancelled else {
+                    _ = requestState.cancel()
+                    return
                 }
 
-                continuation.resume(returning: playerItem)
+                let requestID = imageManager.requestPlayerItem(forVideo: asset, options: options) { playerItem, info in
+                    if let error = info?[PHImageErrorKey] as? Error {
+#if DEBUG
+                        print("PhotoSoap: Failed to load video preview: \(error.localizedDescription)")
+#endif
+                    }
+
+                    let isCancelled = info?[PHImageCancelledKey] as? Bool ?? false
+                    guard !isCancelled else {
+                        requestState.complete(nil)
+                        return
+                    }
+
+                    requestState.complete(playerItem)
+                }
+
+                if requestState.setRequestID(requestID) {
+                    imageManager.cancelImageRequest(requestID)
+                }
+            }
+        } onCancel: {
+            let requestID = requestState.cancel()
+            if requestID != PHInvalidImageRequestID {
+                PHImageManager.default().cancelImageRequest(requestID)
             }
         }
     }
@@ -452,6 +565,14 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             return cachedSize.int64Value
         }
 
+        if asset.mediaType == .video {
+            let fileSize = await fetchLocalVideoFileSize(for: asset)
+            if fileSize > 0 {
+                fileSizeCache.setObject(NSNumber(value: fileSize), forKey: assetID as NSString)
+            }
+            return fileSize
+        }
+
         let resources = PHAssetResource.assetResources(for: asset)
         guard let resource = preferredResource(from: resources) else {
             return 0
@@ -470,7 +591,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 totalBytes += Int64(data.count)
             } completionHandler: { error in
                 if let error {
+#if DEBUG
                     print("PhotoSoap: Failed to fetch file size for asset: \(error.localizedDescription)")
+#endif
                     continuation.resume(returning: 0)
                     return
                 }
@@ -484,6 +607,64 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         return fileSize
+    }
+
+    private func fetchLocalVideoFileSize(for asset: PHAsset) async -> Int64 {
+        let options = PHVideoRequestOptions()
+        options.deliveryMode = .fastFormat
+        options.isNetworkAccessAllowed = false
+
+        return await withCheckedContinuation { (continuation: CheckedContinuation<Int64, Never>) in
+            var hasResumed = false
+
+            imageManager.requestAVAsset(forVideo: asset, options: options) { avAsset, _, info in
+                guard !hasResumed else { return }
+
+                if let error = info?[PHImageErrorKey] as? Error {
+#if DEBUG
+                    print("PhotoSoap: Failed to fetch local video file size: \(error.localizedDescription)")
+#endif
+                    hasResumed = true
+                    continuation.resume(returning: 0)
+                    return
+                }
+
+                let isCancelled = info?[PHImageCancelledKey] as? Bool ?? false
+                guard !isCancelled else {
+                    hasResumed = true
+                    continuation.resume(returning: 0)
+                    return
+                }
+
+                guard let urlAsset = avAsset as? AVURLAsset else {
+                    hasResumed = true
+                    continuation.resume(returning: 0)
+                    return
+                }
+
+                hasResumed = true
+                continuation.resume(returning: Self.fileSize(forLocalURL: urlAsset.url))
+            }
+        }
+    }
+
+    private nonisolated static func fileSize(forLocalURL url: URL) -> Int64 {
+        if let resourceValues = try? url.resourceValues(forKeys: [.fileSizeKey, .totalFileAllocatedSizeKey]) {
+            if let fileSize = resourceValues.fileSize, fileSize > 0 {
+                return Int64(fileSize)
+            }
+
+            if let allocatedSize = resourceValues.totalFileAllocatedSize, allocatedSize > 0 {
+                return Int64(allocatedSize)
+            }
+        }
+
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let fileSize = attributes[.size] as? NSNumber else {
+            return 0
+        }
+
+        return fileSize.int64Value
     }
 
     func fetchAssets(withLocalIdentifiers identifiers: [String]) -> [String: PHAsset] {
@@ -540,6 +721,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     private func invalidateCaches() {
         cachedAssets = nil
         totalAssetCount = 0
+        resetAssetCursor()
         cachedAlbums = []
         cachedYears = []
         cachedMonthsByYear = [:]
@@ -564,6 +746,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         currentFilter = filter
         cachedAssets = nil
         totalAssetCount = 0
+        resetAssetCursor()
     }
 
     func setSortOrder(oldestFirst: Bool) {
@@ -571,6 +754,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         isOldestFirst = oldestFirst
         cachedAssets = nil
         totalAssetCount = 0
+        resetAssetCursor()
     }
 
     func setMediaKind(_ mediaKind: ReviewMediaKind) {
