@@ -44,7 +44,9 @@ struct PhotoSoapApp: App {
                 bootstrapErrorMessage: nil
             )
         } catch {
+#if DEBUG
             print("PhotoSoap: Falling back to in-memory store after persistent store failure")
+#endif
 
             let schema = Schema([UserStats.self, ReviewedPhoto.self, UnlockedAchievement.self])
             let fallbackConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)

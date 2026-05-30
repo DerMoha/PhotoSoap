@@ -461,9 +461,13 @@ final class AggregateMetricsService: ObservableObject {
             persistState()
 
             if let statusCode = metricsError.statusCode {
+#if DEBUG
                 print("PhotoSoap: metrics flush disabled for this app launch after HTTP status \(statusCode)")
+#endif
             } else {
+#if DEBUG
                 print("PhotoSoap: metrics flush disabled for this app launch after a permanent failure")
+#endif
             }
             return
         }
@@ -474,7 +478,9 @@ final class AggregateMetricsService: ObservableObject {
         state.nextRetryAt = referenceDate.addingTimeInterval(retryDelay)
         persistState()
 
+#if DEBUG
         print("PhotoSoap: metrics flush deferred after failure: \(error.localizedDescription)")
+#endif
     }
 
     private func shouldFlushNow(at referenceDate: Date) -> Bool {

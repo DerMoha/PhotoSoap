@@ -1,6 +1,5 @@
 import XCTest
 import SwiftData
-import Photos
 @testable import PhotoSoap
 
 final class SmokeTests: XCTestCase {
@@ -557,7 +556,9 @@ private func makeInMemoryReviewContainer() throws -> ModelContainer {
 
 private func makeTestDefaults() -> UserDefaults {
     let suiteName = "PhotoSoapTests.\(UUID().uuidString)"
-    let defaults = UserDefaults(suiteName: suiteName)!
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+        fatalError("Cannot create test UserDefaults for suite: \(suiteName)")
+    }
     defaults.removePersistentDomain(forName: suiteName)
     return defaults
 }

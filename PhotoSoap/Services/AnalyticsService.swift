@@ -99,6 +99,7 @@ final class AnalyticsService: ObservableObject {
     }
 
     nonisolated private static func defaultRecorder(event: AnalyticsEvent) {
+#if DEBUG
         let properties = event.properties
             .sorted { $0.key < $1.key }
             .map { "\($0.key)=\($0.value)" }
@@ -109,6 +110,7 @@ final class AnalyticsService: ObservableObject {
         } else {
             print("PhotoSoap: analytics \(event.name) [\(properties)]")
         }
+#endif
     }
 }
 
