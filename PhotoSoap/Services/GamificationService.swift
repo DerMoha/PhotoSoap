@@ -3,7 +3,7 @@ import SwiftData
 import Combine
 
 @MainActor
-class GameificationService: ObservableObject {
+class GamificationService: ObservableObject {
     @Published var newlyUnlockedAchievement: Achievement?
     @Published var showAchievementBanner = false
     @Published var streakMilestoneReached: Int?

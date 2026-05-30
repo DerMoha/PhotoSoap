@@ -5,7 +5,7 @@ import Combine
 @MainActor
 final class ServiceContainer: ObservableObject {
     let photoLibraryService: PhotoLibraryService
-    let gamificationService: GameificationService
+    let gamificationService: GamificationService
     let aggregateMetricsService: AggregateMetricsService
     let analyticsService: AnalyticsService
     let hapticsService: HapticsService
@@ -15,6 +15,6 @@ final class ServiceContainer: ObservableObject {
         self.hapticsService = HapticsService()
         self.aggregateMetricsService = AggregateMetricsService()
         self.photoLibraryService = PhotoLibraryService()
-        self.gamificationService = GameificationService()
+        self.gamificationService = GamificationService()
     }
 }

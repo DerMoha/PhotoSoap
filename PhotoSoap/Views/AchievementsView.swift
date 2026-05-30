@@ -3,14 +3,14 @@ import SwiftData
 
 struct AchievementsView: View {
     @Bindable var stats: UserStats
-    @ObservedObject var gameificationService: GameificationService
+    @ObservedObject var gamificationService: GamificationService
     @Environment(\.modelContext) private var modelContext
     @Query private var unlockedAchievements: [UnlockedAchievement]
     @State private var selectedAchievement: Achievement?
 
-    init(stats: UserStats, gameificationService: GameificationService) {
+    init(stats: UserStats, gamificationService: GamificationService) {
         self.stats = stats
-        self.gameificationService = gameificationService
+        self.gamificationService = gamificationService
     }
 
     var body: some View {
@@ -97,7 +97,7 @@ struct AchievementsView: View {
     }
 
     private func getProgress(for achievement: Achievement) -> Double {
-        let progressData = gameificationService.getAchievementProgress(stats: stats, context: modelContext)
+        let progressData = gamificationService.getAchievementProgress(stats: stats, context: modelContext)
         return progressData.first { $0.0.id == achievement.id }?.2 ?? 0
     }
 
@@ -238,5 +238,5 @@ struct AchievementDetailSheet: View {
 }
 
 #Preview {
-    AchievementsView(stats: UserStats(), gameificationService: GameificationService())
+    AchievementsView(stats: UserStats(), gamificationService: GamificationService())
 }

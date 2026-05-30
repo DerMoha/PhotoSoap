@@ -11,7 +11,7 @@ struct PhotoReviewView: View {
     @State private var showPreviewHint = false
     @StateObject private var viewModel: PhotoReviewViewModel
     @ObservedObject var photoLibraryService: PhotoLibraryService
-    @ObservedObject var gameificationService: GameificationService
+    @ObservedObject var gamificationService: GamificationService
     @Bindable var stats: UserStats
     @ObservedObject var analyticsService: AnalyticsService
     @ObservedObject var aggregateMetricsService: AggregateMetricsService
@@ -20,20 +20,20 @@ struct PhotoReviewView: View {
 
     init(
         photoLibraryService: PhotoLibraryService,
-        gameificationService: GameificationService,
+        gamificationService: GamificationService,
         stats: UserStats,
         analyticsService: AnalyticsService,
         aggregateMetricsService: AggregateMetricsService,
         hapticsService: HapticsService
     ) {
         self.photoLibraryService = photoLibraryService
-        self.gameificationService = gameificationService
+        self.gamificationService = gamificationService
         self.stats = stats
         self.analyticsService = analyticsService
         self.aggregateMetricsService = aggregateMetricsService
         self._viewModel = StateObject(wrappedValue: PhotoReviewViewModel(
             photoLibraryService: photoLibraryService,
-            gameificationService: gameificationService,
+            gamificationService: gamificationService,
             analyticsService: analyticsService,
             aggregateMetricsService: aggregateMetricsService,
             hapticsService: hapticsService,
@@ -113,10 +113,10 @@ struct PhotoReviewView: View {
                     await viewModel.loadInitialPhoto()
                 }
             }
-            .onChange(of: gameificationService.showAchievementBanner) { _, isShowing in
+            .onChange(of: gamificationService.showAchievementBanner) { _, isShowing in
                 viewModel.onAchievementBannerChanged(isShowing)
             }
-            .onChange(of: gameificationService.showStreakCelebration) { _, isShowing in
+            .onChange(of: gamificationService.showStreakCelebration) { _, isShowing in
                 viewModel.onStreakCelebrationChanged(isShowing)
             }
             .onChange(of: viewModel.showDailyGoalToast) { _, isShowing in
@@ -234,7 +234,7 @@ struct PhotoReviewView: View {
     }
 
     private var compactHeaderSection: some View {
-        let challenge = gameificationService.getCurrentDailyChallenge(stats: stats)
+        let challenge = gamificationService.getCurrentDailyChallenge(stats: stats)
         let current = challenge.progress(from: stats)
         let progress = Double(current) / Double(max(stats.dailyChallengeTarget, 1))
 
@@ -661,8 +661,8 @@ struct PhotoReviewView: View {
 
     @ViewBuilder
     private var achievementBanner: some View {
-        if gameificationService.showAchievementBanner,
-           let achievement = gameificationService.newlyUnlockedAchievement {
+        if gamificationService.showAchievementBanner,
+           let achievement = gamificationService.newlyUnlockedAchievement {
             VStack {
                 Spacer()
 
@@ -688,14 +688,14 @@ struct PhotoReviewView: View {
                 .padding()
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            .animation(.spring(), value: gameificationService.showAchievementBanner)
+            .animation(.spring(), value: gamificationService.showAchievementBanner)
         }
     }
 
     @ViewBuilder
     private var streakCelebration: some View {
-        if gameificationService.showStreakCelebration,
-           let milestone = gameificationService.streakMilestoneReached {
+        if gamificationService.showStreakCelebration,
+           let milestone = gamificationService.streakMilestoneReached {
             VStack {
                 Spacer()
 
@@ -719,7 +719,7 @@ struct PhotoReviewView: View {
 
                 Spacer()
             }
-            .animation(.spring(), value: gameificationService.showStreakCelebration)
+            .animation(.spring(), value: gamificationService.showStreakCelebration)
         }
     }
 
@@ -930,7 +930,7 @@ struct PhotoReviewView: View {
 
     PhotoReviewView(
         photoLibraryService: PhotoLibraryService(),
-        gameificationService: GameificationService(),
+        gamificationService: GamificationService(),
         stats: UserStats(),
         analyticsService: AnalyticsService(),
         aggregateMetricsService: AggregateMetricsService(),

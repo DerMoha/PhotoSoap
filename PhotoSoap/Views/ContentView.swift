@@ -13,7 +13,7 @@ struct ContentView: View {
     @EnvironmentObject private var analyticsService: AnalyticsService
     @EnvironmentObject private var aggregateMetricsService: AggregateMetricsService
     @EnvironmentObject private var photoLibraryService: PhotoLibraryService
-    @EnvironmentObject private var gameificationService: GameificationService
+    @EnvironmentObject private var gamificationService: GamificationService
     @EnvironmentObject private var hapticsService: HapticsService
     @State private var selectedTab: MainTab = .review
     @State private var showBootstrapAlert = false
@@ -119,7 +119,7 @@ struct ContentView: View {
                 StatsView(
                     stats: stats,
                     photoLibraryService: photoLibraryService,
-                    gameificationService: gameificationService,
+                    gamificationService: gamificationService,
                     analyticsService: analyticsService,
                     aggregateMetricsService: aggregateMetricsService
                 )
@@ -130,7 +130,7 @@ struct ContentView: View {
 
                 PhotoReviewView(
                     photoLibraryService: photoLibraryService,
-                    gameificationService: gameificationService,
+                    gamificationService: gamificationService,
                     stats: stats,
                     analyticsService: analyticsService,
                     aggregateMetricsService: aggregateMetricsService,
@@ -141,7 +141,7 @@ struct ContentView: View {
                 }
                 .tag(MainTab.review)
 
-                AchievementsView(stats: stats, gameificationService: gameificationService)
+                AchievementsView(stats: stats, gamificationService: gamificationService)
                 .tabItem {
                     Label(String(localized: "achievements.tab", table: "LocalizableAchievements"), systemImage: "trophy")
                 }
@@ -153,11 +153,13 @@ struct ContentView: View {
     private func initializeStats() {
         do {
             let stats = try UserStats.fetchOrCreateSingleton(in: modelContext)
-            gameificationService.ensureDailyChallengeIsSet(stats: stats)
+            gamificationService.ensureDailyChallengeIsSet(stats: stats)
             try modelContext.save()
             activeStats = stats
         } catch {
+#if DEBUG
             print("PhotoSoap: failed to initialize user stats: \(error.localizedDescription)")
+#endif
             activeStats = resolvedStats
         }
     }
@@ -616,5 +618,5 @@ private struct SwipeHintBadge: View {
         .environmentObject(AnalyticsService())
         .environmentObject(AggregateMetricsService())
         .environmentObject(PhotoLibraryService())
-        .environmentObject(GameificationService())
+        .environmentObject(GamificationService())
 }

@@ -47,23 +47,23 @@ private struct ReviewPersistenceSnapshot {
     let stats: UserStatsSnapshot
     let reviewedPhotoIDs: Set<String>
     let unlockedAchievementIDs: Set<String>
-    let feedback: GameificationFeedbackSnapshot
+    let feedback: GamificationFeedbackSnapshot
 }
 
-private struct GameificationFeedbackSnapshot {
+private struct GamificationFeedbackSnapshot {
     let newlyUnlockedAchievement: Achievement?
     let showAchievementBanner: Bool
     let streakMilestoneReached: Int?
     let showStreakCelebration: Bool
 
-    init(service: GameificationService) {
+    init(service: GamificationService) {
         self.newlyUnlockedAchievement = service.newlyUnlockedAchievement
         self.showAchievementBanner = service.showAchievementBanner
         self.streakMilestoneReached = service.streakMilestoneReached
         self.showStreakCelebration = service.showStreakCelebration
     }
 
-    func restore(to service: GameificationService) {
+    func restore(to service: GamificationService) {
         service.newlyUnlockedAchievement = newlyUnlockedAchievement
         service.showAchievementBanner = showAchievementBanner
         service.streakMilestoneReached = streakMilestoneReached
@@ -185,7 +185,7 @@ final class PhotoReviewViewModel: ObservableObject {
     let celebrationFeedbackCooldown: TimeInterval = 0.75
 
     private let photoLibraryService: PhotoLibraryService
-    private let gameificationService: GameificationService
+    private let gamificationService: GamificationService
     private let analyticsService: AnalyticsService
     private let aggregateMetricsService: AggregateMetricsService
     private let hapticsService: HapticsService
@@ -197,14 +197,14 @@ final class PhotoReviewViewModel: ObservableObject {
 
     init(
         photoLibraryService: PhotoLibraryService,
-        gameificationService: GameificationService,
+        gamificationService: GamificationService,
         analyticsService: AnalyticsService,
         aggregateMetricsService: AggregateMetricsService,
         hapticsService: HapticsService,
         defaults: UserDefaults = .standard
     ) {
         self.photoLibraryService = photoLibraryService
-        self.gameificationService = gameificationService
+        self.gamificationService = gamificationService
         self.analyticsService = analyticsService
         self.aggregateMetricsService = aggregateMetricsService
         self.hapticsService = hapticsService
@@ -310,7 +310,7 @@ final class PhotoReviewViewModel: ObservableObject {
         cycleDeletedCount = 0
 
         do {
-            try gameificationService.deleteAllReviewedPhotos(context: modelContext)
+            try gamificationService.deleteAllReviewedPhotos(context: modelContext)
             try modelContext.save()
         } catch {
             presentError("Failed to clear review history: \(error.localizedDescription)")
@@ -560,8 +560,8 @@ final class PhotoReviewViewModel: ObservableObject {
         let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
 
         do {
-            try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
-            gameificationService.processPhotoReview(
+            try gamificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+            gamificationService.processPhotoReview(
                 action: .keep,
                 fileSize: 0,
                 stats: stats,
@@ -608,8 +608,8 @@ final class PhotoReviewViewModel: ObservableObject {
             let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
 
             if !snapshot.reviewedPhotoIDs.contains(photo.id) {
-                try gameificationService.markPhotoReviewed(id: photo.id, context: modelContext)
-                gameificationService.processPhotoReview(
+                try gamificationService.markPhotoReviewed(id: photo.id, context: modelContext)
+                gamificationService.processPhotoReview(
                     action: .delete,
                     fileSize: resolvedFileSize,
                     stats: stats,
@@ -829,15 +829,15 @@ final class PhotoReviewViewModel: ObservableObject {
 
             for item in itemsToDelete {
                 if snapshot.reviewedPhotoIDs.contains(item.id) {
-                    gameificationService.processQueuedDeletionCommit(
+                    gamificationService.processQueuedDeletionCommit(
                         fileSize: item.fileSize,
                         stats: stats,
                         challengeType: challengeType,
                         context: modelContext
                     )
                 } else {
-                    try gameificationService.markPhotoReviewed(id: item.id, context: modelContext)
-                    gameificationService.processPhotoReview(
+                    try gamificationService.markPhotoReviewed(id: item.id, context: modelContext)
+                    gamificationService.processPhotoReview(
                         action: .delete,
                         fileSize: item.fileSize,
                         stats: stats,
@@ -915,8 +915,8 @@ final class PhotoReviewViewModel: ObservableObject {
 
         do {
             let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-            try gameificationService.markPhotoReviewed(id: photoID, context: modelContext)
-            gameificationService.processQueuedDeletionReview(
+            try gamificationService.markPhotoReviewed(id: photoID, context: modelContext)
+            gamificationService.processQueuedDeletionReview(
                 stats: stats,
                 challengeType: challengeType,
                 context: modelContext
@@ -942,7 +942,7 @@ final class PhotoReviewViewModel: ObservableObject {
         do {
             let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
             for photoID in photoIDs {
-                try gameificationService.rollbackQueuedDeletionReview(
+                try gamificationService.rollbackQueuedDeletionReview(
                     id: photoID,
                     stats: stats,
                     challengeType: challengeType,
@@ -996,14 +996,14 @@ final class PhotoReviewViewModel: ObservableObject {
         stats: UserStats,
         context: ModelContext
     ) -> ReviewPersistenceSnapshot {
-        let reviewedPhotoIDs = Set(photoIDs.filter { gameificationService.isPhotoReviewed(id: $0, context: context) })
+        let reviewedPhotoIDs = Set(photoIDs.filter { gamificationService.isPhotoReviewed(id: $0, context: context) })
         let unlockedAchievementIDs = (try? context.fetch(FetchDescriptor<UnlockedAchievement>())) ?? []
 
         return ReviewPersistenceSnapshot(
             stats: UserStatsSnapshot(stats: stats),
             reviewedPhotoIDs: reviewedPhotoIDs,
             unlockedAchievementIDs: Set(unlockedAchievementIDs.map(\.achievementId)),
-            feedback: GameificationFeedbackSnapshot(service: gameificationService)
+            feedback: GamificationFeedbackSnapshot(service: gamificationService)
         )
     }
 
@@ -1015,7 +1015,7 @@ final class PhotoReviewViewModel: ObservableObject {
     ) {
         do {
             snapshot.stats.restore(to: stats)
-            snapshot.feedback.restore(to: gameificationService)
+            snapshot.feedback.restore(to: gamificationService)
 
             for photoID in photoIDs where !snapshot.reviewedPhotoIDs.contains(photoID) {
                 if let reviewedPhoto = try fetchReviewedPhoto(id: photoID, context: context) {
@@ -1082,7 +1082,7 @@ final class PhotoReviewViewModel: ObservableObject {
             return false
         }
 
-        let isReviewed = gameificationService.isPhotoReviewed(id: photoID, context: modelContext)
+        let isReviewed = gamificationService.isPhotoReviewed(id: photoID, context: modelContext)
         if isReviewed {
             persistedReviewedIDs.insert(photoID)
         } else {

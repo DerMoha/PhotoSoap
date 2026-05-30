@@ -4,7 +4,7 @@ import SwiftData
 struct StatsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var photoLibraryService: PhotoLibraryService
-    @ObservedObject var gameificationService: GameificationService
+    @ObservedObject var gamificationService: GamificationService
     @ObservedObject var analyticsService: AnalyticsService
     @ObservedObject var aggregateMetricsService: AggregateMetricsService
     @State private var viewModel = StatsViewModel()
@@ -173,7 +173,7 @@ struct StatCard: View {
     StatsView(
         stats: UserStats(),
         photoLibraryService: PhotoLibraryService(),
-        gameificationService: GameificationService(),
+        gamificationService: GamificationService(),
         analyticsService: AnalyticsService(),
         aggregateMetricsService: AggregateMetricsService()
     )

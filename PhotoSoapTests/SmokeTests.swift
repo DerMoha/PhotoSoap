@@ -312,7 +312,7 @@ final class SmokeTests: XCTestCase {
         stats.totalReviewed = 49
         context.insert(stats)
 
-        let service = GameificationService()
+        let service = GamificationService()
         service.processPhotoReview(
             action: .keep,
             fileSize: 0,
@@ -334,7 +334,7 @@ final class SmokeTests: XCTestCase {
         stats.dailyChallengeDate = Date()
         context.insert(stats)
 
-        let service = GameificationService()
+        let service = GamificationService()
         try service.markPhotoReviewed(id: "queued-photo", context: context)
         service.processQueuedDeletionReview(
             stats: stats,
@@ -371,7 +371,7 @@ final class SmokeTests: XCTestCase {
         stats.dailyChallengeDate = Date()
         context.insert(stats)
 
-        let service = GameificationService()
+        let service = GamificationService()
         try service.markPhotoReviewed(id: "queued-photo", context: context)
         service.processQueuedDeletionReview(
             stats: stats,
@@ -405,7 +405,7 @@ final class SmokeTests: XCTestCase {
         stats.dailyChallengeDate = Date()
         context.insert(stats)
 
-        let service = GameificationService()
+        let service = GamificationService()
         try service.markPhotoReviewed(id: "queued-photo", context: context)
         service.processQueuedDeletionReview(
             stats: stats,
