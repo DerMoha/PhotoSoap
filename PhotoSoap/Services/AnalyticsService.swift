@@ -68,7 +68,7 @@ struct AnalyticsEvent: Equatable {
 
 final class AnalyticsService: ObservableObject {
     static let analyticsEnabledKey = "isAnalyticsEnabled"
-    static let defaultAnalyticsEnabled = true
+    static let defaultAnalyticsEnabled = false
 
     @Published private(set) var recordedEvents: [AnalyticsEvent] = []
     @Published private(set) var isEnabled: Bool

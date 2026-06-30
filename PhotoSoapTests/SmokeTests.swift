@@ -17,12 +17,13 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
-    func testAnalyticsServiceIsEnabledByDefault() {
+    func testAnalyticsServiceIsDisabledByDefault() {
         let defaults = makeTestDefaults()
 
         let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
 
-        XCTAssertTrue(analyticsService.isEnabled)
+        XCTAssertFalse(analyticsService.isEnabled)
+        XCTAssertFalse(AnalyticsService.isEnabled(in: defaults))
     }
 
     @MainActor

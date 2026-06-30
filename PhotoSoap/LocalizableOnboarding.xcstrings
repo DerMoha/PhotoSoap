@@ -7,13 +7,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap führt anonyme Gesamtzahlen. Analysen sind aus und enthalten keine Fotos, IDs oder Standort."
+            "value" : "Nutzungsanalysen sind standardmäßig deaktiviert. Wenn du sie aktivierst, teilt PhotoSoap nur Nutzungs-Gesamtzahlen mit einer zufälligen App-Installationskennung; niemals Fotoinhalte oder Standortdaten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap keeps anonymous totals. Analytics are off and never include photos, IDs, or location."
+            "value" : "Usage analytics are off by default. If enabled, PhotoSoap shares only usage totals with a random app install identifier; never photo contents or location data."
           }
         }
       }
@@ -24,13 +24,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Community-Gesamtzahlen bleiben anonym"
+            "value" : "Optionale Nutzungsanalysen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Community totals stay anonymous"
+            "value" : "Optional usage analytics"
           }
         }
       }
