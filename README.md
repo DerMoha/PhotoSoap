@@ -19,7 +19,12 @@ Photo cleanup for iPhone with fast swipe reviews, simple stats, and streak-based
 - Review your photo library one image at a time.
 - Swipe to keep or queue photos for deletion.
 - Track progress with daily goals, streaks, achievements, and storage freed.
-- Keep analytics optional and privacy-focused.
+- Keep usage analytics optional, off by default, and privacy-focused.
+
+## Release Links
+
+- [Privacy Policy](PRIVACY.md)
+- [Support](SUPPORT.md)
 
 ## Contributing
 
