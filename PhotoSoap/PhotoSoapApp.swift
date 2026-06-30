@@ -25,6 +25,9 @@ struct PhotoSoapApp: App {
                 .environmentObject(serviceContainer.gamificationService)
                 .environmentObject(serviceContainer.aggregateMetricsService)
                 .environmentObject(serviceContainer.analyticsService)
+                .environmentObject(serviceContainer.privacyCollectionService)
+                .environmentObject(serviceContainer.reviewAccountingService)
+                .environmentObject(serviceContainer.startupRoutingService)
                 .environmentObject(serviceContainer.hapticsService)
         }
         .modelContainer(modelContainer)

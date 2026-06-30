@@ -13,8 +13,8 @@ struct PhotoReviewView: View {
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gamificationService: GamificationService
     @Bindable var stats: UserStats
-    @ObservedObject var analyticsService: AnalyticsService
-    @ObservedObject var aggregateMetricsService: AggregateMetricsService
+    @ObservedObject var reviewAccountingService: ReviewAccountingService
+    @ObservedObject var privacyCollectionService: PrivacyCollectionService
 
     private let dailyGoalOptions = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
@@ -22,20 +22,19 @@ struct PhotoReviewView: View {
         photoLibraryService: PhotoLibraryService,
         gamificationService: GamificationService,
         stats: UserStats,
-        analyticsService: AnalyticsService,
-        aggregateMetricsService: AggregateMetricsService,
+        reviewAccountingService: ReviewAccountingService,
+        privacyCollectionService: PrivacyCollectionService,
         hapticsService: HapticsService
     ) {
         self.photoLibraryService = photoLibraryService
         self.gamificationService = gamificationService
         self.stats = stats
-        self.analyticsService = analyticsService
-        self.aggregateMetricsService = aggregateMetricsService
+        self.reviewAccountingService = reviewAccountingService
+        self.privacyCollectionService = privacyCollectionService
         self._viewModel = StateObject(wrappedValue: PhotoReviewViewModel(
             photoLibraryService: photoLibraryService,
-            gamificationService: gamificationService,
-            analyticsService: analyticsService,
-            aggregateMetricsService: aggregateMetricsService,
+            reviewAccountingService: reviewAccountingService,
+            privacyCollectionService: privacyCollectionService,
             hapticsService: hapticsService,
             defaults: UserDefaults.standard
         ))
@@ -176,6 +175,7 @@ struct PhotoReviewView: View {
             }) {
                 DeleteQueueSheet(
                     items: viewModel.pendingDeletionItems,
+                    photoLibraryService: photoLibraryService,
                     onRemoveFromQueue: { item in
                         viewModel.requestRemoveFromQueue(item)
                     },
@@ -485,7 +485,7 @@ struct PhotoReviewView: View {
                     buttonTitle: String(localized: "limitedAccess.chooseMore", table: "LocalizableShared"),
                     style: .completion,
                     onManage: {
-                        analyticsService.track(.limitedLibraryPickerOpened())
+                        privacyCollectionService.track(.limitedLibraryPickerOpened())
                         photoLibraryService.presentLimitedLibraryPicker()
                     }
                 )
@@ -581,7 +581,7 @@ struct PhotoReviewView: View {
             buttonTitle: String(localized: "limitedAccess.chooseMore", table: "LocalizableShared"),
             style: .stats,
             onManage: {
-                analyticsService.track(.limitedLibraryPickerOpened())
+                privacyCollectionService.track(.limitedLibraryPickerOpened())
                 photoLibraryService.presentLimitedLibraryPicker()
             }
         )
@@ -927,13 +927,17 @@ struct PhotoReviewView: View {
 
 #Preview {
     let hapticsService = HapticsService()
+    let gamificationService = GamificationService()
 
     PhotoReviewView(
         photoLibraryService: PhotoLibraryService(),
-        gamificationService: GamificationService(),
+        gamificationService: gamificationService,
         stats: UserStats(),
-        analyticsService: AnalyticsService(),
-        aggregateMetricsService: AggregateMetricsService(),
+        reviewAccountingService: ReviewAccountingService(gamificationService: gamificationService),
+        privacyCollectionService: PrivacyCollectionService(
+            analyticsService: AnalyticsService(),
+            aggregateMetricsService: AggregateMetricsService()
+        ),
         hapticsService: hapticsService
     )
     .environmentObject(hapticsService)

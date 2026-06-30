@@ -2,130 +2,10 @@ import Foundation
 import SwiftUI
 import SwiftData
 import Combine
-import Photos
-
-struct PendingDeletionItem: Identifiable, Equatable {
-    let id: String
-    let photo: Photo
-    let queuedAt: Date
-    var fileSize: Int64
-    let createdReviewOnQueue: Bool
-
-    static func == (lhs: PendingDeletionItem, rhs: PendingDeletionItem) -> Bool {
-        lhs.id == rhs.id
-    }
-}
-
-private struct PersistedPendingDeletionItem: Codable {
-    let id: String
-    let queuedAt: Date
-    let fileSize: Int64
-    let createdReviewOnQueue: Bool
-
-    init(id: String, queuedAt: Date, fileSize: Int64, createdReviewOnQueue: Bool) {
-        self.id = id
-        self.queuedAt = queuedAt
-        self.fileSize = fileSize
-        self.createdReviewOnQueue = createdReviewOnQueue
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(String.self, forKey: .id)
-        self.queuedAt = try container.decode(Date.self, forKey: .queuedAt)
-        self.fileSize = try container.decode(Int64.self, forKey: .fileSize)
-        self.createdReviewOnQueue = try container.decodeIfPresent(Bool.self, forKey: .createdReviewOnQueue) ?? false
-    }
-}
 
 private enum PendingDeleteBatchAction {
     case showExplainer
     case commit
-}
-
-private struct ReviewPersistenceSnapshot {
-    let stats: UserStatsSnapshot
-    let reviewedPhotoIDs: Set<String>
-    let unlockedAchievementIDs: Set<String>
-    let feedback: GamificationFeedbackSnapshot
-}
-
-private struct GamificationFeedbackSnapshot {
-    let newlyUnlockedAchievement: Achievement?
-    let showAchievementBanner: Bool
-    let streakMilestoneReached: Int?
-    let showStreakCelebration: Bool
-
-    init(service: GamificationService) {
-        self.newlyUnlockedAchievement = service.newlyUnlockedAchievement
-        self.showAchievementBanner = service.showAchievementBanner
-        self.streakMilestoneReached = service.streakMilestoneReached
-        self.showStreakCelebration = service.showStreakCelebration
-    }
-
-    func restore(to service: GamificationService) {
-        service.newlyUnlockedAchievement = newlyUnlockedAchievement
-        service.showAchievementBanner = showAchievementBanner
-        service.streakMilestoneReached = streakMilestoneReached
-        service.showStreakCelebration = showStreakCelebration
-    }
-}
-
-private struct UserStatsSnapshot {
-    let totalReviewed: Int
-    let totalDeleted: Int
-    let totalKept: Int
-    let storageFreed: Int64
-    let sessionReviewCount: Int
-    let currentStreak: Int
-    let bestStreak: Int
-    let dayStreak: Int
-    let lastReviewDate: Date?
-    let todayReviewCount: Int
-    let todayDate: Date?
-    let bestDayReviewCount: Int
-    let dailyChallengeProgress: Int
-    let dailyChallengeTarget: Int
-    let dailyChallengeType: String
-    let dailyChallengeDate: Date?
-
-    init(stats: UserStats) {
-        self.totalReviewed = stats.totalReviewed
-        self.totalDeleted = stats.totalDeleted
-        self.totalKept = stats.totalKept
-        self.storageFreed = stats.storageFreed
-        self.sessionReviewCount = stats.sessionReviewCount
-        self.currentStreak = stats.currentStreak
-        self.bestStreak = stats.bestStreak
-        self.dayStreak = stats.dayStreak
-        self.lastReviewDate = stats.lastReviewDate
-        self.todayReviewCount = stats.todayReviewCount
-        self.todayDate = stats.todayDate
-        self.bestDayReviewCount = stats.bestDayReviewCount
-        self.dailyChallengeProgress = stats.dailyChallengeProgress
-        self.dailyChallengeTarget = stats.dailyChallengeTarget
-        self.dailyChallengeType = stats.dailyChallengeType
-        self.dailyChallengeDate = stats.dailyChallengeDate
-    }
-
-    func restore(to stats: UserStats) {
-        stats.totalReviewed = totalReviewed
-        stats.totalDeleted = totalDeleted
-        stats.totalKept = totalKept
-        stats.storageFreed = storageFreed
-        stats.sessionReviewCount = sessionReviewCount
-        stats.currentStreak = currentStreak
-        stats.bestStreak = bestStreak
-        stats.dayStreak = dayStreak
-        stats.lastReviewDate = lastReviewDate
-        stats.todayReviewCount = todayReviewCount
-        stats.todayDate = todayDate
-        stats.bestDayReviewCount = bestDayReviewCount
-        stats.dailyChallengeProgress = dailyChallengeProgress
-        stats.dailyChallengeTarget = dailyChallengeTarget
-        stats.dailyChallengeType = dailyChallengeType
-        stats.dailyChallengeDate = dailyChallengeDate
-    }
 }
 
 @MainActor
@@ -153,9 +33,6 @@ final class PhotoReviewViewModel: ObservableObject {
     @Published var showStartOverConfirmation = false
     @Published var showQueuedStartOverConfirmation = false
     @Published var showDailyGoalToast = false
-    @Published var hasTriggeredSwipeThresholdFeedback = false
-    @Published var lastCelebrationFeedbackDate = Date.distantPast
-
     @Published var pendingDeletionItems: [PendingDeletionItem] = []
     @Published var isShowingDeleteQueueSheet = false
     @Published var isShowingDeleteBatchExplainer = false
@@ -176,19 +53,17 @@ final class PhotoReviewViewModel: ObservableObject {
         Set(pendingDeletionItems.map { $0.id })
     }
 
-    private var deletionStack: [PendingDeletionItem] = []
-
     let swipeActionThreshold: CGFloat = 100
     let swipeFeedbackDistance: CGFloat = 140
     let swipeOverlayThreshold: CGFloat = 12
     let cardCornerRadius: CGFloat = 16
-    let celebrationFeedbackCooldown: TimeInterval = 0.75
 
     private let photoLibraryService: PhotoLibraryService
-    private let gamificationService: GamificationService
-    private let analyticsService: AnalyticsService
-    private let aggregateMetricsService: AggregateMetricsService
+    private let reviewAccountingService: ReviewAccountingService
+    private let privacyCollectionService: PrivacyCollectionService
     private let hapticsService: HapticsService
+    private let deleteQueueLifecycle: PhotoReviewLifecycleService
+    private let feedbackController: ReviewFeedbackController
     private let defaults: UserDefaults
     private weak var modelContext: ModelContext?
     private var stats: UserStats?
@@ -197,17 +72,17 @@ final class PhotoReviewViewModel: ObservableObject {
 
     init(
         photoLibraryService: PhotoLibraryService,
-        gamificationService: GamificationService,
-        analyticsService: AnalyticsService,
-        aggregateMetricsService: AggregateMetricsService,
+        reviewAccountingService: ReviewAccountingService,
+        privacyCollectionService: PrivacyCollectionService,
         hapticsService: HapticsService,
         defaults: UserDefaults = .standard
     ) {
         self.photoLibraryService = photoLibraryService
-        self.gamificationService = gamificationService
-        self.analyticsService = analyticsService
-        self.aggregateMetricsService = aggregateMetricsService
+        self.reviewAccountingService = reviewAccountingService
+        self.privacyCollectionService = privacyCollectionService
         self.hapticsService = hapticsService
+        self.deleteQueueLifecycle = PhotoReviewLifecycleService(store: DeleteQueueStore(defaults: defaults))
+        self.feedbackController = ReviewFeedbackController(hapticsService: hapticsService)
         self.defaults = defaults
 
         self.currentMediaKind = Self.storedMediaKind(in: defaults)
@@ -228,7 +103,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
     func onViewAppear() {
         guard !hasTrackedReviewStart else { return }
-        analyticsService.track(.reviewStarted(filter: currentFilter, mediaKind: currentMediaKind))
+        privacyCollectionService.track(.reviewStarted(filter: currentFilter, mediaKind: currentMediaKind))
         hasTrackedReviewStart = true
     }
 
@@ -236,31 +111,35 @@ final class PhotoReviewViewModel: ObservableObject {
         guard !hasRestoredPendingDeletionQueue else { return }
         hasRestoredPendingDeletionQueue = true
 
-        let persistedItems = loadPersistedPendingDeletionItems()
+        let persistedItems = deleteQueueLifecycle.loadPersistedItems()
         guard !persistedItems.isEmpty else { return }
 
-        let assetsByIdentifier = photoLibraryService.fetchAssets(withLocalIdentifiers: persistedItems.map(\.id))
+        let fileSizesByIdentifier = Dictionary(uniqueKeysWithValues: persistedItems.map { ($0.id, $0.fileSize) })
+        let photosByIdentifier = photoLibraryService.photos(
+            withLocalIdentifiers: persistedItems.map(\.id),
+            fileSizesByIdentifier: fileSizesByIdentifier
+        )
         let restoredItems: [PendingDeletionItem] = persistedItems.compactMap { item in
-            guard let asset = assetsByIdentifier[item.id] else { return nil }
+            guard let photo = photosByIdentifier[item.id] else { return nil }
 
             return PendingDeletionItem(
                 id: item.id,
-                photo: Photo(asset: asset, fileSize: item.fileSize),
+                photo: photo,
                 queuedAt: item.queuedAt,
                 fileSize: item.fileSize,
                 createdReviewOnQueue: item.createdReviewOnQueue
             )
         }
 
-        pendingDeletionItems = restoredItems
-        deletionStack = restoredItems
+        deleteQueueLifecycle.restore(restoredItems)
+        syncPendingDeletionItems()
 
         if restoredItems.count != persistedItems.count {
             let restoredIDs = Set(restoredItems.map(\.id))
             let missingItems = persistedItems.filter { !restoredIDs.contains($0.id) }
             guard rollbackQueuedDeletionReviews(for: missingItems.filter(\.createdReviewOnQueue).map(\.id)) else { return }
 
-            persistPendingDeletionQueue()
+            deleteQueueLifecycle.persist()
             showQueuePrunedFeedback()
         }
     }
@@ -310,7 +189,7 @@ final class PhotoReviewViewModel: ObservableObject {
         cycleDeletedCount = 0
 
         do {
-            try gamificationService.deleteAllReviewedPhotos(context: modelContext)
+            try reviewAccountingService.deleteAllReviewedPhotos(context: modelContext)
             try modelContext.save()
         } catch {
             presentError("Failed to clear review history: \(error.localizedDescription)")
@@ -363,7 +242,7 @@ final class PhotoReviewViewModel: ObservableObject {
         currentPhoto = nil
         nextPhoto = nil
         noMorePhotos = false
-        analyticsService.track(.filterApplied(filter, mediaKind: currentMediaKind))
+        privacyCollectionService.track(.filterApplied(filter, mediaKind: currentMediaKind))
 
         Task {
             await loadInitialPhoto()
@@ -380,7 +259,7 @@ final class PhotoReviewViewModel: ObservableObject {
         currentPhoto = nil
         nextPhoto = nil
         noMorePhotos = false
-        analyticsService.track(.filterApplied(currentFilter, mediaKind: mediaKind))
+        privacyCollectionService.track(.filterApplied(currentFilter, mediaKind: mediaKind))
 
         Task {
             await loadInitialPhoto()
@@ -416,19 +295,15 @@ final class PhotoReviewViewModel: ObservableObject {
         if distance < swipeOverlayThreshold {
             swipeProgress = 0
             swipeDirection = nil
-            hasTriggeredSwipeThresholdFeedback = false
+            feedbackController.resetSwipeFeedback()
         } else {
             swipeProgress = progress
             swipeDirection = translation > 0 ? .keep : .delete
-
-            if distance >= swipeActionThreshold {
-                if !hasTriggeredSwipeThresholdFeedback {
-                    hapticsService.selection()
-                    hasTriggeredSwipeThresholdFeedback = true
-                }
-            } else {
-                hasTriggeredSwipeThresholdFeedback = false
-            }
+            feedbackController.updateSwipeFeedback(
+                distance: distance,
+                overlayThreshold: swipeOverlayThreshold,
+                actionThreshold: swipeActionThreshold
+            )
         }
     }
 
@@ -557,17 +432,8 @@ final class PhotoReviewViewModel: ObservableObject {
         isProcessingAction = true
         defer { isProcessingAction = false }
 
-        let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-
         do {
-            try gamificationService.markPhotoReviewed(id: photo.id, context: modelContext)
-            gamificationService.processPhotoReview(
-                action: .keep,
-                fileSize: 0,
-                stats: stats,
-                challengeType: challengeType,
-                context: modelContext
-            )
+            try reviewAccountingService.recordKeep(photoID: photo.id, stats: stats, context: modelContext)
         } catch {
             presentError("Failed to update review history: \(error.localizedDescription)")
             return
@@ -578,8 +444,8 @@ final class PhotoReviewViewModel: ObservableObject {
         }
 
         cycleKeptCount += 1
-        analyticsService.track(.photoKept(filter: currentFilter, mediaKind: currentMediaKind))
-        aggregateMetricsService.recordReview()
+        privacyCollectionService.track(.photoKept(filter: currentFilter, mediaKind: currentMediaKind))
+        privacyCollectionService.recordReview()
         hapticsService.impact(.medium)
 
         await advanceToNextPhoto()
@@ -597,26 +463,15 @@ final class PhotoReviewViewModel: ObservableObject {
             if photo.fileSize > 0 {
                 resolvedFileSize = photo.fileSize
             } else {
-                resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo.asset)
+                resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo)
             }
 
-            let snapshot = makeReviewPersistenceSnapshot(
-                for: [photo.id],
+            let snapshot = try reviewAccountingService.prepareImmediateDeletion(
+                photoID: photo.id,
+                fileSize: resolvedFileSize,
                 stats: stats,
                 context: modelContext
             )
-            let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-
-            if !snapshot.reviewedPhotoIDs.contains(photo.id) {
-                try gamificationService.markPhotoReviewed(id: photo.id, context: modelContext)
-                gamificationService.processPhotoReview(
-                    action: .delete,
-                    fileSize: resolvedFileSize,
-                    stats: stats,
-                    challengeType: challengeType,
-                    context: modelContext
-                )
-            }
 
             guard persistReviewProgress(for: photo.id, cacheInSession: false) else {
                 return
@@ -642,8 +497,8 @@ final class PhotoReviewViewModel: ObservableObject {
 
             photoLibraryService.markReviewed(photo.id)
             cycleDeletedCount += 1
-            analyticsService.track(.photoDeleted(filter: currentFilter, mediaKind: currentMediaKind))
-            aggregateMetricsService.recordDeletion(bytesFreed: resolvedFileSize)
+            privacyCollectionService.track(.photoDeleted(filter: currentFilter, mediaKind: currentMediaKind))
+            privacyCollectionService.recordDeletion(bytesFreed: resolvedFileSize)
             hapticsService.impact(.rigid)
 
             await advanceToNextPhoto()
@@ -658,7 +513,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
         var resolvedFileSize: Int64 = photo.fileSize
         if resolvedFileSize == 0 {
-            resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo.asset)
+            resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo)
         }
 
         let item = PendingDeletionItem(
@@ -675,9 +530,8 @@ final class PhotoReviewViewModel: ObservableObject {
             }
         }
 
-        pendingDeletionItems.append(item)
-        deletionStack.append(item)
-        persistPendingDeletionQueue()
+        deleteQueueLifecycle.enqueue(item)
+        syncPendingDeletionItems()
 
         if !defaults.bool(forKey: UserDefaultsKeys.hasSeenDeleteListIntro) {
             defaults.set(true, forKey: UserDefaultsKeys.hasSeenDeleteListIntro)
@@ -696,16 +550,11 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     func undoLastQueuedDeletion() {
-        guard !deletionStack.isEmpty else { return }
+        guard let lastItem = deleteQueueLifecycle.lastQueuedItem() else { return }
+        guard rollbackQueuedDeletionReviewIfNeeded(for: [lastItem]) else { return }
 
-        let lastItem = deletionStack.removeLast()
-        guard rollbackQueuedDeletionReviewIfNeeded(for: [lastItem]) else {
-            deletionStack.append(lastItem)
-            return
-        }
-
-        pendingDeletionItems.removeAll { $0.id == lastItem.id }
-        persistPendingDeletionQueue()
+        deleteQueueLifecycle.removeLastQueuedItem()
+        syncPendingDeletionItems()
         hapticsService.impact(.light)
 
         if noMorePhotos || currentPhoto == nil {
@@ -722,9 +571,8 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let item = photoPendingQueueRemoval else { return }
         guard rollbackQueuedDeletionReviewIfNeeded(for: [item]) else { return }
 
-        pendingDeletionItems.removeAll { $0.id == item.id }
-        deletionStack.removeAll { $0.id == item.id }
-        persistPendingDeletionQueue()
+        deleteQueueLifecycle.remove(item)
+        syncPendingDeletionItems()
 
         isShowingRemoveFromQueueConfirmation = false
         photoPendingQueueRemoval = nil
@@ -747,9 +595,8 @@ final class PhotoReviewViewModel: ObservableObject {
     func confirmClearQueue() {
         guard rollbackQueuedDeletionReviewIfNeeded(for: pendingDeletionItems) else { return }
 
-        pendingDeletionItems.removeAll()
-        deletionStack.removeAll()
-        clearPersistedPendingDeletionQueue()
+        deleteQueueLifecycle.clear()
+        syncPendingDeletionItems()
 
         isShowingClearQueueConfirmation = false
         hapticsService.impact(.medium)
@@ -818,34 +665,12 @@ final class PhotoReviewViewModel: ObservableObject {
         let photosToDelete = itemsToDelete.map { $0.photo }
         let totalBytes = itemsToDelete.reduce(0) { $0 + $1.fileSize }
         let photoIDs = itemsToDelete.map(\.id)
-        let snapshot = makeReviewPersistenceSnapshot(
-            for: photoIDs,
-            stats: stats,
-            context: modelContext
-        )
-
         do {
-            let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-
-            for item in itemsToDelete {
-                if snapshot.reviewedPhotoIDs.contains(item.id) {
-                    gamificationService.processQueuedDeletionCommit(
-                        fileSize: item.fileSize,
-                        stats: stats,
-                        challengeType: challengeType,
-                        context: modelContext
-                    )
-                } else {
-                    try gamificationService.markPhotoReviewed(id: item.id, context: modelContext)
-                    gamificationService.processPhotoReview(
-                        action: .delete,
-                        fileSize: item.fileSize,
-                        stats: stats,
-                        challengeType: challengeType,
-                        context: modelContext
-                    )
-                }
-            }
+            let snapshot = try reviewAccountingService.prepareDeletionBatch(
+                items: itemsToDelete,
+                stats: stats,
+                context: modelContext
+            )
 
             guard savePreparedReviewProgress(for: photoIDs, cacheInSession: false) else {
                 return
@@ -871,13 +696,12 @@ final class PhotoReviewViewModel: ObservableObject {
 
             let deletedCount = itemsToDelete.count
             cycleDeletedCount += deletedCount
-            analyticsService.track(.photoDeleted(filter: currentFilter, mediaKind: currentMediaKind))
-            aggregateMetricsService.recordDeletion(bytesFreed: totalBytes, count: deletedCount)
+            privacyCollectionService.track(.photoDeleted(filter: currentFilter, mediaKind: currentMediaKind))
+            privacyCollectionService.recordDeletion(bytesFreed: totalBytes, count: deletedCount)
             photoIDs.forEach { photoLibraryService.markReviewed($0) }
 
-            pendingDeletionItems.removeAll()
-            deletionStack.removeAll()
-            clearPersistedPendingDeletionQueue()
+            deleteQueueLifecycle.clear()
+            syncPendingDeletionItems()
 
             showDeletionSuccessToast = true
             hapticsService.success()
@@ -914,13 +738,7 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let stats, let modelContext else { return false }
 
         do {
-            let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-            try gamificationService.markPhotoReviewed(id: photoID, context: modelContext)
-            gamificationService.processQueuedDeletionReview(
-                stats: stats,
-                challengeType: challengeType,
-                context: modelContext
-            )
+            try reviewAccountingService.recordQueuedDeletionReview(photoID: photoID, stats: stats, context: modelContext)
 
             return persistReviewProgress(for: photoID, cacheInSession: true)
         } catch {
@@ -940,16 +758,11 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let stats, let modelContext else { return false }
 
         do {
-            let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-            for photoID in photoIDs {
-                try gamificationService.rollbackQueuedDeletionReview(
-                    id: photoID,
-                    stats: stats,
-                    challengeType: challengeType,
-                    context: modelContext
-                )
-            }
-            try modelContext.save()
+            try reviewAccountingService.rollbackQueuedDeletionReviews(
+                photoIDs: photoIDs,
+                stats: stats,
+                context: modelContext
+            )
 
             for photoID in photoIDs {
                 persistedReviewedIDs.remove(photoID)
@@ -973,7 +786,7 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let modelContext else { return false }
 
         do {
-            try modelContext.save()
+            try reviewAccountingService.save(context: modelContext)
             for photoID in photoIDs {
                 persistedReviewedIDs.insert(photoID)
                 knownUnreviewedIDs.remove(photoID)
@@ -991,53 +804,28 @@ final class PhotoReviewViewModel: ObservableObject {
         }
     }
 
-    private func makeReviewPersistenceSnapshot(
-        for photoIDs: [String],
-        stats: UserStats,
-        context: ModelContext
-    ) -> ReviewPersistenceSnapshot {
-        let reviewedPhotoIDs = Set(photoIDs.filter { gamificationService.isPhotoReviewed(id: $0, context: context) })
-        let unlockedAchievementIDs = (try? context.fetch(FetchDescriptor<UnlockedAchievement>())) ?? []
-
-        return ReviewPersistenceSnapshot(
-            stats: UserStatsSnapshot(stats: stats),
-            reviewedPhotoIDs: reviewedPhotoIDs,
-            unlockedAchievementIDs: Set(unlockedAchievementIDs.map(\.achievementId)),
-            feedback: GamificationFeedbackSnapshot(service: gamificationService)
-        )
-    }
-
     private func restoreReviewPersistence(
-        _ snapshot: ReviewPersistenceSnapshot,
+        _ snapshot: ReviewAccountingSnapshot,
         for photoIDs: [String],
         stats: UserStats,
         context: ModelContext
     ) {
         do {
-            snapshot.stats.restore(to: stats)
-            snapshot.feedback.restore(to: gamificationService)
+            let result = try reviewAccountingService.restore(
+                snapshot,
+                affectedPhotoIDs: photoIDs,
+                stats: stats,
+                context: context
+            )
 
-            for photoID in photoIDs where !snapshot.reviewedPhotoIDs.contains(photoID) {
-                if let reviewedPhoto = try fetchReviewedPhoto(id: photoID, context: context) {
-                    context.delete(reviewedPhoto)
-                }
+            for photoID in result.reviewedPhotoIDs {
+                persistedReviewedIDs.insert(photoID)
+                knownUnreviewedIDs.remove(photoID)
             }
 
-            let unlockedAchievements = try context.fetch(FetchDescriptor<UnlockedAchievement>())
-            for unlockedAchievement in unlockedAchievements where !snapshot.unlockedAchievementIDs.contains(unlockedAchievement.achievementId) {
-                context.delete(unlockedAchievement)
-            }
-
-            try context.save()
-
-            for photoID in photoIDs {
-                if snapshot.reviewedPhotoIDs.contains(photoID) {
-                    persistedReviewedIDs.insert(photoID)
-                    knownUnreviewedIDs.remove(photoID)
-                } else {
-                    persistedReviewedIDs.remove(photoID)
-                    knownUnreviewedIDs.insert(photoID)
-                }
+            for photoID in result.unreviewedPhotoIDs {
+                persistedReviewedIDs.remove(photoID)
+                knownUnreviewedIDs.insert(photoID)
             }
         } catch {
             context.rollback()
@@ -1045,14 +833,8 @@ final class PhotoReviewViewModel: ObservableObject {
         }
     }
 
-    private func fetchReviewedPhoto(id: String, context: ModelContext) throws -> ReviewedPhoto? {
-        var descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
-        descriptor.fetchLimit = 1
-        return try context.fetch(descriptor).first
-    }
-
     private func isPhotosDeletionCancellation(_ error: Error) -> Bool {
-        (error as NSError).code == 3072
+        PhotoLibraryService.isDeletionCancellation(error)
     }
 
     private func showDeletionCancelledFeedback() {
@@ -1082,7 +864,7 @@ final class PhotoReviewViewModel: ObservableObject {
             return false
         }
 
-        let isReviewed = gamificationService.isPhotoReviewed(id: photoID, context: modelContext)
+        let isReviewed = reviewAccountingService.isPhotoReviewed(id: photoID, context: modelContext)
         if isReviewed {
             persistedReviewedIDs.insert(photoID)
         } else {
@@ -1113,7 +895,7 @@ final class PhotoReviewViewModel: ObservableObject {
         } else {
             currentPhoto = nil
             noMorePhotos = true
-            analyticsService.track(.reviewBatchCompleted(filter: currentFilter, mediaKind: currentMediaKind))
+            privacyCollectionService.track(.reviewBatchCompleted(filter: currentFilter, mediaKind: currentMediaKind))
         }
     }
 
@@ -1122,7 +904,7 @@ final class PhotoReviewViewModel: ObservableObject {
         cardRotation = 0
         swipeProgress = 0
         swipeDirection = nil
-        hasTriggeredSwipeThresholdFeedback = false
+        feedbackController.resetSwipeFeedback()
     }
 
     private func reloadPhotoAfterQueueChange() async {
@@ -1152,16 +934,14 @@ final class PhotoReviewViewModel: ObservableObject {
         guard photoLibraryService.authorizationStatus.hasPhotoAccess else { return }
         guard !pendingDeletionItems.isEmpty else { return }
 
-        let assetsByIdentifier = photoLibraryService.fetchAssets(withLocalIdentifiers: pendingDeletionItems.map(\.id))
-        let availableIDs = Set(assetsByIdentifier.keys)
-        let missingItems = pendingDeletionItems.filter { !availableIDs.contains($0.id) }
+        let availableIDs = photoLibraryService.availablePhotoIDs(withLocalIdentifiers: pendingDeletionItems.map(\.id))
+        let missingItems = deleteQueueLifecycle.missingItems(availableIDs: availableIDs)
         guard !missingItems.isEmpty else { return }
 
         guard rollbackQueuedDeletionReviewIfNeeded(for: missingItems) else { return }
 
-        pendingDeletionItems.removeAll { !availableIDs.contains($0.id) }
-        deletionStack.removeAll { !availableIDs.contains($0.id) }
-        persistPendingDeletionQueue()
+        deleteQueueLifecycle.pruneUnavailableItems(availableIDs: availableIDs)
+        syncPendingDeletionItems()
         showQueuePrunedFeedback()
     }
 
@@ -1177,48 +957,12 @@ final class PhotoReviewViewModel: ObservableObject {
         }
     }
 
-    private func persistPendingDeletionQueue() {
-        guard !pendingDeletionItems.isEmpty else {
-            clearPersistedPendingDeletionQueue()
-            return
-        }
-
-        let persistedItems = pendingDeletionItems.map {
-            PersistedPendingDeletionItem(
-                id: $0.id,
-                queuedAt: $0.queuedAt,
-                fileSize: $0.fileSize,
-                createdReviewOnQueue: $0.createdReviewOnQueue
-            )
-        }
-
-        guard let encoded = try? JSONEncoder().encode(persistedItems) else { return }
-        defaults.set(encoded, forKey: UserDefaultsKeys.pendingDeletionQueue)
-    }
-
-    private func clearPersistedPendingDeletionQueue() {
-        defaults.removeObject(forKey: UserDefaultsKeys.pendingDeletionQueue)
-    }
-
-    private func loadPersistedPendingDeletionItems() -> [PersistedPendingDeletionItem] {
-        guard let data = defaults.data(forKey: UserDefaultsKeys.pendingDeletionQueue) else {
-            return []
-        }
-
-        guard let items = try? JSONDecoder().decode([PersistedPendingDeletionItem].self, from: data) else {
-            clearPersistedPendingDeletionQueue()
-            return []
-        }
-
-        return items
-    }
-
     private func triggerCelebrationFeedbackIfNeeded() {
-        let now = Date()
-        guard now.timeIntervalSince(lastCelebrationFeedbackDate) > celebrationFeedbackCooldown else { return }
+        feedbackController.triggerCelebrationIfNeeded()
+    }
 
-        lastCelebrationFeedbackDate = now
-        hapticsService.success()
+    private func syncPendingDeletionItems() {
+        pendingDeletionItems = deleteQueueLifecycle.pendingDeletionItems
     }
 
     private func presentError(_ message: String) {

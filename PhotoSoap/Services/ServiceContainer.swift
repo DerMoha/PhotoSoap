@@ -8,13 +8,26 @@ final class ServiceContainer: ObservableObject {
     let gamificationService: GamificationService
     let aggregateMetricsService: AggregateMetricsService
     let analyticsService: AnalyticsService
+    let privacyCollectionService: PrivacyCollectionService
+    let reviewAccountingService: ReviewAccountingService
+    let startupRoutingService: StartupRoutingService
     let hapticsService: HapticsService
 
     init(modelContext _: ModelContext) {
-        self.analyticsService = AnalyticsService()
+        let analyticsService = AnalyticsService()
+        let aggregateMetricsService = AggregateMetricsService()
+        let gamificationService = GamificationService()
+
+        self.analyticsService = analyticsService
         self.hapticsService = HapticsService()
-        self.aggregateMetricsService = AggregateMetricsService()
+        self.aggregateMetricsService = aggregateMetricsService
         self.photoLibraryService = PhotoLibraryService()
-        self.gamificationService = GamificationService()
+        self.gamificationService = gamificationService
+        self.privacyCollectionService = PrivacyCollectionService(
+            analyticsService: analyticsService,
+            aggregateMetricsService: aggregateMetricsService
+        )
+        self.reviewAccountingService = ReviewAccountingService(gamificationService: gamificationService)
+        self.startupRoutingService = StartupRoutingService()
     }
 }

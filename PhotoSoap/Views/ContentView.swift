@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import UIKit
 
 struct ContentView: View {
     let bootstrapErrorMessage: String?
@@ -10,8 +9,9 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("hasSeenQuickStartInfo") private var hasSeenQuickStartInfo = false
     @Query private var statsArray: [UserStats]
-    @EnvironmentObject private var analyticsService: AnalyticsService
-    @EnvironmentObject private var aggregateMetricsService: AggregateMetricsService
+    @EnvironmentObject private var privacyCollectionService: PrivacyCollectionService
+    @EnvironmentObject private var reviewAccountingService: ReviewAccountingService
+    @EnvironmentObject private var startupRoutingService: StartupRoutingService
     @EnvironmentObject private var photoLibraryService: PhotoLibraryService
     @EnvironmentObject private var gamificationService: GamificationService
     @EnvironmentObject private var hapticsService: HapticsService
@@ -29,63 +29,70 @@ struct ContentView: View {
         activeStats ?? statsArray.first
     }
 
+    private var startupRoute: StartupRoute {
+        startupRoutingService.route(
+            hasSeenQuickStartInfo: hasSeenQuickStartInfo,
+            authorizationStatus: photoLibraryService.authorizationStatus
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            if shouldShowQuickStart {
+            switch startupRoute {
+            case .quickStart:
                 QuickStartInfoView()
-            } else if photoLibraryService.authorizationStatus == .notDetermined {
+            case .permissionRequest:
                 PermissionRequestView(
                     photoLibraryService: photoLibraryService,
-                    analyticsService: analyticsService
+                    privacyCollectionService: privacyCollectionService,
+                    startupRoutingService: startupRoutingService
                 )
-            } else if photoLibraryService.authorizationStatus == .denied ||
-                      photoLibraryService.authorizationStatus == .restricted {
-                PermissionDeniedView(analyticsService: analyticsService)
-            } else {
+            case .permissionDenied:
+                PermissionDeniedView(
+                    photoLibraryService: photoLibraryService,
+                    privacyCollectionService: privacyCollectionService,
+                    startupRoutingService: startupRoutingService
+                )
+            case .main:
                 mainTabView
             }
         }
         .onAppear {
-            if !hasTrackedAppOpen {
-                analyticsService.track(.appOpened())
-                hasTrackedAppOpen = true
-            }
-
+            startupRoutingService.trackAppOpenIfNeeded(
+                hasTrackedAppOpen: &hasTrackedAppOpen,
+                privacyCollectionService: privacyCollectionService
+            )
             initializeStats()
             refreshPhotoLibraryStateIfNeeded()
-            aggregateMetricsService.registerInstallIfNeeded()
+            privacyCollectionService.registerInstallIfNeeded()
             showBootstrapAlert = bootstrapErrorMessage != nil
-            analyticsService.track(.permissionStatusChanged(photoLibraryService.authorizationStatus))
+            startupRoutingService.trackPermissionStatus(
+                photoLibraryService.authorizationStatus,
+                privacyCollectionService: privacyCollectionService
+            )
         }
         .onChange(of: scenePhase) { _, newPhase in
-            switch newPhase {
-            case .active:
-                refreshPhotoLibraryStateIfNeeded()
-                aggregateMetricsService.flushPendingMetricsIfNeeded()
-            case .inactive, .background:
-                aggregateMetricsService.flushPendingMetricsIfNeeded()
-            @unknown default:
-                break
-            }
+            startupRoutingService.handleScenePhase(
+                newPhase,
+                hasSeenQuickStartInfo: hasSeenQuickStartInfo,
+                photoLibraryService: photoLibraryService,
+                privacyCollectionService: privacyCollectionService
+            )
         }
         .onChange(of: photoLibraryService.authorizationStatus) { _, status in
-            analyticsService.track(.permissionStatusChanged(status))
+            startupRoutingService.trackPermissionStatus(status, privacyCollectionService: privacyCollectionService)
         }
         .onChange(of: hasSeenQuickStartInfo) { _, _ in
             refreshPhotoLibraryStateIfNeeded()
         }
         .onChange(of: selectedTab) { _, newTab in
-            analyticsService.track(.tabSelected(tabName(for: newTab)))
+            startupRoutingService.trackTabSelection(newTab.analyticsName, privacyCollectionService: privacyCollectionService)
         }
         .alert(String(localized: "recoveryMode.title", table: "LocalizableShared"), isPresented: $showBootstrapAlert) {
             Button(String(localized: "common.ok", defaultValue: "OK", table: "LocalizableShared")) {}
         } message: {
             Text(bootstrapErrorMessage ?? "")
         }
-    }
-
-    private var shouldShowQuickStart: Bool {
-        !hasSeenQuickStartInfo
     }
 
     @ViewBuilder
@@ -120,8 +127,7 @@ struct ContentView: View {
                     stats: stats,
                     photoLibraryService: photoLibraryService,
                     gamificationService: gamificationService,
-                    analyticsService: analyticsService,
-                    aggregateMetricsService: aggregateMetricsService
+                    privacyCollectionService: privacyCollectionService
                 )
                 .tabItem {
                     Label(String(localized: "stats.tab", table: "LocalizableStats"), systemImage: "chart.bar")
@@ -132,8 +138,8 @@ struct ContentView: View {
                     photoLibraryService: photoLibraryService,
                     gamificationService: gamificationService,
                     stats: stats,
-                    analyticsService: analyticsService,
-                    aggregateMetricsService: aggregateMetricsService,
+                    reviewAccountingService: reviewAccountingService,
+                    privacyCollectionService: privacyCollectionService,
                     hapticsService: hapticsService
                 )
                 .tabItem {
@@ -151,26 +157,18 @@ struct ContentView: View {
     }
 
     private func initializeStats() {
-        do {
-            let stats = try UserStats.fetchOrCreateSingleton(in: modelContext)
-            gamificationService.ensureDailyChallengeIsSet(stats: stats)
-            try modelContext.save()
-            activeStats = stats
-        } catch {
-#if DEBUG
-            print("PhotoSoap: failed to initialize user stats: \(error.localizedDescription)")
-#endif
-            activeStats = resolvedStats
-        }
+        activeStats = startupRoutingService.initializeStats(
+            context: modelContext,
+            currentStats: resolvedStats,
+            gamificationService: gamificationService
+        )
     }
 
     private func refreshPhotoLibraryStateIfNeeded() {
-        guard !shouldShowQuickStart else { return }
-        photoLibraryService.refreshLibraryAccessState()
-    }
-
-    private func tabName(for selection: MainTab) -> String {
-        selection.analyticsName
+        startupRoutingService.refreshPhotoLibraryStateIfNeeded(
+            hasSeenQuickStartInfo: hasSeenQuickStartInfo,
+            photoLibraryService: photoLibraryService
+        )
     }
 }
 
@@ -193,7 +191,8 @@ private enum MainTab: Hashable {
 
 struct PermissionRequestView: View {
     @ObservedObject var photoLibraryService: PhotoLibraryService
-    @ObservedObject var analyticsService: AnalyticsService
+    @ObservedObject var privacyCollectionService: PrivacyCollectionService
+    let startupRoutingService: StartupRoutingService
 
     var body: some View {
         VStack(spacing: 24) {
@@ -214,9 +213,11 @@ struct PermissionRequestView: View {
                 .padding(.horizontal, 32)
 
             Button {
-                analyticsService.track(.permissionRequestTapped())
                 Task {
-                    await photoLibraryService.requestAuthorization()
+                    await startupRoutingService.requestAuthorization(
+                        photoLibraryService: photoLibraryService,
+                        privacyCollectionService: privacyCollectionService
+                    )
                 }
             } label: {
                 Text(String(localized: "permission.allow", table: "LocalizableOnboarding"))
@@ -236,7 +237,9 @@ struct PermissionRequestView: View {
 }
 
 struct PermissionDeniedView: View {
-    @ObservedObject var analyticsService: AnalyticsService
+    @ObservedObject var photoLibraryService: PhotoLibraryService
+    @ObservedObject var privacyCollectionService: PrivacyCollectionService
+    let startupRoutingService: StartupRoutingService
 
     var body: some View {
         VStack(spacing: 24) {
@@ -257,10 +260,10 @@ struct PermissionDeniedView: View {
                 .padding(.horizontal, 32)
 
             Button {
-                analyticsService.track(.settingsOpened())
-                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(settingsURL)
-                }
+                startupRoutingService.openSettings(
+                    photoLibraryService: photoLibraryService,
+                    privacyCollectionService: privacyCollectionService
+                )
             } label: {
                 Text(String(localized: "permission.denied.openSettings", table: "LocalizableOnboarding"))
                     .font(.headline)
@@ -612,11 +615,19 @@ private struct SwipeHintBadge: View {
     let container = try! ModelContainer(for: UserStats.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     let context = container.mainContext
     context.insert(UserStats())
+    let analyticsService = AnalyticsService()
+    let aggregateMetricsService = AggregateMetricsService()
+    let gamificationService = GamificationService()
 
     return ContentView(bootstrapErrorMessage: nil)
         .modelContainer(container)
-        .environmentObject(AnalyticsService())
-        .environmentObject(AggregateMetricsService())
+        .environmentObject(PrivacyCollectionService(
+            analyticsService: analyticsService,
+            aggregateMetricsService: aggregateMetricsService
+        ))
+        .environmentObject(ReviewAccountingService(gamificationService: gamificationService))
+        .environmentObject(StartupRoutingService())
         .environmentObject(PhotoLibraryService())
-        .environmentObject(GamificationService())
+        .environmentObject(gamificationService)
+        .environmentObject(HapticsService())
 }

@@ -5,8 +5,7 @@ struct StatsView: View {
     @Bindable var stats: UserStats
     @ObservedObject var photoLibraryService: PhotoLibraryService
     @ObservedObject var gamificationService: GamificationService
-    @ObservedObject var analyticsService: AnalyticsService
-    @ObservedObject var aggregateMetricsService: AggregateMetricsService
+    @ObservedObject var privacyCollectionService: PrivacyCollectionService
     @State private var viewModel = StatsViewModel()
     @State private var isShowingSettings = false
 
@@ -27,18 +26,15 @@ struct StatsView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle(String(localized: "stats.title", table: "LocalizableStats"))
             .navigationDestination(isPresented: $isShowingSettings) {
-                SettingsView(
-                    analyticsService: analyticsService,
-                    aggregateMetricsService: aggregateMetricsService
-                )
+                SettingsView(privacyCollectionService: privacyCollectionService)
             }
             .onAppear {
-                analyticsService.track(.statsViewed())
+                privacyCollectionService.track(.statsViewed())
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        analyticsService.track(.settingsOpened())
+                        privacyCollectionService.track(.settingsOpened())
                         isShowingSettings = true
                     } label: {
                         Image(systemName: "gearshape")
@@ -72,7 +68,7 @@ struct StatsView: View {
             buttonTitle: String(localized: "limitedAccess.chooseMore", table: "LocalizableShared"),
             style: .stats,
             onManage: {
-                analyticsService.track(.limitedLibraryPickerOpened())
+                privacyCollectionService.track(.limitedLibraryPickerOpened())
                 photoLibraryService.presentLimitedLibraryPicker()
             }
         )
@@ -174,7 +170,9 @@ struct StatCard: View {
         stats: UserStats(),
         photoLibraryService: PhotoLibraryService(),
         gamificationService: GamificationService(),
-        analyticsService: AnalyticsService(),
-        aggregateMetricsService: AggregateMetricsService()
+        privacyCollectionService: PrivacyCollectionService(
+            analyticsService: AnalyticsService(),
+            aggregateMetricsService: AggregateMetricsService()
+        )
     )
 }

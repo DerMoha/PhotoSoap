@@ -3,8 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var hapticsService: HapticsService
 
-    @ObservedObject var analyticsService: AnalyticsService
-    @ObservedObject var aggregateMetricsService: AggregateMetricsService
+    @ObservedObject var privacyCollectionService: PrivacyCollectionService
 
     @AppStorage(UserDefaultsKeys.deleteQueueEnabled) private var isDeleteQueueEnabled = true
 
@@ -17,6 +16,7 @@ struct SettingsView: View {
             feedbackSection
             deletionSection
             privacySection
+            legalSection
 
             #if DEBUG
             developerSection
@@ -79,11 +79,23 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Text(analyticsService.isEnabled ? String(localized: "stats.analyticsOn", table: "LocalizableStats") : String(localized: "stats.analyticsOff", table: "LocalizableStats"))
+                Text(privacyCollectionService.isEnabled ? String(localized: "stats.analyticsOn", table: "LocalizableStats") : String(localized: "stats.analyticsOff", table: "LocalizableStats"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
+        }
+    }
+
+    private var legalSection: some View {
+        Section(String(localized: "settings.legal.title", table: "LocalizableShared")) {
+            Link(destination: ReleaseLinks.privacyPolicyURL) {
+                Label(String(localized: "settings.legal.privacyPolicy", table: "LocalizableShared"), systemImage: "hand.raised.fill")
+            }
+
+            Link(destination: ReleaseLinks.supportURL) {
+                Label(String(localized: "settings.legal.support", table: "LocalizableShared"), systemImage: "questionmark.circle.fill")
+            }
         }
     }
 
@@ -99,11 +111,8 @@ struct SettingsView: View {
 
     private var analyticsToggleBinding: Binding<Bool> {
         Binding(
-            get: { analyticsService.isEnabled },
-            set: {
-                analyticsService.setEnabled($0)
-                aggregateMetricsService.setEnabled($0)
-            }
+            get: { privacyCollectionService.isEnabled },
+            set: { privacyCollectionService.setEnabled($0) }
         )
     }
 
@@ -115,12 +124,17 @@ struct SettingsView: View {
     }
 }
 
+private enum ReleaseLinks {
+    static let privacyPolicyURL = URL(string: "https://github.com/DerMoha/PhotoSoap/blob/main/PRIVACY.md")!
+    static let supportURL = URL(string: "https://github.com/DerMoha/PhotoSoap/issues")!
+}
+
 #Preview {
     NavigationStack {
-        SettingsView(
+        SettingsView(privacyCollectionService: PrivacyCollectionService(
             analyticsService: AnalyticsService(),
             aggregateMetricsService: AggregateMetricsService()
-        )
+        ))
     }
     .environmentObject(HapticsService())
 }
