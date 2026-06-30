@@ -203,7 +203,7 @@ struct PhotoPreviewSheet: View {
     private func loadPreviewImage() async {
         previewImage = photo.image
 
-        if let highResolutionImage = await photoLibraryService.fetchHighResolutionPreviewImage(for: photo.asset) {
+        if let highResolutionImage = await photoLibraryService.fetchHighResolutionPreviewImage(for: photo) {
             previewImage = highResolutionImage
         }
     }
@@ -221,7 +221,7 @@ struct PhotoPreviewSheet: View {
             }
         }
 
-        guard let playerItem = await photoLibraryService.fetchVideoPlayerItem(for: photo.asset) else {
+        guard let playerItem = await photoLibraryService.fetchVideoPlayerItem(for: photo) else {
             if !Task.isCancelled {
                 videoPreviewFailed = true
             }

@@ -1,8 +1,9 @@
 import SwiftUI
-import Photos
+import UIKit
 
 struct DeleteQueueSheet: View {
     let items: [PendingDeletionItem]
+    @ObservedObject var photoLibraryService: PhotoLibraryService
     let onRemoveFromQueue: (PendingDeletionItem) -> Void
     let onClearQueue: () -> Void
     let onDeleteAll: () -> Void
@@ -18,7 +19,7 @@ struct DeleteQueueSheet: View {
                 } else {
                     List {
                         ForEach(items) { item in
-                            DeleteQueueItemRow(item: item) {
+                            DeleteQueueItemRow(item: item, photoLibraryService: photoLibraryService) {
                                 onRemoveFromQueue(item)
                             }
                         }
@@ -100,6 +101,7 @@ struct DeleteQueueSheet: View {
 
 struct DeleteQueueItemRow: View {
     let item: PendingDeletionItem
+    @ObservedObject var photoLibraryService: PhotoLibraryService
     let onRemove: () -> Void
 
     @State private var image: UIImage?
@@ -169,23 +171,9 @@ struct DeleteQueueItemRow: View {
     }
 
     private func loadImage() async {
-        let options = PHImageRequestOptions()
-        options.deliveryMode = .opportunistic
-        options.isSynchronous = false
-        options.isNetworkAccessAllowed = true
-
         let size = CGSize(width: 120, height: 120)
-        PHImageManager.default().requestImage(
-            for: item.photo.asset,
-            targetSize: size,
-            contentMode: .aspectFill,
-            options: options
-        ) { result, _ in
-            if let result = result {
-                Task { @MainActor in
-                    self.image = result
-                }
-            }
+        if let result = await photoLibraryService.fetchThumbnail(for: item.photo, targetSize: size) {
+            image = result
         }
     }
 
@@ -203,6 +191,7 @@ struct DeleteQueueItemRow: View {
 #Preview {
     DeleteQueueSheet(
         items: [],
+        photoLibraryService: PhotoLibraryService(),
         onRemoveFromQueue: { _ in },
         onClearQueue: {},
         onDeleteAll: {},

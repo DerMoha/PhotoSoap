@@ -61,18 +61,13 @@ private enum Constants {
     static let cachingThumbnailSize = CGSize(width: 400, height: 400)
 }
 
-private final class PhotoLibraryRequestState<Result>: @unchecked Sendable {
+private final class VideoPlayerItemRequestState: @unchecked Sendable {
     private let lock = NSLock()
-    private let cancelValue: Result
     private var requestID: PHImageRequestID = PHInvalidImageRequestID
-    private var continuation: CheckedContinuation<Result, Never>?
+    private var continuation: CheckedContinuation<AVPlayerItem?, Never>?
     private var isFinished = false
 
-    init(cancelValue: Result) {
-        self.cancelValue = cancelValue
-    }
-
-    func setContinuation(_ continuation: CheckedContinuation<Result, Never>) {
+    func setContinuation(_ continuation: CheckedContinuation<AVPlayerItem?, Never>) {
         var shouldResume = false
 
         lock.lock()
@@ -84,7 +79,7 @@ private final class PhotoLibraryRequestState<Result>: @unchecked Sendable {
         lock.unlock()
 
         if shouldResume {
-            continuation.resume(returning: cancelValue)
+            continuation.resume(returning: nil)
         }
     }
 
@@ -96,8 +91,8 @@ private final class PhotoLibraryRequestState<Result>: @unchecked Sendable {
         return shouldCancelRequest
     }
 
-    func complete(_ value: Result) {
-        let continuationToResume: CheckedContinuation<Result, Never>?
+    func complete(_ value: AVPlayerItem?) {
+        let continuationToResume: CheckedContinuation<AVPlayerItem?, Never>?
 
         lock.lock()
         if isFinished {
@@ -113,7 +108,7 @@ private final class PhotoLibraryRequestState<Result>: @unchecked Sendable {
     }
 
     func cancel() -> PHImageRequestID {
-        let continuationToResume: CheckedContinuation<Result, Never>?
+        let continuationToResume: CheckedContinuation<AVPlayerItem?, Never>?
         let requestIDToCancel: PHImageRequestID
 
         lock.lock()
@@ -128,7 +123,7 @@ private final class PhotoLibraryRequestState<Result>: @unchecked Sendable {
         }
         lock.unlock()
 
-        continuationToResume?.resume(returning: cancelValue)
+        continuationToResume?.resume(returning: nil)
         return requestIDToCancel
     }
 }
@@ -497,13 +492,17 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
     }
 
+    func fetchHighResolutionPreviewImage(for photo: Photo) async -> UIImage? {
+        await fetchHighResolutionPreviewImage(for: photo.asset)
+    }
+
     func fetchVideoPlayerItem(for asset: PHAsset) async -> AVPlayerItem? {
         guard asset.mediaType == .video else { return nil }
 
         let options = PHVideoRequestOptions()
         options.deliveryMode = .automatic
         options.isNetworkAccessAllowed = true
-        let requestState = PhotoLibraryRequestState<AVPlayerItem?>(cancelValue: nil)
+        let requestState = VideoPlayerItemRequestState()
 
         return await withTaskCancellationHandler {
             await withCheckedContinuation { (continuation: CheckedContinuation<AVPlayerItem?, Never>) in
@@ -535,9 +534,55 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 }
             }
         } onCancel: {
-            let requestID = requestState.cancel()
-            if requestID != PHInvalidImageRequestID {
-                PHImageManager.default().cancelImageRequest(requestID)
+            Task { @MainActor in
+                let requestID = requestState.cancel()
+                if requestID != PHInvalidImageRequestID {
+                    PHImageManager.default().cancelImageRequest(requestID)
+                }
+            }
+        }
+    }
+
+    func fetchVideoPlayerItem(for photo: Photo) async -> AVPlayerItem? {
+        await fetchVideoPlayerItem(for: photo.asset)
+    }
+
+    func fetchThumbnail(for photo: Photo, targetSize: CGSize) async -> UIImage? {
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .opportunistic
+        options.isSynchronous = false
+        options.isNetworkAccessAllowed = true
+        options.resizeMode = .fast
+
+        return await withCheckedContinuation { (continuation: CheckedContinuation<UIImage?, Never>) in
+            var hasResumed = false
+
+            imageManager.requestImage(
+                for: photo.asset,
+                targetSize: targetSize,
+                contentMode: .aspectFill,
+                options: options
+            ) { image, info in
+                guard !hasResumed else { return }
+
+                let isCancelled = info?[PHImageCancelledKey] as? Bool ?? false
+                if isCancelled {
+                    hasResumed = true
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                if let image {
+                    hasResumed = true
+                    continuation.resume(returning: image)
+                    return
+                }
+
+                let isDegraded = info?[PHImageResultIsDegradedKey] as? Bool ?? false
+                guard !isDegraded else { return }
+
+                hasResumed = true
+                continuation.resume(returning: nil)
             }
         }
     }
@@ -607,6 +652,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         return fileSize
+    }
+
+    func fetchFileSize(for photo: Photo, allowNetworkAccess: Bool = false) async -> Int64 {
+        await fetchFileSize(for: photo.asset, allowNetworkAccess: allowNetworkAccess)
     }
 
     private func fetchLocalVideoFileSize(for asset: PHAsset) async -> Int64 {
@@ -680,6 +729,17 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return assetsByIdentifier
     }
 
+    func photos(withLocalIdentifiers identifiers: [String], fileSizesByIdentifier: [String: Int64] = [:]) -> [String: Photo] {
+        let assetsByIdentifier = fetchAssets(withLocalIdentifiers: identifiers)
+        return assetsByIdentifier.mapValues { asset in
+            Photo(asset: asset, fileSize: fileSizesByIdentifier[asset.localIdentifier] ?? 0)
+        }
+    }
+
+    func availablePhotoIDs(withLocalIdentifiers identifiers: [String]) -> Set<String> {
+        Set(fetchAssets(withLocalIdentifiers: identifiers).keys)
+    }
+
     // MARK: - Deletion
 
     func deletePhoto(_ photo: Photo) async throws {
@@ -693,6 +753,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         try await PHPhotoLibrary.shared().performChanges {
             PHAssetChangeRequest.deleteAssets(assets as NSFastEnumeration)
         }
+    }
+
+    nonisolated static func isDeletionCancellation(_ error: Error) -> Bool {
+        (error as NSError).code == 3072
     }
 
     // MARK: - Library Refresh
