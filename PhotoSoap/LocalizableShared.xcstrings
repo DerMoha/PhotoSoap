@@ -135,6 +135,23 @@
         }
       }
     },
+    "common.retry" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Retry"
+          }
+        }
+      }
+    },
     "common.unknown" : {
       "localizations" : {
         "de" : {
@@ -735,13 +752,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rechtliches & Support"
+            "value" : "Rechtliches"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Legal & Support"
+            "value" : "Legal"
           }
         }
       }
