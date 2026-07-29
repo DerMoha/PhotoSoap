@@ -1,0 +1,15 @@
+"privacy.title" = "Datenschutzerklärung";
+"privacy.done" = "Fertig";
+"privacy.updated" = "Zuletzt aktualisiert: 29. Juli 2026";
+"privacy.design.title" = "Datenschutz als Grundprinzip";
+"privacy.design.body" = "PhotoSoap hilft dir, deine Fotobibliothek direkt auf deinem Gerät zu prüfen. Die App ist so konzipiert, dass sie keine Foto- oder Videoinhalte erfasst oder hochlädt.";
+"privacy.library.title" = "Zugriff auf die Fotobibliothek";
+"privacy.library.body" = "PhotoSoap verwendet die Fotomediathek-Berechtigung des Systems, damit du Fotos und Videos prüfen und zum Löschen auswählen kannst. Medieninhalte bleiben auf deinem Gerät. PhotoSoap übermittelt weder Inhalte noch Dateinamen, Medienkennungen, Standorte oder Albuminhalte an den Metrikdienst. Das System bittet dich um Zustimmung, bevor geschützte Medien gelöscht werden.";
+"privacy.device.title" = "Auf deinem Gerät gespeicherte Daten";
+"privacy.device.body" = "PhotoSoap speichert Einstellungen und Fortschritt lokal, darunter geprüfte Elemente, Löschliste, Statistiken, Serien, Ziele und Erfolge. Diese Daten dienen dem Betrieb der App und nicht der appübergreifenden Nachverfolgung.";
+"privacy.analytics.title" = "Optionale Nutzungsanalyse";
+"privacy.analytics.body" = "Analysen sind deaktiviert, bis du sie freiwillig einschaltest. Dann kann PhotoSoap eine zufällige Installationskennung, App-Version und Build, Plattform, Übermittlungsdatum sowie tägliche Summen für geprüfte, behaltene und gelöschte Elemente und geschätzten freigegebenen Speicher an einen von Supabase betriebenen Dienst senden. Medieninhalte, Dateinamen, Medienkennungen, Standorte, Kontakte und Werbe-IDs werden nie gesendet. Beim Ausschalten werden die Erfassung beendet, ausstehende Metriken gelöscht und die lokale Analysekennung entfernt. Bereits übermittelte aggregierte Werte können in Gemeinschaftssummen verbleiben.";
+"privacy.tracking.title" = "Tracking und Werbung";
+"privacy.tracking.body" = "PhotoSoap verfolgt dich nicht über Apps oder Websites hinweg und verwendet keine Daten für Werbung.";
+"privacy.contact.title" = "Kontakt";
+"privacy.contact.body" = "Bei Fragen zu Datenschutz oder Support schreibe an photosoap@brokenmoha.de.";

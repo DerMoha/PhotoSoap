@@ -1,0 +1,15 @@
+"privacy.title" = "Privacy Policy";
+"privacy.done" = "Done";
+"privacy.updated" = "Last updated: July 29, 2026";
+"privacy.design.title" = "Privacy by design";
+"privacy.design.body" = "PhotoSoap helps you review your photo library on your device. It is designed not to collect or upload photo or video contents.";
+"privacy.library.title" = "Photo library access";
+"privacy.library.body" = "PhotoSoap uses the system photo-library permission so you can review photos and videos and choose items to delete. Media contents stay on your device. PhotoSoap does not send contents, filenames, asset identifiers, locations, or album contents to its metrics service. The system asks for approval before protected media is deleted.";
+"privacy.device.title" = "Data stored on your device";
+"privacy.device.body" = "PhotoSoap stores preferences and review progress locally, including reviewed-item state, the delete list, statistics, streaks, goals, and achievements. This data operates the app and is not used for cross-app tracking.";
+"privacy.analytics.title" = "Optional usage analytics";
+"privacy.analytics.body" = "Analytics are off unless you choose to share them. If enabled, PhotoSoap may send a random installation identifier, app version and build, platform, submission date, and daily totals for items reviewed, kept, deleted, and estimated bytes freed to a backend powered by Supabase. It never includes media contents, filenames, asset identifiers, locations, contacts, or advertising identifiers. Turning analytics off stops collection, clears pending metrics, and removes the local analytics identifier. Previously submitted aggregate metrics may remain in community totals.";
+"privacy.tracking.title" = "Tracking and advertising";
+"privacy.tracking.body" = "PhotoSoap does not track you across apps or websites and does not use data for advertising.";
+"privacy.contact.title" = "Contact";
+"privacy.contact.body" = "For privacy or support questions, email photosoap@brokenmoha.de.";

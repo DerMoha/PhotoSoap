@@ -89,12 +89,8 @@ struct SettingsView: View {
 
     private var legalSection: some View {
         Section(String(localized: "settings.legal.title", table: "LocalizableShared")) {
-            Link(destination: ReleaseLinks.privacyPolicyURL) {
+            NavigationLink(destination: PrivacyPolicyView()) {
                 Label(String(localized: "settings.legal.privacyPolicy", table: "LocalizableShared"), systemImage: "hand.raised.fill")
-            }
-
-            Link(destination: ReleaseLinks.supportURL) {
-                Label(String(localized: "settings.legal.support", table: "LocalizableShared"), systemImage: "questionmark.circle.fill")
             }
         }
     }
