@@ -100,6 +100,7 @@
       }
     },
     "stats.adFreeUnlock" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -120,13 +121,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Optionale Nutzungsanalysen sind deaktiviert. Du kannst die App weiterhin nutzen, ohne sie zu aktivieren."
+            "value" : "Nutzungsanalysen sind deaktiviert. PhotoSoap sammelt oder lädt keine Nutzungsdaten hoch."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Optional usage analytics are currently off. You can keep using the app without enabling them."
+            "value" : "Usage analytics are off. PhotoSoap does not collect or upload usage data."
           }
         }
       }
@@ -346,13 +347,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nutzungsanalysen helfen, PhotoSoap zu verbessern, und sind standardmäßig deaktiviert. Wenn du sie aktivierst, teilt PhotoSoap Nutzungs-Gesamtzahlen wie Installationen, überprüfte und gelöschte Objekte mit einer zufälligen App-Installationskennung; niemals Foto- oder Videoinhalte, Asset-IDs oder Standortdaten."
+            "value" : "Wenn du zustimmst, teilt PhotoSoap Nutzungs-Gesamtzahlen wie Installationen, überprüfte und gelöschte Objekte mit einer zufälligen App-Installationskennung; niemals Foto- oder Videoinhalte, Asset-IDs oder Standortdaten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Usage analytics help improve PhotoSoap and are off by default. If you turn them on, PhotoSoap shares usage totals like installs, items reviewed, and items deleted with a random app install identifier; never photo or video contents, asset IDs, or location data."
+            "value" : "If you consent, PhotoSoap shares usage totals like installs, items reviewed, and items deleted with a random app install identifier; never photo or video contents, asset IDs, or location data."
           }
         }
       }

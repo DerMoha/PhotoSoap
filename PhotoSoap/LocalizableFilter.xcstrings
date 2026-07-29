@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "filter.accessibility" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotos filtern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter photos"
+          }
+        }
+      }
+    },
     "filter.albums" : {
       "localizations" : {
         "de" : {
@@ -17,22 +33,6 @@
         }
       }
     },
-    "filter.allPhotos" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle Fotos"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All Photos"
-          }
-        }
-      }
-    },
     "filter.allMedia" : {
       "localizations" : {
         "de" : {
@@ -45,6 +45,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "All Media"
+          }
+        }
+      }
+    },
+    "filter.allPhotos" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Fotos"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Photos"
           }
         }
       }
@@ -97,23 +113,8 @@
         }
       }
     },
-    "filter.accessibility" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fotos filtern"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filter photos"
-          }
-        }
-      }
-    },
     "filter.entireLibrary" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -189,22 +190,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Loading filters..."
-          }
-        }
-      }
-    },
-    "filter.month" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monat %d"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Month %d"
           }
         }
       }
@@ -317,6 +302,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Review only videos from the same filters."
+          }
+        }
+      }
+    },
+    "filter.month" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monat %d"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Month %d"
           }
         }
       }

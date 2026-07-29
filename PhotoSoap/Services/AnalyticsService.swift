@@ -58,6 +58,10 @@ struct AnalyticsEvent: Equatable {
         AnalyticsEvent("stats_viewed")
     }
 
+    static func feedbackOpened(source: String) -> AnalyticsEvent {
+        AnalyticsEvent("feedback_opened", properties: ["source": source])
+    }
+
     private static func reviewEvent(_ name: String, filter: PhotoFilter, mediaKind: ReviewMediaKind) -> AnalyticsEvent {
         AnalyticsEvent(name, properties: [
             "filter": filter.analyticsValue,

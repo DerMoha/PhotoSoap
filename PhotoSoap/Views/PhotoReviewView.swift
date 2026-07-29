@@ -46,10 +46,18 @@ struct PhotoReviewView: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
 
+                GeometryReader { geometry in
+                    swipeDecisionBackdrop(cardWidth: geometry.size.width)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .allowsHitTesting(false)
+
                 VStack(spacing: 0) {
-                    compactHeaderSection
-                        .padding(.horizontal)
-                        .padding(.top, 8)
+                    if !viewModel.noMorePhotos {
+                        compactHeaderSection
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                    }
 
                     if shouldShowLimitedAccessBanner {
                         limitedAccessBanner
@@ -62,9 +70,10 @@ struct PhotoReviewView: View {
                         loadingView
                         Spacer()
                     } else if viewModel.noMorePhotos {
-                        Spacer()
-                        noMorePhotosView
-                        Spacer()
+                        ScrollView {
+                            noMorePhotosView
+                                .frame(maxWidth: .infinity)
+                        }
                     } else if let photo = viewModel.currentPhoto {
                         reviewContent(photo: photo)
                             .padding(.top, 6)
@@ -259,27 +268,23 @@ struct PhotoReviewView: View {
     }
 
     private func photoCardSection(photo: Photo) -> some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .bottom) {
-                swipeDecisionBackdrop(cardWidth: geometry.size.width)
+        ZStack(alignment: .bottom) {
+            PhotoCardDisplay(
+                photo: photo,
+                photoLibraryService: photoLibraryService,
+                offset: viewModel.cardOffset,
+                rotation: viewModel.cardRotation,
+                swipeProgress: viewModel.swipeProgress,
+                swipeDirection: viewModel.swipeDirection
+            )
 
-                PhotoCardDisplay(
-                    photo: photo,
-                    photoLibraryService: photoLibraryService,
-                    offset: viewModel.cardOffset,
-                    rotation: viewModel.cardRotation,
-                    swipeProgress: viewModel.swipeProgress,
-                    swipeDirection: viewModel.swipeDirection
-                )
-
-                if shouldShowPreviewHint {
-                    previewHintChip
-                        .padding(.bottom, 56)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
+            if shouldShowPreviewHint {
+                previewHintChip
+                    .padding(.bottom, 56)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .gesture(
             DragGesture()
                 .onChanged { value in
@@ -779,7 +784,7 @@ struct PhotoReviewView: View {
 
     @ViewBuilder
     private var bottomChrome: some View {
-        if viewModel.pendingDeletionCount > 0 {
+        if viewModel.pendingDeletionCount > 0 && !viewModel.noMorePhotos {
             VStack(spacing: 8) {
                 deleteQueueTray
             }

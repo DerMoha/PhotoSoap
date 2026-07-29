@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var hapticsService: HapticsService
+    @Environment(\.openURL) private var openURL
 
     @ObservedObject var privacyCollectionService: PrivacyCollectionService
 
@@ -14,6 +15,7 @@ struct SettingsView: View {
     var body: some View {
         List {
             feedbackSection
+            hapticsSection
             deletionSection
             privacySection
             legalSection
@@ -32,7 +34,29 @@ struct SettingsView: View {
     }
 
     private var feedbackSection: some View {
-        Section(String(localized: "settings.feedback", table: "LocalizableShared")) {
+        Section(String(localized: "settings.feedback.title", table: "LocalizableShared")) {
+            Button {
+                privacyCollectionService.track(.feedbackOpened(source: "github"))
+                openURL(ReleaseLinks.issuesURL)
+            } label: {
+                Label(String(localized: "settings.feedback.reportIssue", table: "LocalizableShared"), systemImage: "exclamationmark.bubble.fill")
+            }
+            .tint(.blue)
+
+            Button {
+                privacyCollectionService.track(.feedbackOpened(source: "email"))
+                if let url = ReleaseLinks.feedbackMailtoURL {
+                    openURL(url)
+                }
+            } label: {
+                Label(String(localized: "settings.feedback.sendFeedback", table: "LocalizableShared"), systemImage: "envelope.fill")
+            }
+            .tint(.blue)
+        }
+    }
+
+    private var hapticsSection: some View {
+        Section(String(localized: "settings.haptics", table: "LocalizableShared")) {
             Toggle(isOn: hapticsToggleBinding) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(String(localized: "settings.feedback.haptics", table: "LocalizableShared"))
@@ -121,8 +145,26 @@ struct SettingsView: View {
 }
 
 private enum ReleaseLinks {
-    static let privacyPolicyURL = URL(string: "https://github.com/DerMoha/PhotoSoap/blob/main/PRIVACY.md")!
-    static let supportURL = URL(string: "https://github.com/DerMoha/PhotoSoap/issues")!
+    static let issuesURL = URL(string: "https://github.com/DerMoha/PhotoSoap/issues/new")!
+    static let feedbackEmail = "photosoap@brokenmoha.de"
+
+    static var feedbackMailtoURL: URL? {
+        let appVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "?"
+        let buildNumber = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "?"
+        let systemVersion = ProcessInfo.processInfo.operatingSystemVersionString
+
+        let subject = "PhotoSoap Feedback"
+        let body = "App Version \(appVersion) (\(buildNumber)) — \(systemVersion)\n\n"
+
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = feedbackEmail
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
+        ]
+        return components.url
+    }
 }
 
 #Preview {

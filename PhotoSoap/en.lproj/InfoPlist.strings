@@ -1,0 +1,2 @@
+"NSPhotoLibraryUsageDescription" = "PhotoSoap needs access to your photo library so you can review photos and videos and choose which ones to delete.";
+"NSPhotoLibraryAddUsageDescription" = "PhotoSoap needs permission to make changes when you delete selected photos or videos.";
