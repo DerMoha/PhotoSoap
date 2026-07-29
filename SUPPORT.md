@@ -1,8 +1,10 @@
 # PhotoSoap Support
 
-For help with PhotoSoap, open a support request at:
+For help with PhotoSoap, visit:
 
-https://github.com/DerMoha/PhotoSoap/issues
+https://dermoha.github.io/PhotoSoap/support.html
+
+You can contact support directly at photosoap@brokenmoha.de.
 
 Please include:
 
@@ -25,4 +27,4 @@ Swipe left adds the item to your Delete List by default. Open the Delete List an
 
 ### Analytics and privacy
 
-Usage analytics are off by default. You can change this in Settings. If analytics are off, PhotoSoap does not collect or upload usage analytics.
+PhotoSoap asks during onboarding whether you want to share community usage totals. You can change this choice in Settings. If analytics are off, PhotoSoap does not collect or upload usage analytics.
