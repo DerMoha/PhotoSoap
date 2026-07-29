@@ -144,7 +144,6 @@ struct RemoteAggregateMetricsSink: AggregateMetricsSink {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue(anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(anonKey)", forHTTPHeaderField: "Authorization")
 
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -207,6 +206,7 @@ final class AggregateMetricsService: ObservableObject {
 
     private static let dailyFlushInterval: TimeInterval = 24 * 60 * 60
     private static let maxPendingDaysBeforeFlush = 3
+    private static let maxRetainedMetricDays = 14
     private static let maxPendingReviewsBeforeFlush = 200
     private static let maxPendingBytesBeforeFlush: Int64 = 500_000_000
     private static let retrySchedule: [TimeInterval] = [15 * 60, 60 * 60, 6 * 60 * 60]
@@ -216,6 +216,7 @@ final class AggregateMetricsService: ObservableObject {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "yyyy-MM-dd"
+        formatter.isLenient = false
         return formatter
     }()
 
@@ -350,6 +351,7 @@ final class AggregateMetricsService: ObservableObject {
     private func mutateCurrentBucket(_ mutation: (inout PersistedDailyMetricsBucket) -> Void) {
         let currentDate = Self.metricDateString(from: now())
         let updatedAt = now()
+        pruneExpiredBuckets(referenceDate: updatedAt)
 
         if let index = state.dailyBuckets.firstIndex(where: { $0.metricDate == currentDate }) {
             mutation(&state.dailyBuckets[index])
@@ -393,6 +395,9 @@ final class AggregateMetricsService: ObservableObject {
 
     private func flushPendingMetrics(force: Bool, ignoreRetryWindow: Bool) async {
         let referenceDate = now()
+        if pruneExpiredBuckets(referenceDate: referenceDate) {
+            persistState()
+        }
 
         guard canAttemptFlush(at: referenceDate, ignoreRetryWindow: ignoreRetryWindow) else { return }
         guard force || shouldFlushNow(at: referenceDate) else { return }
@@ -552,6 +557,17 @@ final class AggregateMetricsService: ObservableObject {
         sortBuckets()
     }
 
+    @discardableResult
+    private func pruneExpiredBuckets(referenceDate: Date) -> Bool {
+        let validRange = Self.retainedMetricDateRange(referenceDate: referenceDate)
+        let previousCount = state.dailyBuckets.count
+        state.dailyBuckets.removeAll {
+            $0.metricDate < validRange.lowerBound || $0.metricDate > validRange.upperBound
+        }
+        sortBuckets()
+        return state.dailyBuckets.count != previousCount
+    }
+
     private func persistState() {
         pendingMetrics = Self.pendingMetrics(from: state)
 
@@ -596,9 +612,14 @@ final class AggregateMetricsService: ObservableObject {
 
     private static func sanitize(state: PersistedAggregateMetricsState, now: Date) -> PersistedAggregateMetricsState {
         var mergedBucketsByDate: [String: PersistedDailyMetricsBucket] = [:]
+        let validRange = retainedMetricDateRange(referenceDate: now)
 
         for bucket in state.dailyBuckets {
             guard let sanitizedBucket = bucket.sanitized() else { continue }
+            guard sanitizedBucket.metricDate >= validRange.lowerBound,
+                  sanitizedBucket.metricDate <= validRange.upperBound,
+                  let parsedDate = metricDateFormatter.date(from: sanitizedBucket.metricDate),
+                  metricDateFormatter.string(from: parsedDate) == sanitizedBucket.metricDate else { continue }
 
             if var existingBucket = mergedBucketsByDate[sanitizedBucket.metricDate] {
                 existingBucket.merge(with: sanitizedBucket)
@@ -647,5 +668,16 @@ final class AggregateMetricsService: ObservableObject {
 
     private static func metricDateString(from date: Date) -> String {
         metricDateFormatter.string(from: date)
+    }
+
+    private static func retainedMetricDateRange(referenceDate: Date) -> ClosedRange<String> {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let earliestDate = calendar.date(
+            byAdding: .day,
+            value: -(maxRetainedMetricDays - 1),
+            to: referenceDate
+        ) ?? referenceDate
+        return metricDateString(from: earliestDate)...metricDateString(from: referenceDate)
     }
 }
