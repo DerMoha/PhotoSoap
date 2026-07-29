@@ -17,6 +17,7 @@ struct ContentView: View {
     @EnvironmentObject private var hapticsService: HapticsService
     @State private var selectedTab: MainTab = .review
     @State private var showBootstrapAlert = false
+    @State private var showAnalyticsConsentPrompt = false
     @State private var hasTrackedAppOpen = false
     @State private var activeStats: UserStats?
 
@@ -70,6 +71,7 @@ struct ContentView: View {
                 photoLibraryService.authorizationStatus,
                 privacyCollectionService: privacyCollectionService
             )
+            presentAnalyticsConsentPromptIfNeeded()
         }
         .onChange(of: scenePhase) { _, newPhase in
             startupRoutingService.handleScenePhase(
@@ -81,6 +83,7 @@ struct ContentView: View {
         }
         .onChange(of: photoLibraryService.authorizationStatus) { _, status in
             startupRoutingService.trackPermissionStatus(status, privacyCollectionService: privacyCollectionService)
+            presentAnalyticsConsentPromptIfNeeded()
         }
         .onChange(of: hasSeenQuickStartInfo) { _, _ in
             refreshPhotoLibraryStateIfNeeded()
@@ -92,6 +95,11 @@ struct ContentView: View {
             Button(String(localized: "common.ok", defaultValue: "OK", table: "LocalizableShared")) {}
         } message: {
             Text(bootstrapErrorMessage ?? "")
+        }
+        .fullScreenCover(isPresented: $showAnalyticsConsentPrompt) {
+            QuickStartInfoView(showsFullIntro: false) {
+                showAnalyticsConsentPrompt = false
+            }
         }
     }
 
@@ -169,6 +177,14 @@ struct ContentView: View {
             hasSeenQuickStartInfo: hasSeenQuickStartInfo,
             photoLibraryService: photoLibraryService
         )
+    }
+
+    private func presentAnalyticsConsentPromptIfNeeded() {
+        guard startupRoute == .main else { return }
+        guard hasSeenQuickStartInfo else { return }
+        guard PrivacyCollectionService.requiresConsentChoice() else { return }
+
+        showAnalyticsConsentPrompt = true
     }
 }
 
@@ -318,45 +334,223 @@ private struct MigrationWarningBanner: View {
 }
 
 private struct QuickStartInfoView: View {
+    private enum AnalyticsConsent: Equatable {
+        case share
+        case doNotShare
+    }
+
+    @EnvironmentObject private var privacyCollectionService: PrivacyCollectionService
     @AppStorage("hasSeenQuickStartInfo") private var hasSeenQuickStartInfo = false
+    @State private var analyticsConsent: AnalyticsConsent?
+    @State private var showsPrivacyPolicy = false
+
+    let showsFullIntro: Bool
+    let onComplete: () -> Void
+
+    init(showsFullIntro: Bool = true, onComplete: @escaping () -> Void = {}) {
+        self.showsFullIntro = showsFullIntro
+        self.onComplete = onComplete
+    }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    onboardingHero
-
-                    SwipeTutorialDemoCard()
-
-                    VStack(spacing: 14) {
-                        QuickStartCard(
-                            title: String(localized: "onboarding.card.privacy.title", table: "LocalizableOnboarding"),
-                            systemImage: "lock.shield.fill",
-                            tint: .blue,
-                            message: String(localized: "onboarding.card.privacy.description", table: "LocalizableOnboarding")
-                        )
-
-                        QuickStartCard(
-                            title: String(localized: "onboarding.card.reward.title", table: "LocalizableOnboarding"),
-                            systemImage: "sparkles",
-                            tint: .green,
-                            message: String(localized: "onboarding.card.reward.description", table: "LocalizableOnboarding")
-                        )
+            Group {
+                if showsFullIntro {
+                    ScrollView {
+                        fullOnboardingContent
+                            .padding(20)
                     }
+                } else {
+                    analyticsConsentCard
+                        .padding(20)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
-                .padding(20)
             }
             .background(backgroundGradient)
             .safeAreaInset(edge: .bottom) {
-                Button(String(localized: "onboarding.cta", table: "LocalizableOnboarding")) {
-                    hasSeenQuickStartInfo = true
+                if showsFullIntro {
+                    Button(String(localized: "onboarding.cta", table: "LocalizableOnboarding")) {
+                        completeOnboarding()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(analyticsConsent == nil)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(.ultraThinMaterial)
                 }
-                .buttonStyle(.borderedProminent)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(.ultraThinMaterial)
             }
         }
+        .onAppear {
+            restoreAnalyticsConsentIfAvailable()
+        }
+        .sheet(isPresented: $showsPrivacyPolicy) {
+            NavigationStack {
+                PrivacyPolicyView()
+            }
+        }
+    }
+
+    private var fullOnboardingContent: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            onboardingHero
+            SwipeTutorialDemoCard()
+
+            VStack(spacing: 14) {
+                QuickStartCard(
+                    title: String(localized: "onboarding.card.privacy.title", table: "LocalizableOnboarding"),
+                    systemImage: "lock.shield.fill",
+                    tint: .blue,
+                    message: String(localized: "onboarding.card.privacy.description", table: "LocalizableOnboarding")
+                )
+
+                QuickStartCard(
+                    title: String(localized: "onboarding.card.reward.title", table: "LocalizableOnboarding"),
+                    systemImage: "sparkles",
+                    tint: .green,
+                    message: String(localized: "onboarding.card.reward.description", table: "LocalizableOnboarding")
+                )
+            }
+
+            analyticsConsentCard
+        }
+    }
+
+    private var analyticsConsentCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.12))
+                        .frame(width: 42, height: 42)
+
+                    Image(systemName: "chart.bar.xaxis")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.blue)
+                }
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(String(localized: "onboarding.analytics.title", defaultValue: "Build the PhotoSoap community", table: "LocalizableOnboarding"))
+                        .font(.headline)
+
+                    Text(String(localized: "onboarding.analytics.description", defaultValue: "Share totals for what the community reviews, keeps, and cleans up.", table: "LocalizableOnboarding"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            analyticsDetail(
+                String(localized: "onboarding.analytics.privacy", defaultValue: "No photo or video contents, asset IDs, or location data", table: "LocalizableOnboarding"),
+                systemImage: "lock.shield.fill"
+            )
+
+            VStack(spacing: 10) {
+                analyticsChoiceButton(
+                    title: String(localized: "onboarding.analytics.share", defaultValue: "Share community totals", table: "LocalizableOnboarding"),
+                    systemImage: "chart.bar.fill",
+                    choice: .share
+                )
+
+                analyticsChoiceButton(
+                    title: String(localized: "onboarding.analytics.decline", defaultValue: "Not now", table: "LocalizableOnboarding"),
+                    systemImage: "hand.raised",
+                    choice: .doNotShare
+                )
+            }
+
+            VStack(spacing: 6) {
+                Text(String(localized: "onboarding.analytics.identifier", defaultValue: "Includes a random app identifier, app version, and platform.", table: "LocalizableOnboarding"))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+
+                Button(
+                    String(localized: "onboarding.analytics.privacyPolicy", defaultValue: "Read the privacy policy", table: "LocalizableOnboarding")
+                ) {
+                    showsPrivacyPolicy = true
+                }
+                .font(.caption.weight(.semibold))
+
+                if showsFullIntro {
+                    Text(analyticsConsent == nil
+                         ? String(localized: "onboarding.analytics.choose", defaultValue: "Choose an option.", table: "LocalizableOnboarding")
+                         : String(localized: "onboarding.analytics.changeLater", defaultValue: "Change this anytime in Settings. PhotoSoap works the same either way.", table: "LocalizableOnboarding"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .padding(20)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: .black.opacity(0.06), radius: 14, x: 0, y: 8)
+    }
+
+    private func analyticsDetail(_ title: String, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func analyticsChoiceButton(
+        title: String,
+        systemImage: String,
+        choice: AnalyticsConsent
+    ) -> some View {
+        let isSelected = analyticsConsent == choice
+
+        return Button {
+            handleAnalyticsChoice(choice)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                Text(title)
+                    .fontWeight(.semibold)
+                Spacer()
+                Image(systemName: showsFullIntro
+                      ? (isSelected ? "checkmark.circle.fill" : "circle")
+                      : "arrow.right")
+            }
+            .foregroundStyle(choice == .share ? Color.white : Color.primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .background(choice == .share ? Color.blue : Color(.tertiarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(choice == .share ? Color.blue : Color(.separator).opacity(0.25), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func handleAnalyticsChoice(_ choice: AnalyticsConsent) {
+        analyticsConsent = choice
+
+        if !showsFullIntro {
+            completeOnboarding(with: choice)
+        }
+    }
+
+    private func restoreAnalyticsConsentIfAvailable() {
+        guard let storedValue = UserDefaults.standard.object(forKey: AnalyticsService.analyticsEnabledKey) as? Bool else {
+            return
+        }
+
+        analyticsConsent = storedValue ? .share : .doNotShare
+    }
+
+    private func completeOnboarding() {
+        guard let analyticsConsent else { return }
+
+        completeOnboarding(with: analyticsConsent)
+    }
+
+    private func completeOnboarding(with analyticsConsent: AnalyticsConsent) {
+        privacyCollectionService.setEnabled(analyticsConsent == .share)
+        hasSeenQuickStartInfo = true
+        onComplete()
     }
 
     private var backgroundGradient: some View {

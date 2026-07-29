@@ -1,19 +1,163 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "onboarding.analytics.changeLater" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jederzeit in den Einstellungen änderbar. PhotoSoap funktioniert mit beiden Optionen gleich."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change this anytime in Settings. PhotoSoap works the same either way."
+          }
+        }
+      }
+    },
+    "onboarding.analytics.choose" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle eine Option aus."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an option."
+          }
+        }
+      }
+    },
+    "onboarding.analytics.decline" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht jetzt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not now"
+          }
+        }
+      }
+    },
+    "onboarding.analytics.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teile Gesamtzahlen darüber, was die Community überprüft, behält und aufräumt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share totals for what the community reviews, keeps, and cleans up."
+          }
+        }
+      }
+    },
+    "onboarding.analytics.privacy" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Foto- oder Videoinhalte, Asset-IDs oder Standortdaten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No photo or video contents, asset IDs, or location data"
+          }
+        }
+      }
+    },
+    "onboarding.analytics.identifier" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthält eine zufällige App-Kennung, App-Version und Plattform."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Includes a random app identifier, app version, and platform."
+          }
+        }
+      }
+    },
+    "onboarding.analytics.privacyPolicy" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenschutzerklärung lesen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read the privacy policy"
+          }
+        }
+      }
+    },
+    "onboarding.analytics.share" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community-Gesamtzahlen teilen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share community totals"
+          }
+        }
+      }
+    },
+    "onboarding.analytics.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baue die PhotoSoap-Community mit auf"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build the PhotoSoap community"
+          }
+        }
+      }
+    },
     "onboarding.card.anonymity.description" : {
       "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nutzungsanalysen sind standardmäßig deaktiviert. Wenn du sie aktivierst, teilt PhotoSoap nur Nutzungs-Gesamtzahlen mit einer zufälligen App-Installationskennung; niemals Fotoinhalte oder Standortdaten."
+            "value" : "PhotoSoap fragt dich beim Einrichten, ob du Community-Nutzungszahlen teilen möchtest. Ohne deine Zustimmung werden keine Nutzungsanalysen gesammelt oder hochgeladen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Usage analytics are off by default. If enabled, PhotoSoap shares only usage totals with a random app install identifier; never photo contents or location data."
+            "value" : "PhotoSoap asks during setup whether you want to share community usage totals. Without your consent, no usage analytics are collected or uploaded."
           }
         }
       }

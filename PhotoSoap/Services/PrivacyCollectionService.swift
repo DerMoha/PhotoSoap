@@ -14,6 +14,10 @@ final class PrivacyCollectionService: ObservableObject {
         self.isEnabled = analyticsService.isEnabled
     }
 
+    static func requiresConsentChoice(in defaults: UserDefaults = .standard) -> Bool {
+        defaults.object(forKey: AnalyticsService.analyticsEnabledKey) == nil
+    }
+
     func setEnabled(_ enabled: Bool) {
         analyticsService.setEnabled(enabled)
         aggregateMetricsService.setEnabled(enabled)

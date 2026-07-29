@@ -17,13 +17,27 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
-    func testAnalyticsServiceIsDisabledByDefault() {
+    func testAnalyticsServiceIsDisabledUntilUserChoosesToShare() {
         let defaults = makeTestDefaults()
 
         let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
 
         XCTAssertFalse(analyticsService.isEnabled)
         XCTAssertFalse(AnalyticsService.isEnabled(in: defaults))
+    }
+
+    @MainActor
+    func testDecliningAnalyticsPersistsAnExplicitChoice() {
+        let defaults = makeTestDefaults()
+        let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
+
+        XCTAssertNil(defaults.object(forKey: AnalyticsService.analyticsEnabledKey))
+        XCTAssertTrue(PrivacyCollectionService.requiresConsentChoice(in: defaults))
+
+        analyticsService.setEnabled(false)
+
+        XCTAssertEqual(defaults.object(forKey: AnalyticsService.analyticsEnabledKey) as? Bool, false)
+        XCTAssertFalse(PrivacyCollectionService.requiresConsentChoice(in: defaults))
     }
 
     @MainActor
