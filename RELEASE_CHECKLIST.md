@@ -4,10 +4,10 @@ Use this before submitting a build to App Store Connect.
 
 ## Required Before Submission
 
-- Confirm the Privacy Policy URL is public: https://github.com/DerMoha/PhotoSoap/blob/main/PRIVACY.md
-- Confirm the Support URL is public: https://github.com/DerMoha/PhotoSoap/issues
+- Publish the `Docs` site and confirm the Privacy Policy URL returns HTTP 200: https://dermoha.github.io/PhotoSoap/privacy.html
+- Confirm the Support URL returns HTTP 200 and its email link opens correctly: https://dermoha.github.io/PhotoSoap/support.html
 - Confirm App Store privacy labels match `PRIVACY.md` and `PhotoSoap/PrivacyInfo.xcprivacy`.
-- Confirm optional usage analytics are off by default and can be disabled from Settings.
+- Confirm onboarding requires an explicit analytics choice, declining preserves all app functionality, and analytics can be disabled from Settings.
 - Confirm `PhotoSoap/Configuration/Secrets.xcconfig` is ignored and not committed.
 - Confirm Release builds include production `PHOTOSOAP_METRICS_ENDPOINT_URL` and `PHOTOSOAP_METRICS_ANON_KEY` values.
 - Confirm the Supabase metrics ingest function is deployed and accepts production requests.
@@ -47,6 +47,6 @@ xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Release
 - Bundle ID: com.dermoha.PhotoSoap
 - Version: 1.0
 - Build: 1
-- Privacy Policy URL: https://github.com/DerMoha/PhotoSoap/blob/main/PRIVACY.md
-- Support URL: https://github.com/DerMoha/PhotoSoap/issues
+- Privacy Policy URL: https://dermoha.github.io/PhotoSoap/privacy.html
+- Support URL: https://dermoha.github.io/PhotoSoap/support.html
 - Review notes explain that PhotoSoap uses Photos permission for local review and iOS shows the final deletion confirmation.
