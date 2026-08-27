@@ -20,10 +20,11 @@ struct PhotoCard: View {
     }
 
     private func cardContent(size: CGSize) -> some View {
-        let metadataHeight: CGFloat = 40
-        let imageHeight = size.height - metadataHeight
         return VStack(spacing: 0) {
-            photoImage(size: CGSize(width: size.width, height: imageHeight))
+            GeometryReader { imageGeometry in
+                photoImage(size: imageGeometry.size)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             compactMetadata
         }
         .frame(width: size.width, height: size.height)
@@ -42,12 +43,7 @@ struct PhotoCard: View {
                     .frame(width: size.width, height: size.height)
                     .clipped()
             } else {
-                Rectangle()
-                    .fill(Color(.systemGray4))
-                    .frame(width: size.width, height: size.height)
-                    .overlay {
-                        ProgressView()
-                    }
+                mediaPlaceholder(size: size)
             }
 
             if photo.isVideo {
@@ -64,6 +60,17 @@ struct PhotoCard: View {
             }
         }
         .frame(width: size.width, height: size.height)
+    }
+
+    private func mediaPlaceholder(size: CGSize) -> some View {
+        Rectangle()
+            .fill(Color(.systemGray5))
+            .frame(width: size.width, height: size.height)
+            .overlay {
+                Image(systemName: photo.isVideo ? "video.fill" : "photo.fill")
+                    .font(.system(size: 42, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
     }
 
     private var videoPlayBadge: some View {

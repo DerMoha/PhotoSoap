@@ -22,8 +22,6 @@ struct PhotoCardDisplay: View {
         .task(id: photo.id) {
             fetchedFileSize = nil
 
-            guard !photo.isVideo else { return }
-
             guard photo.fileSize <= 0 else {
                 fetchedFileSize = photo.fileSize > 0 ? photo.fileSize : nil
                 return
