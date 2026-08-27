@@ -15,6 +15,7 @@ struct PhotoCard: View {
                 overlays
             }
         }
+        .rotationEffect(.degrees(rotation))
         .offset(x: offset.width, y: 0)
     }
 

@@ -286,7 +286,7 @@ final class PhotoReviewViewModel: ObservableObject {
         withTransaction(t) {
             cardOffset = CGSize(width: value.translation.width, height: 0)
         }
-        cardRotation = 0
+        cardRotation = Double(max(-12.0, min(12.0, value.translation.width / 40)))
 
         let translation = value.translation.width
         let distance = abs(translation)
@@ -313,12 +313,14 @@ final class PhotoReviewViewModel: ObservableObject {
         if value.translation.width > swipeActionThreshold {
             withAnimation(.easeOut(duration: 0.3)) {
                 cardOffset = CGSize(width: 500, height: 0)
+                cardRotation = 12
             }
             try? await Task.sleep(nanoseconds: 200_000_000)
             await keepPhoto()
         } else if value.translation.width < -swipeActionThreshold {
             withAnimation(.easeOut(duration: 0.3)) {
                 cardOffset = CGSize(width: -500, height: 0)
+                cardRotation = -12
             }
             try? await Task.sleep(nanoseconds: 200_000_000)
             if defaults.object(forKey: UserDefaultsKeys.deleteQueueEnabled) as? Bool ?? true {
