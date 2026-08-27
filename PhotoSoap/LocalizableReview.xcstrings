@@ -817,6 +817,22 @@
         }
       }
     },
+    "review.preview.photo" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo"
+          }
+        }
+      }
+    },
     "review.preview.video" : {
       "localizations" : {
         "de" : {
@@ -829,6 +845,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Video"
+          }
+        }
+      }
+    },
+    "review.accessibility.hint" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doppeltippen für die Vorschau. Nach rechts streichen zum Behalten, nach links zum Löschen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double-tap to preview. Swipe right to keep or swipe left to delete."
           }
         }
       }

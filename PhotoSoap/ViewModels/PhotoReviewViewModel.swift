@@ -335,6 +335,20 @@ final class PhotoReviewViewModel: ObservableObject {
         }
     }
 
+    func performKeepAction() async {
+        await keepPhoto()
+    }
+
+    func performDeleteAction() async {
+        guard !isProcessingAction else { return }
+
+        if defaults.object(forKey: UserDefaultsKeys.deleteQueueEnabled) as? Bool ?? true {
+            await queueCurrentPhotoForDeletion()
+        } else {
+            await deletePhoto()
+        }
+    }
+
     func refreshLibrary() {
         photoLibraryService.refreshLibrary()
         noMorePhotos = false
@@ -511,7 +525,11 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     func queueCurrentPhotoForDeletion() async {
+        guard !isProcessingAction else { return }
         guard let photo = currentPhoto else { return }
+
+        isProcessingAction = true
+        defer { isProcessingAction = false }
 
         var resolvedFileSize: Int64 = photo.fileSize
         if resolvedFileSize == 0 {

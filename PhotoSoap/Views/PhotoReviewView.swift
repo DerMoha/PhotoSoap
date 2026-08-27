@@ -302,7 +302,23 @@ struct PhotoReviewView: View {
                     presentPreview(for: photo)
                 }
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel(for: photo))
+        .accessibilityHint(String(localized: "review.accessibility.hint", defaultValue: "Double-tap to preview. Swipe right to keep or swipe left to delete.", table: "LocalizableReview"))
+        .accessibilityAction(named: Text(String(localized: "review.action.keep", defaultValue: "Keep photo", table: "LocalizableReview"))) {
+            Task { await viewModel.performKeepAction() }
+        }
+        .accessibilityAction(named: Text(String(localized: "review.action.delete", defaultValue: "Delete photo", table: "LocalizableReview"))) {
+            Task { await viewModel.performDeleteAction() }
+        }
         .animation(.easeInOut(duration: 0.2), value: shouldShowPreviewHint)
+    }
+
+    private func accessibilityLabel(for photo: Photo) -> String {
+        let mediaType = photo.isVideo
+            ? String(localized: "review.preview.video", defaultValue: "Video", table: "LocalizableReview")
+            : String(localized: "review.preview.photo", defaultValue: "Photo", table: "LocalizableReview")
+        return "\(mediaType), \(photo.formattedDate), \(photo.compactDimensions)"
     }
 
     private func presentPreview(for photo: Photo) {
