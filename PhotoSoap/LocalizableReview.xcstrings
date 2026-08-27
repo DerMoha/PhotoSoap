@@ -750,6 +750,22 @@
         }
       }
     },
+    "review.changeFilter" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter ändern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change filter"
+          }
+        }
+      }
+    },
     "review.loading" : {
       "localizations" : {
         "de" : {

@@ -513,6 +513,21 @@ struct PhotoReviewView: View {
             }
 
             VStack(spacing: 12) {
+                Button {
+                    viewModel.showFilterSheet = true
+                } label: {
+                    Label(
+                        String(localized: "review.changeFilter", defaultValue: "Change filter", table: "LocalizableReview"),
+                        systemImage: "line.3.horizontal.decrease.circle"
+                    )
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .foregroundStyle(.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
                 if viewModel.pendingDeletionCount > 0 {
                     Button {
                         viewModel.isShowingDeleteQueueSheet = true
