@@ -69,7 +69,6 @@ final class PhotoReviewViewModel: ObservableObject {
     private var stats: UserStats?
     private var hasRestoredPendingDeletionQueue = false
     private var pendingDeleteBatchAction: PendingDeleteBatchAction?
-    private var preloadTask: Task<Void, Never>?
 
     init(
         photoLibraryService: PhotoLibraryService,
@@ -211,8 +210,6 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     func loadInitialPhoto() async {
-        preloadTask?.cancel()
-        preloadTask = nil
         isLoading = true
         error = nil
         noMorePhotos = false
@@ -228,7 +225,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
             if let photo = try await nextAvailablePhoto(excluding: pendingDeletionIDs) {
                 currentPhoto = photo
-                startPreloadingNextPhoto()
+                await preloadNextPhoto()
             } else {
                 noMorePhotos = true
             }
@@ -323,84 +320,45 @@ final class PhotoReviewViewModel: ObservableObject {
         }
     }
 
-    func handleDragEnd(_ value: DragGesture.Value) {
+    func handleDragEnd(_ value: DragGesture.Value) async {
         guard !isProcessingAction else { return }
-        guard let direction = Self.swipeDecision(
-            translation: value.translation,
-            predictedTranslation: value.predictedEndTranslation
-        ) else {
+
+        if value.translation.width > swipeActionThreshold {
+            withAnimation(.easeOut(duration: 0.3)) {
+                cardOffset = CGSize(width: 500, height: 0)
+                cardRotation = 12
+            }
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            await keepPhoto()
+        } else if value.translation.width < -swipeActionThreshold {
+            withAnimation(.easeOut(duration: 0.3)) {
+                cardOffset = CGSize(width: -500, height: 0)
+                cardRotation = -12
+            }
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            if defaults.object(forKey: UserDefaultsKeys.deleteQueueEnabled) as? Bool ?? true {
+                await queueCurrentPhotoForDeletion()
+            } else {
+                await deletePhoto()
+            }
+        } else {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                 resetSwipeState()
             }
-            return
         }
-
-        // Reserve the action before scheduling work so another gesture cannot race it.
-        isProcessingAction = true
-        Task {
-            await processReviewAction(direction, animated: true)
-        }
-    }
-
-    static func swipeDecision(translation: CGSize, predictedTranslation: CGSize) -> SwipeDirection? {
-        let horizontal = translation.width
-        guard abs(horizontal) >= 20, abs(horizontal) > abs(translation.height) else { return nil }
-        let projected = predictedTranslation.width
-        let isFlick = horizontal * projected > 0 && abs(projected) >= 100
-        guard abs(horizontal) >= 100 || isFlick else { return nil }
-        return horizontal > 0 ? .keep : .delete
     }
 
     func performKeepAction() async {
-        guard !isProcessingAction else { return }
-        isProcessingAction = true
-        await processReviewAction(.keep)
+        await keepPhoto()
     }
 
     func performDeleteAction() async {
         guard !isProcessingAction else { return }
-        isProcessingAction = true
-        await processReviewAction(.delete)
-    }
 
-    func queueCurrentPhotoForDeletion() async {
-        guard !isProcessingAction else { return }
-        isProcessingAction = true
-        defer {
-            resetSwipeState()
-            isProcessingAction = false
-        }
-        await queuePhotoForDeletion()
-    }
-
-    private func processReviewAction(_ direction: SwipeDirection, animated: Bool = false) async {
-        defer {
-            resetSwipeState()
-            isProcessingAction = false
-        }
-        guard currentPhoto != nil else { return }
-
-        if animated {
-            withAnimation(.easeOut(duration: 0.2)) {
-                cardOffset = CGSize(width: direction == .keep ? 500 : -500, height: 0)
-                cardRotation = direction == .keep ? 12 : -12
-            }
-            do {
-                try await Task.sleep(nanoseconds: 200_000_000)
-            } catch {
-                return
-            }
-        }
-
-        switch direction {
-        case .keep:
-            await keepPhoto()
-        case .delete:
-            if defaults.object(forKey: UserDefaultsKeys.deleteQueueEnabled) as? Bool ?? true {
-                await queuePhotoForDeletion()
-            } else {
-                await deletePhoto()
-            }
+        if defaults.object(forKey: UserDefaultsKeys.deleteQueueEnabled) as? Bool ?? true {
+            await queueCurrentPhotoForDeletion()
+        } else {
+            await deletePhoto()
         }
     }
 
@@ -452,19 +410,10 @@ final class PhotoReviewViewModel: ObservableObject {
         }
     }
 
-    private func startPreloadingNextPhoto() {
-        preloadTask?.cancel()
-        preloadTask = Task { [weak self] in
-            await self?.preloadNextPhoto()
-        }
-    }
-
     private func preloadNextPhoto() async {
-        let sourcePhotoID = currentPhoto?.id
         var excluded = currentPhoto.map { Set<String>([$0.id]) } ?? Set<String>()
         excluded.formUnion(pendingDeletionIDs)
         if let photo = try? await nextAvailablePhoto(excluding: excluded) {
-            guard !Task.isCancelled, currentPhoto?.id == sourcePhotoID else { return }
             nextPhoto = photo
         }
     }
@@ -476,7 +425,6 @@ final class PhotoReviewViewModel: ObservableObject {
         let maxAttempts = max(80, photoLibraryService.getTotalPhotoCount())
 
         for _ in 0..<maxAttempts {
-            try Task.checkCancellation()
             guard let photo = try await photoLibraryService.getNextPhoto(excluding: attemptedIDs) else {
                 return nil
             }
@@ -507,7 +455,11 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     private func keepPhoto() async {
+        guard !isProcessingAction else { return }
         guard let photo = currentPhoto, let stats, let modelContext else { return }
+
+        isProcessingAction = true
+        defer { isProcessingAction = false }
 
         do {
             try reviewAccountingService.recordKeep(
@@ -534,7 +486,11 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     private func deletePhoto() async {
+        guard !isProcessingAction else { return }
         guard let photo = currentPhoto, let stats, let modelContext else { return }
+
+        isProcessingAction = true
+        defer { isProcessingAction = false }
 
         do {
             let resolvedFileSize: Int64
@@ -587,8 +543,12 @@ final class PhotoReviewViewModel: ObservableObject {
         }
     }
 
-    private func queuePhotoForDeletion() async {
+    func queueCurrentPhotoForDeletion() async {
+        guard !isProcessingAction else { return }
         guard let photo = currentPhoto else { return }
+
+        isProcessingAction = true
+        defer { isProcessingAction = false }
 
         var resolvedFileSize: Int64 = photo.fileSize
         if resolvedFileSize == 0 {
@@ -959,7 +919,6 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     private func advanceToNextPhoto() async {
-        await preloadTask?.value
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             resetSwipeState()
         }
@@ -967,7 +926,7 @@ final class PhotoReviewViewModel: ObservableObject {
         if let next = nextPhoto {
             currentPhoto = next
             nextPhoto = nil
-            startPreloadingNextPhoto()
+            await preloadNextPhoto()
         } else {
             await loadNextPhoto()
         }
@@ -976,7 +935,7 @@ final class PhotoReviewViewModel: ObservableObject {
     private func loadNextPhoto() async {
         if let photo = try? await nextAvailablePhoto(excluding: pendingDeletionIDs) {
             currentPhoto = photo
-            startPreloadingNextPhoto()
+            await preloadNextPhoto()
         } else {
             currentPhoto = nil
             noMorePhotos = true
@@ -998,7 +957,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
         if let photo = try? await nextAvailablePhoto(excluding: pendingDeletionIDs) {
             currentPhoto = photo
-            startPreloadingNextPhoto()
+            await preloadNextPhoto()
         } else {
             noMorePhotos = true
         }
