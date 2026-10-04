@@ -23,6 +23,8 @@ struct SettingsView: View {
             #if DEBUG
             developerSection
             #endif
+
+            appInfoSection
         }
         .navigationTitle(String(localized: "settings.title", table: "LocalizableShared"))
         .navigationBarTitleDisplayMode(.inline)
@@ -129,6 +131,16 @@ struct SettingsView: View {
     }
     #endif
 
+    private var appInfoSection: some View {
+        Section("PhotoSoap") {
+            LabeledContent(String(localized: "settings.app.version", defaultValue: "Version", table: "LocalizableShared")) {
+                Text(ReleaseLinks.versionDisplay)
+                    .monospacedDigit()
+                    .textSelection(.enabled)
+            }
+        }
+    }
+
     private var analyticsToggleBinding: Binding<Bool> {
         Binding(
             get: { privacyCollectionService.isEnabled },
@@ -148,9 +160,23 @@ private enum ReleaseLinks {
     static let issuesURL = URL(string: "https://github.com/DerMoha/PhotoSoap/issues/new")!
     static let feedbackEmail = "photosoap@brokenmoha.de"
 
+    static var appVersion: String {
+        (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "?"
+    }
+
+    static var buildNumber: String {
+        (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "?"
+    }
+
+    static var versionDisplay: String {
+        String(
+            format: String(localized: "settings.app.versionAndBuild", defaultValue: "%@ (Build %@)", table: "LocalizableShared"),
+            appVersion,
+            buildNumber
+        )
+    }
+
     static var feedbackMailtoURL: URL? {
-        let appVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "?"
-        let buildNumber = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "?"
         let systemVersion = ProcessInfo.processInfo.operatingSystemVersionString
 
         let subject = "PhotoSoap Feedback"
