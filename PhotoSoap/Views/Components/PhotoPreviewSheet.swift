@@ -45,13 +45,12 @@ struct PhotoPreviewSheet: View {
                 Button {
                     dismissPreview()
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 30))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 3)
-                        .padding(12)
+                    Image(systemName: "xmark")
+                        .font(.title3.weight(.semibold))
+                        .frame(minWidth: 32, minHeight: 32)
                 }
-                .buttonStyle(.plain)
+                .modifier(NativeGlassButtonStyle())
+                .buttonBorderShape(.circle)
                 .accessibilityLabel(String(localized: "common.done", table: "LocalizableShared"))
                 .scaleEffect(buttonScale)
                 .opacity(contentOpacity)
@@ -60,6 +59,7 @@ struct PhotoPreviewSheet: View {
                 .padding(.trailing, 8)
                 .allowsHitTesting(!isDismissing)
             }
+            .preferredColorScheme(.dark)
             .animation(.easeOut(duration: 0.22), value: isContentVisible)
             .animation(.easeInOut(duration: 0.2), value: showZoomHint)
         }
@@ -164,25 +164,18 @@ struct PhotoPreviewSheet: View {
                 } label: {
                     Text(String(localized: "common.retry", defaultValue: "Retry", table: "LocalizableShared"))
                         .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(.white.opacity(0.16))
-                        .clipShape(Capsule())
+
                 }
-                .buttonStyle(.plain)
+                .modifier(NativeGlassButtonStyle())
 
                 Button {
                     dismissPreview()
                 } label: {
                     Text(String(localized: "common.done", defaultValue: "Done", table: "LocalizableShared"))
                         .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(.white)
-                        .foregroundStyle(.black)
-                        .clipShape(Capsule())
+
                 }
-                .buttonStyle(.plain)
+                .modifier(NativeGlassButtonStyle(isProminent: true))
             }
             .padding(.top, 4)
         }
