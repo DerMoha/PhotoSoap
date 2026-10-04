@@ -20,7 +20,7 @@ struct DeleteBatchExplainerSheet: View {
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Text(String(localized: "review.queue.explainer.message", defaultValue: "PhotoSoap will ask iOS to delete \(itemCount) photos. Nothing is removed until you confirm the next iOS prompt. Deleted photos move to Recently Deleted.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.explainer.message", defaultValue: "PhotoSoap will ask iOS to delete \(itemCount) items. Nothing is removed until you confirm the next iOS prompt. Deleted items move to Recently Deleted.", table: "LocalizableReview"))
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

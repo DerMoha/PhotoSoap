@@ -38,13 +38,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lösche %d Fotos heute, um Speicher freizugeben"
+            "value" : "Lösche heute %d Medien, um Speicher freizugeben"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete %d photos today to free up space"
+            "value" : "Delete %d items today to free up space"
           }
         }
       }
@@ -54,13 +54,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bewerte %d Fotos heute, um diese Herausforderung abzuschließen"
+            "value" : "Bewerte heute %d Medien, um diese Herausforderung abzuschließen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Review %d photos today to complete this challenge"
+            "value" : "Review %d items today to complete this challenge"
           }
         }
       }
@@ -70,13 +70,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Halte eine Serie von %d aufeinanderfolgenden Fotobewertungen aufrecht"
+            "value" : "Halte eine Serie von %d aufeinanderfolgenden Medienbewertungen aufrecht"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Maintain a streak of %d consecutive photo reviews"
+            "value" : "Maintain a streak of %d consecutive item reviews"
           }
         }
       }
@@ -134,13 +134,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Serie von %d Fotos"
+            "value" : "Serie von %d Medien"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d-photo streak"
+            "value" : "%d-item streak"
           }
         }
       }
@@ -186,13 +186,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aktuelles Ziel: %d Fotos"
+            "value" : "Aktuelles Ziel: %d Medien"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Current goal: %d photos"
+            "value" : "Current goal: %d items"
           }
         }
       }
@@ -467,13 +467,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Foto löschen"
+            "value" : "Medium löschen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete photo"
+            "value" : "Delete item"
           }
         }
       }
@@ -483,13 +483,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Foto behalten"
+            "value" : "Medium behalten"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep photo"
+            "value" : "Keep item"
           }
         }
       }
@@ -1048,13 +1048,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle Objekte werden aus deiner Löschliste entfernt und in Fotos behalten."
+            "value" : "Alle Objekte werden aus deiner Löschliste entfernt und in deiner Mediathek behalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All items will be removed from your Delete List and kept in Photos."
+            "value" : "All items will be removed from your Delete List and kept in your library."
           }
         }
       }
@@ -1105,7 +1105,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In Fotos gelöscht"
+            "value" : "Aus der Mediathek gelöscht"
           }
         },
         "en" : {
@@ -1200,13 +1200,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap bittet iOS darum, %lld Objekte zu löschen. Nichts wird entfernt, bis du die nächste iOS-Abfrage bestätigst. Gelöschte Objekte landen in Zuletzt gelöscht."
+            "value" : "PhotoSoap bittet iOS darum, %lld Medien zu löschen. Nichts wird entfernt, bis du die nächste iOS-Abfrage bestätigst. Gelöschte Medien landen in Zuletzt gelöscht."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap will ask iOS to delete %lld photos. Nothing is removed until you confirm the next iOS prompt. Deleted photos move to Recently Deleted."
+            "value" : "PhotoSoap will ask iOS to delete %lld items. Nothing is removed until you confirm the next iOS prompt. Deleted items move to Recently Deleted."
           }
         }
       }
@@ -1251,13 +1251,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Objekte bleiben in Fotos, bis du das Löschen in iOS bestätigst."
+            "value" : "Diese Objekte bleiben in deiner Mediathek, bis du das Löschen in iOS bestätigst."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "These items stay in Photos until you confirm deletion in iOS."
+            "value" : "These items stay in your library until you confirm deletion in iOS."
           }
         }
       }
@@ -1335,13 +1335,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objekte in deiner Löschliste bleiben in Fotos, bis du die iOS-Abfrage zum Löschen bestätigst."
+            "value" : "Objekte in deiner Löschliste bleiben in deiner Mediathek, bis du die iOS-Abfrage zum Löschen bestätigst."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Items in your Delete List stay in Photos until you confirm the iOS deletion prompt."
+            "value" : "Items in your Delete List stay in your library until you confirm the iOS deletion prompt."
           }
         }
       }

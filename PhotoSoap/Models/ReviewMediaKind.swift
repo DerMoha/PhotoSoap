@@ -1,6 +1,6 @@
 import Foundation
 
-enum ReviewMediaKind: String, CaseIterable, Identifiable {
+enum ReviewMediaKind: String, CaseIterable, Identifiable, Hashable {
     case photos
     case videos
     case all
@@ -37,6 +37,31 @@ enum ReviewMediaKind: String, CaseIterable, Identifiable {
             return String(localized: "filter.entireVideoLibrary", defaultValue: "Your video library", table: "LocalizableFilter")
         case .all:
             return String(localized: "filter.entireMediaLibrary", defaultValue: "Your photos and videos", table: "LocalizableFilter")
+        }
+    }
+}
+
+enum ReviewMediaType: String, CaseIterable, Identifiable, Hashable {
+    case photo
+    case video
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .photo:
+            return String(localized: "filter.media.photos", defaultValue: "Photos", table: "LocalizableFilter")
+        case .video:
+            return String(localized: "filter.media.videos", defaultValue: "Videos", table: "LocalizableFilter")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .photo:
+            return "photo.stack"
+        case .video:
+            return "video.fill"
         }
     }
 }

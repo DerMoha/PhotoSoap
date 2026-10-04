@@ -16,15 +16,16 @@ class GamificationService: ObservableObject {
         fileSize: Int64,
         stats: UserStats,
         challengeType: DailyChallengeType,
-        context: ModelContext
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
     ) {
-        stats.incrementReviewed()
+        stats.incrementReviewed(mediaType: mediaType)
 
         switch action {
         case .keep:
-            stats.incrementKept()
+            stats.incrementKept(mediaType: mediaType)
         case .delete:
-            stats.incrementDeleted(fileSize: fileSize)
+            stats.incrementDeleted(fileSize: fileSize, mediaType: mediaType)
         }
 
         stats.updateDailyChallengeProgress(for: challengeType)
@@ -36,9 +37,10 @@ class GamificationService: ObservableObject {
     func processQueuedDeletionReview(
         stats: UserStats,
         challengeType: DailyChallengeType,
-        context: ModelContext
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
     ) {
-        stats.incrementReviewed()
+        stats.incrementReviewed(mediaType: mediaType)
 
         if challengeType == .review {
             stats.updateDailyChallengeProgress(for: .review)
@@ -52,9 +54,10 @@ class GamificationService: ObservableObject {
         fileSize: Int64,
         stats: UserStats,
         challengeType: DailyChallengeType,
-        context: ModelContext
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
     ) {
-        stats.incrementQueuedDeletionCommit(fileSize: fileSize)
+        stats.incrementQueuedDeletionCommit(fileSize: fileSize, mediaType: mediaType)
 
         if challengeType == .delete {
             stats.updateDailyChallengeProgress(for: .delete)
@@ -70,11 +73,14 @@ class GamificationService: ObservableObject {
         context: ModelContext
     ) throws {
         let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
-        for reviewedPhoto in try context.fetch(descriptor) {
+        let reviewedPhotos = try context.fetch(descriptor)
+        let mediaType = reviewedPhotos.first?.reviewMediaType ?? .photo
+
+        for reviewedPhoto in reviewedPhotos {
             context.delete(reviewedPhoto)
         }
 
-        stats.decrementQueuedReview()
+        stats.decrementQueuedReview(mediaType: mediaType)
         if challengeType == .review {
             stats.decrementDailyChallengeProgress(for: .review)
         }
@@ -88,10 +94,10 @@ class GamificationService: ObservableObject {
 
     // MARK: - Review History Management
 
-    func markPhotoReviewed(id: String, context: ModelContext) throws {
+    func markPhotoReviewed(id: String, context: ModelContext, mediaType: ReviewMediaType = .photo) throws {
         let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
         if (try? context.fetchCount(descriptor)) == 0 {
-            let review = ReviewedPhoto(id: id)
+            let review = ReviewedPhoto(id: id, mediaType: mediaType)
             context.insert(review)
         }
     }

@@ -13,6 +13,8 @@ Use this before submitting a build to App Store Connect.
 - Confirm the Supabase metrics ingest function is deployed and accepts production requests.
 - Confirm the final merged Info.plist Photos permission copy matches the intended copy.
 - Confirm device support is iPhone-only for v1, or reverse that decision and prepare iPad QA/screenshots.
+- Confirm Stats shows overall totals plus separate photo and video counts and storage freed.
+- Confirm existing users retain their totals after the media-stats migration and new video reviews update only the video bucket.
 
 ## Build Verification
 
@@ -30,12 +32,14 @@ xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Release
 - Permission denied and Settings recovery
 - Photo preview
 - Video preview
+- Photos-only, videos-only, and all-media filters
 - Swipe keep
 - Swipe to Delete List
 - Remove item from Delete List
 - Clear Delete List
 - Confirm batch deletion
 - Cancel iOS deletion prompt and confirm stats/review state rolls back
+- Confirm video keep, queued deletion, queue removal, batch deletion, and stats rollback paths
 - Large library scrolling/review performance
 - Analytics off: no pending metrics and no install ID
 - Analytics on: install registration and aggregate metrics are queued/flushed

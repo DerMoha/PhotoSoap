@@ -27,7 +27,7 @@ struct DeleteQueueSheet: View {
                     .listStyle(.plain)
 
                     VStack(spacing: 12) {
-                        Text(String(localized: "review.queue.sheet.note", defaultValue: "Items in your Delete List stay in Photos until you confirm the iOS deletion prompt.", table: "LocalizableReview"))
+                        Text(String(localized: "review.queue.sheet.note", defaultValue: "Items in your Delete List stay in your library until you confirm the iOS deletion prompt.", table: "LocalizableReview"))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -75,7 +75,7 @@ struct DeleteQueueSheet: View {
                     onDismiss()
                 }
             } message: {
-                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All items will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All items will be removed from your Delete List and kept in your library.", table: "LocalizableReview"))
             }
         }
     }
@@ -90,7 +90,7 @@ struct DeleteQueueSheet: View {
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            Text(String(localized: "reviewqueue.empty.description", defaultValue: "Swipe left on photos or videos to add them to your Delete List.", table: "LocalizableReview"))
+            Text(String(localized: "reviewqueue.empty.description", defaultValue: "Swipe left on items to add them to your Delete List.", table: "LocalizableReview"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

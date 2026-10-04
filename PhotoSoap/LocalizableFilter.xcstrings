@@ -6,13 +6,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fotos filtern"
+            "value" : "Medien filtern"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filter photos"
+            "value" : "Filter media"
           }
         }
       }

@@ -71,13 +71,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wenn aktiviert, legt ein Wisch nach links Fotos in die Löschliste, damit du sie später zusammen löschen kannst. Wenn deaktiviert, fragt iOS bei jedem Foto sofort nach dem Löschen."
+            "value" : "Wenn aktiviert, legt ein Wisch nach links Medien in die Löschliste, damit du sie später zusammen löschen kannst. Wenn deaktiviert, fragt iOS bei jedem Medium sofort nach dem Löschen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When on, swipe left adds photos to your Delete List so you can delete them together later. When off, iOS asks to delete each photo right away."
+            "value" : "When on, swipe left adds items to your Delete List so you can delete them together later. When off, iOS asks to delete each item right away."
           }
         }
       }
@@ -267,13 +267,125 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Übersicht"
+            "value" : "Alle Medien"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Overview"
+            "value" : "All Media"
+          }
+        }
+      }
+    },
+    "stats.itemsDeleted" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelöschte Medien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Items Deleted"
+          }
+        }
+      }
+    },
+    "stats.itemsKept" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behaltene Medien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Items Kept"
+          }
+        }
+      }
+    },
+    "stats.itemsReviewed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überprüfte Medien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Items Reviewed"
+          }
+        }
+      }
+    },
+    "stats.mediaBreakdown" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Medientyp"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By Media Type"
+          }
+        }
+      }
+    },
+    "stats.reviewed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überprüft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reviewed"
+          }
+        }
+      }
+    },
+    "stats.kept" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept"
+          }
+        }
+      }
+    },
+    "stats.deleted" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelöscht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted"
           }
         }
       }

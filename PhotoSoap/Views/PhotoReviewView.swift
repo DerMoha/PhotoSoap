@@ -237,7 +237,7 @@ struct PhotoReviewView: View {
                     viewModel.confirmClearQueue()
                 }
             } message: {
-                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All items will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All items will be removed from your Delete List and kept in your library.", table: "LocalizableReview"))
             }
         }
     }
@@ -305,10 +305,10 @@ struct PhotoReviewView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel(for: photo))
         .accessibilityHint(String(localized: "review.accessibility.hint", defaultValue: "Double-tap to preview. Swipe right to keep or swipe left to delete.", table: "LocalizableReview"))
-        .accessibilityAction(named: Text(String(localized: "review.action.keep", defaultValue: "Keep photo", table: "LocalizableReview"))) {
+        .accessibilityAction(named: Text(String(localized: "review.action.keep", defaultValue: "Keep item", table: "LocalizableReview"))) {
             Task { await viewModel.performKeepAction() }
         }
-        .accessibilityAction(named: Text(String(localized: "review.action.delete", defaultValue: "Delete photo", table: "LocalizableReview"))) {
+        .accessibilityAction(named: Text(String(localized: "review.action.delete", defaultValue: "Delete item", table: "LocalizableReview"))) {
             Task { await viewModel.performDeleteAction() }
         }
         .animation(.easeInOut(duration: 0.2), value: shouldShowPreviewHint)
@@ -685,7 +685,7 @@ struct PhotoReviewView: View {
             )
             .font(.headline)
 
-            Text(String(localized: "review.queue.pendingSummary.detail", defaultValue: "These items stay in Photos until you confirm deletion in iOS.", table: "LocalizableReview"))
+            Text(String(localized: "review.queue.pendingSummary.detail", defaultValue: "These items stay in your library until you confirm deletion in iOS.", table: "LocalizableReview"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

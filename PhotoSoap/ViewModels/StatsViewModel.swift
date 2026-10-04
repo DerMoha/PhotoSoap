@@ -12,22 +12,37 @@ final class StatsViewModel {
         let color: Color
     }
 
+    struct MediaStatsItem: Identifiable {
+        let mediaType: ReviewMediaType
+        let reviewed: Int
+        let deleted: Int
+        let kept: Int
+        let storageFreed: Int64
+
+        var id: String { mediaType.rawValue }
+        var title: String { mediaType.displayName }
+        var iconName: String { mediaType.systemImage }
+        var storageFreedFormatted: String { storageFreed.formattedBytes }
+    }
+
     func getMainStats(from stats: UserStats) -> [StatItem] {
-        [
+        stats.migrateLegacyMediaStatsIfNeeded()
+
+        return [
             StatItem(
-                title: String(localized: "stats.photosReviewed", defaultValue: "Photos Reviewed", table: "LocalizableStats"),
+                title: String(localized: "stats.itemsReviewed", defaultValue: "Items Reviewed", table: "LocalizableStats"),
                 value: "\(stats.totalReviewed)",
-                iconName: "photo.stack",
+                iconName: "square.grid.2x2",
                 color: .blue
             ),
             StatItem(
-                title: String(localized: "stats.photosDeleted", defaultValue: "Photos Deleted", table: "LocalizableStats"),
+                title: String(localized: "stats.itemsDeleted", defaultValue: "Items Deleted", table: "LocalizableStats"),
                 value: "\(stats.totalDeleted)",
                 iconName: "trash",
                 color: .red
             ),
             StatItem(
-                title: String(localized: "stats.photosKept", defaultValue: "Photos Kept", table: "LocalizableStats"),
+                title: String(localized: "stats.itemsKept", defaultValue: "Items Kept", table: "LocalizableStats"),
                 value: "\(stats.totalKept)",
                 iconName: "heart.fill",
                 color: .green
@@ -37,6 +52,27 @@ final class StatsViewModel {
                 value: stats.storageFreedFormatted,
                 iconName: "externaldrive.fill",
                 color: .orange
+            )
+        ]
+    }
+
+    func getMediaStats(from stats: UserStats) -> [MediaStatsItem] {
+        stats.migrateLegacyMediaStatsIfNeeded()
+
+        return [
+            MediaStatsItem(
+                mediaType: .photo,
+                reviewed: stats.photosReviewed,
+                deleted: stats.photosDeleted,
+                kept: stats.photosKept,
+                storageFreed: stats.photoStorageFreed
+            ),
+            MediaStatsItem(
+                mediaType: .video,
+                reviewed: stats.videosReviewed,
+                deleted: stats.videosDeleted,
+                kept: stats.videosKept,
+                storageFreed: stats.videoStorageFreed
             )
         ]
     }

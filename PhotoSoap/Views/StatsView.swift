@@ -18,6 +18,7 @@ struct StatsView: View {
                     }
 
                     overviewSection
+                    mediaBreakdownSection
                     streaksSection
                     ratioSection
                 }
@@ -72,6 +73,20 @@ struct StatsView: View {
                 photoLibraryService.presentLimitedLibraryPicker()
             }
         )
+    }
+
+    private var mediaBreakdownSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(String(localized: "stats.mediaBreakdown", table: "LocalizableStats"))
+                .font(.headline)
+                .foregroundStyle(.secondary)
+
+            VStack(spacing: 12) {
+                ForEach(viewModel.getMediaStats(from: stats)) { mediaStats in
+                    MediaStatsCard(item: mediaStats)
+                }
+            }
+        }
     }
 
     private var streaksSection: some View {
@@ -162,6 +177,59 @@ struct StatCard: View {
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+struct MediaStatsCard: View {
+    let item: StatsViewModel.MediaStatsItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label(item.title, systemImage: item.iconName)
+                .font(.headline)
+                .foregroundStyle(.primary)
+
+            HStack(spacing: 8) {
+                metric(
+                    value: item.reviewed,
+                    label: String(localized: "stats.reviewed", defaultValue: "Reviewed", table: "LocalizableStats")
+                )
+                metric(
+                    value: item.kept,
+                    label: String(localized: "stats.kept", defaultValue: "Kept", table: "LocalizableStats")
+                )
+                metric(
+                    value: item.deleted,
+                    label: String(localized: "stats.deleted", defaultValue: "Deleted", table: "LocalizableStats")
+                )
+            }
+
+            HStack(spacing: 6) {
+                Image(systemName: "externaldrive.fill")
+                    .foregroundStyle(.orange)
+                Text(item.storageFreedFormatted)
+                    .fontWeight(.semibold)
+                Text(String(localized: "stats.storageFreed", defaultValue: "Storage Freed", table: "LocalizableStats"))
+                    .foregroundStyle(.secondary)
+            }
+            .font(.caption)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func metric(value: Int, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("\(value)")
+                .font(.title3)
+                .fontWeight(.bold)
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

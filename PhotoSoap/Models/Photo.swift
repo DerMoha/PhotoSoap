@@ -84,6 +84,10 @@ struct Photo: Identifiable {
         mediaType == .video
     }
 
+    var reviewMediaType: ReviewMediaType {
+        isVideo ? .video : .photo
+    }
+
     var duration: TimeInterval? {
         isVideo ? asset.duration : nil
     }

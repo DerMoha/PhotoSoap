@@ -10,6 +10,21 @@ class UserStats {
     var storageFreed: Int64
     var sessionReviewCount: Int
 
+    // MARK: - Media Stats
+    // These counters are kept separately so the app can show useful video-specific stats
+    // while the core counters above continue to drive shared streaks and achievements.
+    var photosReviewed: Int = 0
+    var photosDeleted: Int = 0
+    var photosKept: Int = 0
+    var photoStorageFreed: Int64 = 0
+    var videosReviewed: Int = 0
+    var videosDeleted: Int = 0
+    var videosKept: Int = 0
+    var videoStorageFreed: Int64 = 0
+    var mediaStatsMigrationVersion: Int = 0
+
+    private static let currentMediaStatsMigrationVersion = 1
+
     // MARK: - Streak Tracking
     var currentStreak: Int
     var bestStreak: Int
@@ -32,6 +47,16 @@ class UserStats {
         self.storageFreed = 0
         self.sessionReviewCount = 0
 
+        self.photosReviewed = 0
+        self.photosDeleted = 0
+        self.photosKept = 0
+        self.photoStorageFreed = 0
+        self.videosReviewed = 0
+        self.videosDeleted = 0
+        self.videosKept = 0
+        self.videoStorageFreed = 0
+        self.mediaStatsMigrationVersion = Self.currentMediaStatsMigrationVersion
+
         self.currentStreak = 0
         self.bestStreak = 0
         self.dayStreak = 0
@@ -48,8 +73,17 @@ class UserStats {
 
     // MARK: - Core Actions
 
-    func incrementReviewed() {
+    func incrementReviewed(mediaType: ReviewMediaType = .photo) {
+        migrateLegacyMediaStatsIfNeeded()
         totalReviewed += 1
+
+        switch mediaType {
+        case .photo:
+            photosReviewed += 1
+        case .video:
+            videosReviewed += 1
+        }
+
         currentStreak += 1
         sessionReviewCount += 1
         lastReviewDate = Date()
@@ -61,8 +95,17 @@ class UserStats {
         updateDayTracking()
     }
 
-    func decrementQueuedReview() {
+    func decrementQueuedReview(mediaType: ReviewMediaType = .photo) {
+        migrateLegacyMediaStatsIfNeeded()
         totalReviewed = max(0, totalReviewed - 1)
+
+        switch mediaType {
+        case .photo:
+            photosReviewed = max(0, photosReviewed - 1)
+        case .video:
+            videosReviewed = max(0, videosReviewed - 1)
+        }
+
         currentStreak = max(0, currentStreak - 1)
         sessionReviewCount = max(0, sessionReviewCount - 1)
 
@@ -75,17 +118,35 @@ class UserStats {
         }
     }
 
-    func incrementDeleted(fileSize: Int64 = 0) {
+    func incrementDeleted(fileSize: Int64 = 0, mediaType: ReviewMediaType = .photo) {
+        migrateLegacyMediaStatsIfNeeded()
         totalDeleted += 1
         storageFreed += fileSize
+
+        switch mediaType {
+        case .photo:
+            photosDeleted += 1
+            photoStorageFreed += fileSize
+        case .video:
+            videosDeleted += 1
+            videoStorageFreed += fileSize
+        }
     }
 
-    func incrementQueuedDeletionCommit(fileSize: Int64 = 0) {
-        incrementDeleted(fileSize: fileSize)
+    func incrementQueuedDeletionCommit(fileSize: Int64 = 0, mediaType: ReviewMediaType = .photo) {
+        incrementDeleted(fileSize: fileSize, mediaType: mediaType)
     }
 
-    func incrementKept() {
+    func incrementKept(mediaType: ReviewMediaType = .photo) {
+        migrateLegacyMediaStatsIfNeeded()
         totalKept += 1
+
+        switch mediaType {
+        case .photo:
+            photosKept += 1
+        case .video:
+            videosKept += 1
+        }
     }
 
     func resetStreak() {
@@ -170,6 +231,28 @@ class UserStats {
         storageFreed.formattedBytes
     }
 
+    func migrateLegacyMediaStatsIfNeeded() {
+        guard mediaStatsMigrationVersion < Self.currentMediaStatsMigrationVersion else { return }
+
+        let hasMediaStats = photosReviewed > 0
+            || photosDeleted > 0
+            || photosKept > 0
+            || photoStorageFreed > 0
+            || videosReviewed > 0
+            || videosDeleted > 0
+            || videosKept > 0
+            || videoStorageFreed > 0
+
+        if !hasMediaStats {
+            photosReviewed = max(0, totalReviewed)
+            photosDeleted = max(0, totalDeleted)
+            photosKept = max(0, totalKept)
+            photoStorageFreed = max(0, storageFreed)
+        }
+
+        mediaStatsMigrationVersion = Self.currentMediaStatsMigrationVersion
+    }
+
     static func fetchOrCreateSingleton(in context: ModelContext) throws -> UserStats {
         let descriptor = FetchDescriptor<UserStats>()
         let allStats = try context.fetch(descriptor)
@@ -180,6 +263,8 @@ class UserStats {
             return newStats
         }
 
+        primaryStats.migrateLegacyMediaStatsIfNeeded()
+
         for duplicateStats in allStats.dropFirst() {
             primaryStats.mergeDuplicate(duplicateStats)
             context.delete(duplicateStats)
@@ -189,11 +274,24 @@ class UserStats {
     }
 
     private func mergeDuplicate(_ duplicate: UserStats) {
+        migrateLegacyMediaStatsIfNeeded()
+        duplicate.migrateLegacyMediaStatsIfNeeded()
+
         totalReviewed += duplicate.totalReviewed
         totalDeleted += duplicate.totalDeleted
         totalKept += duplicate.totalKept
         storageFreed += duplicate.storageFreed
         sessionReviewCount += duplicate.sessionReviewCount
+
+        photosReviewed += duplicate.photosReviewed
+        photosDeleted += duplicate.photosDeleted
+        photosKept += duplicate.photosKept
+        photoStorageFreed += duplicate.photoStorageFreed
+        videosReviewed += duplicate.videosReviewed
+        videosDeleted += duplicate.videosDeleted
+        videosKept += duplicate.videosKept
+        videoStorageFreed += duplicate.videoStorageFreed
+        mediaStatsMigrationVersion = Self.currentMediaStatsMigrationVersion
 
         currentStreak = max(currentStreak, duplicate.currentStreak)
         bestStreak = max(bestStreak, duplicate.bestStreak)

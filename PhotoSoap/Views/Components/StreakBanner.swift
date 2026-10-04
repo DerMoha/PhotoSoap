@@ -103,7 +103,7 @@ struct CompactHeader: View {
     @State private var isAnimating = false
     @State private var wasCompleted = false
 
-    private let photosLabel = String(localized: "common.photos", table: "LocalizableShared")
+    private let itemsLabel = String(localized: "common.items", defaultValue: "items", table: "LocalizableShared")
 
     var body: some View {
         HStack(spacing: 12) {
@@ -135,9 +135,9 @@ struct CompactHeader: View {
                         onGoalSelect(goal)
                     } label: {
                         if goal == target {
-                            Label("\(goal) \(photosLabel)", systemImage: "checkmark")
+                            Label("\(goal) \(itemsLabel)", systemImage: "checkmark")
                         } else {
-                            Text("\(goal) \(photosLabel)")
+                            Text("\(goal) \(itemsLabel)")
                         }
                     }
                 }

@@ -41,6 +41,15 @@ struct UserStatsSnapshot {
     let totalKept: Int
     let storageFreed: Int64
     let sessionReviewCount: Int
+    let photosReviewed: Int
+    let photosDeleted: Int
+    let photosKept: Int
+    let photoStorageFreed: Int64
+    let videosReviewed: Int
+    let videosDeleted: Int
+    let videosKept: Int
+    let videoStorageFreed: Int64
+    let mediaStatsMigrationVersion: Int
     let currentStreak: Int
     let bestStreak: Int
     let dayStreak: Int
@@ -59,6 +68,15 @@ struct UserStatsSnapshot {
         self.totalKept = stats.totalKept
         self.storageFreed = stats.storageFreed
         self.sessionReviewCount = stats.sessionReviewCount
+        self.photosReviewed = stats.photosReviewed
+        self.photosDeleted = stats.photosDeleted
+        self.photosKept = stats.photosKept
+        self.photoStorageFreed = stats.photoStorageFreed
+        self.videosReviewed = stats.videosReviewed
+        self.videosDeleted = stats.videosDeleted
+        self.videosKept = stats.videosKept
+        self.videoStorageFreed = stats.videoStorageFreed
+        self.mediaStatsMigrationVersion = stats.mediaStatsMigrationVersion
         self.currentStreak = stats.currentStreak
         self.bestStreak = stats.bestStreak
         self.dayStreak = stats.dayStreak
@@ -78,6 +96,15 @@ struct UserStatsSnapshot {
         stats.totalKept = totalKept
         stats.storageFreed = storageFreed
         stats.sessionReviewCount = sessionReviewCount
+        stats.photosReviewed = photosReviewed
+        stats.photosDeleted = photosDeleted
+        stats.photosKept = photosKept
+        stats.photoStorageFreed = photoStorageFreed
+        stats.videosReviewed = videosReviewed
+        stats.videosDeleted = videosDeleted
+        stats.videosKept = videosKept
+        stats.videoStorageFreed = videoStorageFreed
+        stats.mediaStatsMigrationVersion = mediaStatsMigrationVersion
         stats.currentStreak = currentStreak
         stats.bestStreak = bestStreak
         stats.dayStreak = dayStreak
@@ -100,42 +127,61 @@ final class ReviewAccountingService: ObservableObject {
         self.gamificationService = gamificationService
     }
 
-    func recordKeep(photoID: String, stats: UserStats, context: ModelContext) throws {
+    func recordKeep(
+        photoID: String,
+        stats: UserStats,
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
+    ) throws {
         let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-        try gamificationService.markPhotoReviewed(id: photoID, context: context)
+        try gamificationService.markPhotoReviewed(id: photoID, context: context, mediaType: mediaType)
         gamificationService.processPhotoReview(
             action: .keep,
             fileSize: 0,
             stats: stats,
             challengeType: challengeType,
-            context: context
+            context: context,
+            mediaType: mediaType
         )
     }
 
-    func prepareImmediateDeletion(photoID: String, fileSize: Int64, stats: UserStats, context: ModelContext) throws -> ReviewAccountingSnapshot {
+    func prepareImmediateDeletion(
+        photoID: String,
+        fileSize: Int64,
+        stats: UserStats,
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
+    ) throws -> ReviewAccountingSnapshot {
         let snapshot = makeSnapshot(for: [photoID], stats: stats, context: context)
         guard !snapshot.reviewedPhotoIDs.contains(photoID) else { return snapshot }
 
         let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-        try gamificationService.markPhotoReviewed(id: photoID, context: context)
+        try gamificationService.markPhotoReviewed(id: photoID, context: context, mediaType: mediaType)
         gamificationService.processPhotoReview(
             action: .delete,
             fileSize: fileSize,
             stats: stats,
             challengeType: challengeType,
-            context: context
+            context: context,
+            mediaType: mediaType
         )
 
         return snapshot
     }
 
-    func recordQueuedDeletionReview(photoID: String, stats: UserStats, context: ModelContext) throws {
+    func recordQueuedDeletionReview(
+        photoID: String,
+        stats: UserStats,
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
+    ) throws {
         let challengeType = DailyChallengeType(rawValue: stats.dailyChallengeType) ?? .review
-        try gamificationService.markPhotoReviewed(id: photoID, context: context)
+        try gamificationService.markPhotoReviewed(id: photoID, context: context, mediaType: mediaType)
         gamificationService.processQueuedDeletionReview(
             stats: stats,
             challengeType: challengeType,
-            context: context
+            context: context,
+            mediaType: mediaType
         )
     }
 
@@ -150,16 +196,22 @@ final class ReviewAccountingService: ObservableObject {
                     fileSize: item.fileSize,
                     stats: stats,
                     challengeType: challengeType,
-                    context: context
+                    context: context,
+                    mediaType: item.photo.reviewMediaType
                 )
             } else {
-                try gamificationService.markPhotoReviewed(id: item.id, context: context)
+                try gamificationService.markPhotoReviewed(
+                    id: item.id,
+                    context: context,
+                    mediaType: item.photo.reviewMediaType
+                )
                 gamificationService.processPhotoReview(
                     action: .delete,
                     fileSize: item.fileSize,
                     stats: stats,
                     challengeType: challengeType,
-                    context: context
+                    context: context,
+                    mediaType: item.photo.reviewMediaType
                 )
             }
         }
@@ -188,6 +240,7 @@ final class ReviewAccountingService: ObservableObject {
     }
 
     func makeSnapshot(for photoIDs: [String], stats: UserStats, context: ModelContext) -> ReviewAccountingSnapshot {
+        stats.migrateLegacyMediaStatsIfNeeded()
         let reviewedPhotoIDs = Set(photoIDs.filter { gamificationService.isPhotoReviewed(id: $0, context: context) })
         let unlockedAchievementIDs = (try? context.fetch(FetchDescriptor<UnlockedAchievement>())) ?? []
 

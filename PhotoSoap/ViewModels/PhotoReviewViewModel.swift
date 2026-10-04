@@ -449,7 +449,12 @@ final class PhotoReviewViewModel: ObservableObject {
         defer { isProcessingAction = false }
 
         do {
-            try reviewAccountingService.recordKeep(photoID: photo.id, stats: stats, context: modelContext)
+            try reviewAccountingService.recordKeep(
+                photoID: photo.id,
+                stats: stats,
+                context: modelContext,
+                mediaType: photo.reviewMediaType
+            )
         } catch {
             presentError("Failed to update review history: \(error.localizedDescription)")
             return
@@ -486,7 +491,8 @@ final class PhotoReviewViewModel: ObservableObject {
                 photoID: photo.id,
                 fileSize: resolvedFileSize,
                 stats: stats,
-                context: modelContext
+                context: modelContext,
+                mediaType: photo.reviewMediaType
             )
 
             guard persistReviewProgress(for: photo.id, cacheInSession: false) else {
@@ -506,7 +512,7 @@ final class PhotoReviewViewModel: ObservableObject {
                 if isPhotosDeletionCancellation(error) {
                     showDeletionCancelledFeedback()
                 } else {
-                    presentError("Failed to delete photo: \(error.localizedDescription)")
+                    presentError("Failed to delete item: \(error.localizedDescription)")
                 }
                 return
             }
@@ -545,7 +551,7 @@ final class PhotoReviewViewModel: ObservableObject {
         )
 
         if item.createdReviewOnQueue {
-            guard markQueuedDeletionAsReviewed(photoID: photo.id) else {
+            guard markQueuedDeletionAsReviewed(photo: photo) else {
                 return
             }
         }
@@ -709,7 +715,7 @@ final class PhotoReviewViewModel: ObservableObject {
                 if isPhotosDeletionCancellation(error) {
                     showDeletionCancelledFeedback()
                 } else {
-                    presentError("Failed to delete photos: \(error.localizedDescription)")
+                    presentError("Failed to delete items: \(error.localizedDescription)")
                 }
                 return
             }
@@ -754,13 +760,18 @@ final class PhotoReviewViewModel: ObservableObject {
         showQueuePrunedToast = false
     }
 
-    private func markQueuedDeletionAsReviewed(photoID: String) -> Bool {
+    private func markQueuedDeletionAsReviewed(photo: Photo) -> Bool {
         guard let stats, let modelContext else { return false }
 
         do {
-            try reviewAccountingService.recordQueuedDeletionReview(photoID: photoID, stats: stats, context: modelContext)
+            try reviewAccountingService.recordQueuedDeletionReview(
+                photoID: photo.id,
+                stats: stats,
+                context: modelContext,
+                mediaType: photo.reviewMediaType
+            )
 
-            return persistReviewProgress(for: photoID, cacheInSession: true)
+            return persistReviewProgress(for: photo.id, cacheInSession: true)
         } catch {
             presentError("Failed to update review history: \(error.localizedDescription)")
             return false

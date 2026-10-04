@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>PhotoSoap needs photo library access so you can review photos and choose which ones to delete.</string>
+	<string>PhotoSoap needs photo library access so you can review photos and videos and choose which ones to delete.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>PhotoSoap needs permission to make changes when you choose to delete photos.</string>
+	<string>PhotoSoap needs permission to make changes when you choose to delete photos or videos.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>PhotoSoapAggregateMetricsEndpointURL</key>
