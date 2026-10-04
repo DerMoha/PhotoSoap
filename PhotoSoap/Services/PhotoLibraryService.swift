@@ -50,6 +50,7 @@ struct FilterData {
     let albums: [AlbumInfo]
     let availableYears: [Int]
     let availableMonthsByYear: [Int: [Int]]
+    let reviewProgress: ReviewCalendarProgress
 }
 
 // MARK: - Constants
@@ -768,25 +769,20 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         invalidateCaches()
     }
 
-    func loadFilterData() async -> FilterData {
-        if !cachedAlbums.isEmpty && !cachedYears.isEmpty {
-            return FilterData(
-                albums: cachedAlbums,
-                availableYears: cachedYears,
-                availableMonthsByYear: cachedMonthsByYear
-            )
-        }
-
+    func loadFilterData(reviewedIDs: Set<String> = []) async -> FilterData {
         let excludedSubtypes = excludedSmartAlbumSubtypes
         let hidesFavorites = isHidingFavorites
         let mediaKind = currentMediaKind
+        let revision = libraryRevision
         let filterData = await Task.detached(priority: .userInitiated) {
-            Self.buildFilterData(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSubtypes, hidesFavorites: hidesFavorites)
+            Self.buildFilterData(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSubtypes, hidesFavorites: hidesFavorites, reviewedIDs: reviewedIDs)
         }.value
 
-        cachedAlbums = filterData.albums
-        cachedYears = filterData.availableYears
-        cachedMonthsByYear = filterData.availableMonthsByYear
+        if mediaKind == currentMediaKind && hidesFavorites == isHidingFavorites && revision == libraryRevision {
+            cachedAlbums = filterData.albums
+            cachedYears = filterData.availableYears
+            cachedMonthsByYear = filterData.availableMonthsByYear
+        }
         return filterData
     }
 
@@ -838,26 +834,26 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     // MARK: - Static Helpers
 
-    private nonisolated static func buildFilterData(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>, hidesFavorites: Bool) -> FilterData {
+    private nonisolated static func buildFilterData(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>, hidesFavorites: Bool, reviewedIDs: Set<String>) -> FilterData {
         let albums = buildAlbums(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes, hidesFavorites: hidesFavorites)
         let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind, hidesFavorites: hidesFavorites)
         let assets = PHAsset.fetchAssets(with: options)
         let calendar = Calendar.current
-        var years = Set<Int>()
-        var monthsByYear: [Int: Set<Int>] = [:]
+        var reviewProgress = ReviewCalendarProgress()
 
         assets.enumerateObjects { asset, _, _ in
-            guard let date = asset.creationDate else { return }
-            let year = calendar.component(.year, from: date)
-            let month = calendar.component(.month, from: date)
-            years.insert(year)
-            monthsByYear[year, default: []].insert(month)
+            reviewProgress.record(
+                creationDate: asset.creationDate,
+                isReviewed: reviewedIDs.contains(asset.localIdentifier),
+                calendar: calendar
+            )
         }
 
         return FilterData(
             albums: albums,
-            availableYears: years.sorted(by: >),
-            availableMonthsByYear: monthsByYear.mapValues { $0.sorted() }
+            availableYears: reviewProgress.monthsByYear.keys.sorted(by: >),
+            availableMonthsByYear: reviewProgress.monthsByYear.mapValues { $0.keys.sorted() },
+            reviewProgress: reviewProgress
         )
     }
 

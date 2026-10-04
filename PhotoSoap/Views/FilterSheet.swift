@@ -1,6 +1,8 @@
 import SwiftUI
+import SwiftData
 
 struct FilterSheet: View {
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var hapticsService: HapticsService
     @AppStorage(UserDefaultsKeys.filterHideFavorites) private var hidesFavorites = true
     @AppStorage(UserDefaultsKeys.filterOldestFirst) private var filterOldestFirst = false
@@ -14,6 +16,10 @@ struct FilterSheet: View {
     let onSortOrderChange: (Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var reviewProgress = ReviewCalendarProgress()
+    @State private var monthsByYear: [Int: [Int]] = [:]
+    @State private var loadError: String?
+    @State private var loadID = UUID()
     @State private var albums: [AlbumInfo] = []
     @State private var availableYears: [Int] = []
     @State private var availableMonths: [Int] = []
@@ -24,7 +30,17 @@ struct FilterSheet: View {
     var body: some View {
         NavigationStack {
             Group {
-                if isLoading {
+                if let loadError {
+                    ContentUnavailableView {
+                        Label(String(localized: "filter.progress.error", defaultValue: "Couldn’t Load Progress", table: "LocalizableFilter"), systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(loadError)
+                    } actions: {
+                        Button(String(localized: "filter.progress.retry", defaultValue: "Try Again", table: "LocalizableFilter")) {
+                            Task { await loadData() }
+                        }
+                    }
+                } else if isLoading {
                     VStack(spacing: 12) {
                         ProgressView()
                         Text(String(localized: "filter.loading", table: "LocalizableFilter"))
@@ -56,6 +72,10 @@ struct FilterSheet: View {
             }
         }
         .task {
+            switch currentFilter {
+            case .year(let year), .month(let year, _): selectedYear = year
+            default: break
+            }
             selectedMediaKind = currentMediaKind
             await loadData()
         }
@@ -147,7 +167,8 @@ struct FilterSheet: View {
                             title: String(year),
                             subtitle: nil,
                             count: nil,
-                            isSelected: currentFilter == .year(year)
+                            isSelected: currentFilter == .year(year),
+                            progress: reviewProgress.progress(for: year)
                         )
                     }
                 }
@@ -157,17 +178,17 @@ struct FilterSheet: View {
 
     private var monthsSection: some View {
         Section(String(localized: "filter.byMonth", defaultValue: "By Month", table: "LocalizableFilter")) {
-            if displayedMonths.isEmpty {
+            if displayedYears.isEmpty {
                 emptyRow(text: String(localized: "filter.noMonths", defaultValue: "No months available", table: "LocalizableFilter"))
             } else {
-                Picker("Year", selection: $selectedYear) {
+                Picker(String(localized: "filter.year", defaultValue: "Year", table: "LocalizableFilter"), selection: $selectedYear) {
                     ForEach(displayedYears, id: \.self) { year in
                         Text(String(year)).tag(year)
                     }
                 }
                 .pickerStyle(.menu)
                 .onChange(of: selectedYear) { _, newValue in
-                    availableMonths = photoLibraryService.getAvailableMonths(for: newValue)
+                    availableMonths = monthsByYear[newValue] ?? []
                 }
 
                 if displayedMonths.isEmpty {
@@ -182,7 +203,8 @@ struct FilterSheet: View {
                                 title: monthName(for: month),
                                 subtitle: String(selectedYear),
                                 count: nil,
-                                isSelected: currentFilter == filter
+                                isSelected: currentFilter == filter,
+                                progress: reviewProgress.monthsByYear[selectedYear]?[month]
                             )
                         }
                     }
@@ -246,8 +268,22 @@ struct FilterSheet: View {
     }
 
     private func loadData() async {
+        let requestID = UUID()
+        loadID = requestID
         isLoading = true
-        let filterData = await photoLibraryService.loadFilterData()
+        loadError = nil
+        let reviewedIDs: Set<String>
+        do {
+            reviewedIDs = Set(try modelContext.fetch(FetchDescriptor<ReviewedPhoto>()).map(\.id))
+        } catch {
+            loadError = error.localizedDescription
+            isLoading = false
+            return
+        }
+        let filterData = await photoLibraryService.loadFilterData(reviewedIDs: reviewedIDs)
+        guard requestID == loadID else { return }
+        reviewProgress = filterData.reviewProgress
+        monthsByYear = filterData.availableMonthsByYear
         albums = filterData.albums
         availableYears = filterData.availableYears
 
@@ -321,6 +357,7 @@ private struct FilterRow: View {
     let subtitle: String?
     let count: Int?
     let isSelected: Bool
+    var progress: ReviewMonthProgress? = nil
 
     var body: some View {
         HStack(spacing: 12) {
@@ -331,6 +368,14 @@ private struct FilterRow: View {
                 Text(title)
                     .foregroundStyle(.primary)
 
+                if let progress {
+                    ProgressView(value: progress.fraction)
+                        .tint(progress.isComplete ? .green : .blue)
+                    Text(String(format: String(localized: "filter.progress.count", defaultValue: "%d of %d reviewed", table: "LocalizableFilter"), progress.reviewedCount, progress.totalCount))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 if let subtitle {
                     Text(subtitle)
                         .font(.caption)
@@ -339,6 +384,18 @@ private struct FilterRow: View {
             }
 
             Spacer()
+
+            if let progress {
+                VStack(spacing: 4) {
+                    Text(progress.displayFraction, format: .percent.precision(.fractionLength(0)))
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
+                    if progress.isComplete {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    }
+                }
+            }
 
             if let count {
                 Text("\(count)")
@@ -360,4 +417,6 @@ private struct FilterRow: View {
         onHidesFavoritesChange: { _ in },
         onSortOrderChange: { _ in }
     )
+    .modelContainer(for: ReviewedPhoto.self, inMemory: true)
+    .environmentObject(HapticsService())
 }
