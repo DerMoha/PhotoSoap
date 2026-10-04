@@ -537,7 +537,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             Task { @MainActor in
                 let requestID = requestState.cancel()
                 if requestID != PHInvalidImageRequestID {
-                    PHImageManager.default().cancelImageRequest(requestID)
+                    self.imageManager.cancelImageRequest(requestID)
                 }
             }
         }
@@ -610,14 +610,6 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             return cachedSize.int64Value
         }
 
-        if asset.mediaType == .video {
-            let fileSize = await fetchLocalVideoFileSize(for: asset)
-            if fileSize > 0 {
-                fileSizeCache.setObject(NSNumber(value: fileSize), forKey: assetID as NSString)
-            }
-            return fileSize
-        }
-
         let resources = PHAssetResource.assetResources(for: asset)
         guard let resource = preferredResource(from: resources) else {
             return 0
@@ -656,64 +648,6 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     func fetchFileSize(for photo: Photo, allowNetworkAccess: Bool = false) async -> Int64 {
         await fetchFileSize(for: photo.asset, allowNetworkAccess: allowNetworkAccess)
-    }
-
-    private func fetchLocalVideoFileSize(for asset: PHAsset) async -> Int64 {
-        let options = PHVideoRequestOptions()
-        options.deliveryMode = .fastFormat
-        options.isNetworkAccessAllowed = false
-
-        return await withCheckedContinuation { (continuation: CheckedContinuation<Int64, Never>) in
-            var hasResumed = false
-
-            imageManager.requestAVAsset(forVideo: asset, options: options) { avAsset, _, info in
-                guard !hasResumed else { return }
-
-                if let error = info?[PHImageErrorKey] as? Error {
-#if DEBUG
-                    print("PhotoSoap: Failed to fetch local video file size: \(error.localizedDescription)")
-#endif
-                    hasResumed = true
-                    continuation.resume(returning: 0)
-                    return
-                }
-
-                let isCancelled = info?[PHImageCancelledKey] as? Bool ?? false
-                guard !isCancelled else {
-                    hasResumed = true
-                    continuation.resume(returning: 0)
-                    return
-                }
-
-                guard let urlAsset = avAsset as? AVURLAsset else {
-                    hasResumed = true
-                    continuation.resume(returning: 0)
-                    return
-                }
-
-                hasResumed = true
-                continuation.resume(returning: Self.fileSize(forLocalURL: urlAsset.url))
-            }
-        }
-    }
-
-    private nonisolated static func fileSize(forLocalURL url: URL) -> Int64 {
-        if let resourceValues = try? url.resourceValues(forKeys: [.fileSizeKey, .totalFileAllocatedSizeKey]) {
-            if let fileSize = resourceValues.fileSize, fileSize > 0 {
-                return Int64(fileSize)
-            }
-
-            if let allocatedSize = resourceValues.totalFileAllocatedSize, allocatedSize > 0 {
-                return Int64(allocatedSize)
-            }
-        }
-
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
-              let fileSize = attributes[.size] as? NSNumber else {
-            return 0
-        }
-
-        return fileSize.int64Value
     }
 
     func fetchAssets(withLocalIdentifiers identifiers: [String]) -> [String: PHAsset] {
