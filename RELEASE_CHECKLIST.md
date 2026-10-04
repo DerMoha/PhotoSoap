@@ -52,7 +52,7 @@ xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Release
 - Category: Utilities
 - Bundle ID: com.dermoha.PhotoSoap
 - Version: 1.0
-- Build: 14
+- Build: 15
 - Privacy Policy URL: https://dermoha.github.io/PhotoSoap/privacy.html
 - Support URL: https://dermoha.github.io/PhotoSoap/support.html
 - Review notes explain that PhotoSoap uses Photos permission for local review and iOS shows the final deletion confirmation.
