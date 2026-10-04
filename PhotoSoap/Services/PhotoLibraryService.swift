@@ -140,6 +140,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     @Published private(set) var currentMediaKind: ReviewMediaKind = .photos
     @Published private(set) var libraryRevision = 0
     @Published private(set) var isOldestFirst = false
+    @Published private(set) var isHidingFavorites = true
 
     // MARK: - Private State
     private let imageManager = PHCachingImageManager()
@@ -301,15 +302,15 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         switch currentFilter {
         case .all:
-            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(with: options)
         case .year(let year):
             let interval = dateIntervalForYear(year)
-            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
+            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: isOldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(with: options)
         case .month(let year, let month):
             let interval = dateIntervalForMonth(year: year, month: month)
-            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
+            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: isOldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(with: options)
         case .album(let identifier, _):
             guard let collection = fetchAssetCollection(identifier: identifier) else {
@@ -318,7 +319,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 resetAssetCursor()
                 return
             }
-            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst)
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(in: collection, options: options)
         }
 
@@ -755,6 +756,12 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         resetAssetCursor()
     }
 
+    func setHidesFavorites(_ hidesFavorites: Bool) {
+        guard hidesFavorites != isHidingFavorites else { return }
+        isHidingFavorites = hidesFavorites
+        invalidateCaches()
+    }
+
     func setMediaKind(_ mediaKind: ReviewMediaKind) {
         guard mediaKind != currentMediaKind else { return }
         currentMediaKind = mediaKind
@@ -771,9 +778,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         let excludedSubtypes = excludedSmartAlbumSubtypes
+        let hidesFavorites = isHidingFavorites
         let mediaKind = currentMediaKind
         let filterData = await Task.detached(priority: .userInitiated) {
-            Self.buildFilterData(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSubtypes)
+            Self.buildFilterData(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSubtypes, hidesFavorites: hidesFavorites)
         }.value
 
         cachedAlbums = filterData.albums
@@ -783,7 +791,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     func fetchAlbums() -> [AlbumInfo] {
-        Self.buildAlbums(mediaKind: currentMediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
+        Self.buildAlbums(mediaKind: currentMediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes, hidesFavorites: isHidingFavorites)
     }
 
     func getAvailableYears() -> [Int] {
@@ -803,7 +811,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             guard let self = self else { return }
 
             let mediaKind = await self.currentMediaKind
-            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: mediaKind)
+            let hidesFavorites = await self.isHidingFavorites
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: mediaKind, hidesFavorites: hidesFavorites)
             let assets = PHAsset.fetchAssets(with: options)
             let calendar = Calendar.current
             var years = Set<Int>()
@@ -829,9 +838,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     // MARK: - Static Helpers
 
-    private nonisolated static func buildFilterData(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> FilterData {
-        let albums = buildAlbums(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
-        let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind)
+    private nonisolated static func buildFilterData(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>, hidesFavorites: Bool) -> FilterData {
+        let albums = buildAlbums(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes, hidesFavorites: hidesFavorites)
+        let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind, hidesFavorites: hidesFavorites)
         let assets = PHAsset.fetchAssets(with: options)
         let calendar = Calendar.current
         var years = Set<Int>()
@@ -852,9 +861,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         )
     }
 
-    private nonisolated static func buildAlbums(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> [AlbumInfo] {
+    private nonisolated static func buildAlbums(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>, hidesFavorites: Bool) -> [AlbumInfo] {
         var albums: [AlbumInfo] = []
-        let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind)
+        let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind, hidesFavorites: hidesFavorites)
 
         let userAlbumCollections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
         userAlbumCollections.enumerateObjects { collection, _, _ in
@@ -894,10 +903,11 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return smartAlbums + userAlbums
     }
 
-    private nonisolated static func makeFetchOptions(
+    nonisolated static func makeFetchOptions(
         dateInterval: DateInterval?,
         mediaKind: ReviewMediaKind,
-        oldestFirst: Bool = false
+        oldestFirst: Bool = false,
+        hidesFavorites: Bool = true
     ) -> PHFetchOptions {
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: oldestFirst)]
@@ -906,6 +916,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         var predicates: [NSPredicate] = []
 
         predicates.append(mediaTypePredicate(for: mediaKind))
+
+        if hidesFavorites {
+            predicates.append(NSPredicate(format: "favorite == NO"))
+        }
 
         if let interval = dateInterval {
             predicates.append(

@@ -87,6 +87,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
         self.currentMediaKind = Self.storedMediaKind(in: defaults)
         self.photoLibraryService.setMediaKind(currentMediaKind)
+        self.photoLibraryService.setHidesFavorites(defaults.object(forKey: UserDefaultsKeys.filterHideFavorites) as? Bool ?? true)
     }
 
     func setModelContext(_ context: ModelContext) {
@@ -260,6 +261,18 @@ final class PhotoReviewViewModel: ObservableObject {
         nextPhoto = nil
         noMorePhotos = false
         privacyCollectionService.track(.filterApplied(currentFilter, mediaKind: mediaKind))
+
+        Task {
+            await loadInitialPhoto()
+        }
+    }
+
+    func applyFavoriteVisibility(hidesFavorites: Bool) {
+        defaults.set(hidesFavorites, forKey: UserDefaultsKeys.filterHideFavorites)
+        photoLibraryService.setHidesFavorites(hidesFavorites)
+        currentPhoto = nil
+        nextPhoto = nil
+        noMorePhotos = false
 
         Task {
             await loadInitialPhoto()

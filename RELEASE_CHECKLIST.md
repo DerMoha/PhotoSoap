@@ -33,6 +33,7 @@ xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Release
 - Photo preview
 - Video preview
 - Photos-only, videos-only, and all-media filters
+- Favorites hidden by default in all, year, month, and album filters; turning the switch off restores them after relaunch
 - Swipe keep
 - Swipe to Delete List
 - Remove item from Delete List

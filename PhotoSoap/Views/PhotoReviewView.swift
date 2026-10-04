@@ -174,6 +174,9 @@ struct PhotoReviewView: View {
                     onMediaKindChange: { mediaKind in
                         viewModel.applyMediaKind(mediaKind)
                     },
+                    onHidesFavoritesChange: { hidesFavorites in
+                        viewModel.applyFavoriteVisibility(hidesFavorites: hidesFavorites)
+                    },
                     onSortOrderChange: { oldestFirst in
                         viewModel.applySortOrder(oldestFirst: oldestFirst)
                     }

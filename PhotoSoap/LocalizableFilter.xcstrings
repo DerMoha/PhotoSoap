@@ -178,6 +178,38 @@
         }
       }
     },
+    "filter.favorites.hide" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Favorites"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoriten ausblenden"
+          }
+        }
+      }
+    },
+    "filter.favorites.help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorites are hidden from all review filters. Turn this off to include them."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoriten werden in allen Review-Filtern ausgeblendet. Deaktiviere den Schalter, um sie einzubeziehen."
+          }
+        }
+      }
+    },
     "filter.loading" : {
       "localizations" : {
         "de" : {

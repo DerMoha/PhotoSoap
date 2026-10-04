@@ -12,6 +12,7 @@ Photo and video cleanup for iPhone with fast swipe reviews, per-media stats, and
 
 - Review your photo and video library one item at a time.
 - Use the media filter to review photos, videos, or both.
+- Favorites are hidden by default; include them with the switch in the filter sheet.
 - Swipe to keep or queue items for deletion.
 - Track overall progress plus photo/video stats with daily goals, streaks, achievements, and storage freed.
 - Invite users to contribute optional, privacy-focused community totals during onboarding.

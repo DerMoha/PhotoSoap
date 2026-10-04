@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FilterSheet: View {
     @EnvironmentObject private var hapticsService: HapticsService
+    @AppStorage(UserDefaultsKeys.filterHideFavorites) private var hidesFavorites = true
     @AppStorage(UserDefaultsKeys.filterOldestFirst) private var filterOldestFirst = false
 
     @ObservedObject var photoLibraryService: PhotoLibraryService
@@ -9,6 +10,7 @@ struct FilterSheet: View {
     let currentMediaKind: ReviewMediaKind
     let onSelect: (PhotoFilter) -> Void
     let onMediaKindChange: (ReviewMediaKind) -> Void
+    let onHidesFavoritesChange: (Bool) -> Void
     let onSortOrderChange: (Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -31,6 +33,7 @@ struct FilterSheet: View {
                 } else {
                     List {
                         mediaKindSection
+                        favoritesSection
                         sortOrderSection
                         allPhotosSection
                         yearsSection
@@ -64,6 +67,14 @@ struct FilterSheet: View {
                 await loadData()
             }
         }
+        .onChange(of: hidesFavorites) { _, hidesFavorites in
+            hapticsService.selection()
+            onHidesFavoritesChange(hidesFavorites)
+
+            Task {
+                await loadData()
+            }
+        }
         .onChange(of: filterOldestFirst) { _, oldestFirst in
             hapticsService.selection()
             onSortOrderChange(oldestFirst)
@@ -83,6 +94,16 @@ struct FilterSheet: View {
             Text(mediaHelpText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private var favoritesSection: some View {
+        Section {
+            Toggle(isOn: $hidesFavorites) {
+                Label(String(localized: "filter.favorites.hide", defaultValue: "Hide Favorites", table: "LocalizableFilter"), systemImage: "heart.fill")
+            }
+        } footer: {
+            Text(String(localized: "filter.favorites.help", defaultValue: "Favorites are hidden from all review filters. Turn this off to include them.", table: "LocalizableFilter"))
         }
     }
 
@@ -336,6 +357,7 @@ private struct FilterRow: View {
         currentMediaKind: .photos,
         onSelect: { _ in },
         onMediaKindChange: { _ in },
+        onHidesFavoritesChange: { _ in },
         onSortOrderChange: { _ in }
     )
 }
