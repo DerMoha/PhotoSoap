@@ -111,7 +111,7 @@ private struct PersistedAggregateMetricsState: Codable, Equatable {
     var consecutiveTransientFailures = 0
 }
 
-protocol AggregateMetricsSink {
+nonisolated protocol AggregateMetricsSink {
     var isConfigured: Bool { get }
     func send(_ payload: AggregateMetricsPayload) async throws
 }
