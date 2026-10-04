@@ -116,8 +116,7 @@ struct CompactHeader: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(Capsule())
+            .modifier(ReviewHeaderBadgeSurface())
 
             Spacer()
 
@@ -187,8 +186,17 @@ struct CompactHeader: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(Capsule())
+        .modifier(ReviewHeaderBadgeSurface())
+    }
+}
+
+private struct ReviewHeaderBadgeSurface: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.regular, in: .capsule)
+        } else {
+            content.background(Color(.secondarySystemGroupedBackground), in: Capsule())
+        }
     }
 }
 
