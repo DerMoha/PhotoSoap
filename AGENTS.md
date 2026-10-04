@@ -46,6 +46,10 @@ xcodebuild test -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'pla
 ```bash
 xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap analyze
 ```
+### CI
+- GitHub Actions workflow: `.github/workflows/ios.yml`, triggered by pushes, pull requests, and manual runs.
+- Uses macOS 15 with Xcode 26.3 and an available iPhone simulator to build and run all tests without signing.
+- Test result bundles and build logs are uploaded as `ios-test-results` artifacts.
 ### Lint / format
 - No `SwiftLint`, `SwiftFormat`, or other lint config is checked in.
 - Use Xcode formatting (`Editor > Structure > Re-Indent`, or `Ctrl+I`) and match existing file style.
