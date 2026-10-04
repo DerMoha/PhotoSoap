@@ -323,15 +323,14 @@ struct PhotoReviewView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
         .gesture(
             DragGesture()
                 .onChanged { value in
                     viewModel.handleDragGesture(value)
                 }
                 .onEnded { value in
-                    Task {
-                        await viewModel.handleDragEnd(value)
-                    }
+                    viewModel.handleDragEnd(value)
                 }
         )
         .simultaneousGesture(
