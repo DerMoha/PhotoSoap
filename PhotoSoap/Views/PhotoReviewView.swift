@@ -178,8 +178,8 @@ struct PhotoReviewView: View {
                     onHidesFavoritesChange: { hidesFavorites in
                         viewModel.applyFavoriteVisibility(hidesFavorites: hidesFavorites)
                     },
-                    onSortOrderChange: { oldestFirst in
-                        viewModel.applySortOrder(oldestFirst: oldestFirst)
+                    onSortOrderChange: { order in
+                        viewModel.applySortOrder(order)
                     }
                 )
             }
@@ -323,15 +323,14 @@ struct PhotoReviewView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
         .gesture(
             DragGesture()
                 .onChanged { value in
                     viewModel.handleDragGesture(value)
                 }
                 .onEnded { value in
-                    Task {
-                        await viewModel.handleDragEnd(value)
-                    }
+                    viewModel.handleDragEnd(value)
                 }
         )
         .simultaneousGesture(

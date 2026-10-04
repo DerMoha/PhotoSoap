@@ -5,7 +5,7 @@ struct FilterSheet: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var hapticsService: HapticsService
     @AppStorage(UserDefaultsKeys.filterHideFavorites) private var hidesFavorites = true
-    @AppStorage(UserDefaultsKeys.filterOldestFirst) private var filterOldestFirst = false
+    @AppStorage(UserDefaultsKeys.reviewSortOrder) private var sortOrder: ReviewSortOrder = .random
 
     @ObservedObject var photoLibraryService: PhotoLibraryService
     let currentFilter: PhotoFilter
@@ -13,7 +13,7 @@ struct FilterSheet: View {
     let onSelect: (PhotoFilter) -> Void
     let onMediaKindChange: (ReviewMediaKind) -> Void
     let onHidesFavoritesChange: (Bool) -> Void
-    let onSortOrderChange: (Bool) -> Void
+    let onSortOrderChange: (ReviewSortOrder) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var reviewProgress = ReviewCalendarProgress()
@@ -93,9 +93,9 @@ struct FilterSheet: View {
                 await loadData()
             }
         }
-        .onChange(of: filterOldestFirst) { _, oldestFirst in
+        .onChange(of: sortOrder) { _, order in
             hapticsService.selection()
-            onSortOrderChange(oldestFirst)
+            onSortOrderChange(order)
         }
     }
 
@@ -127,11 +127,13 @@ struct FilterSheet: View {
 
     private var sortOrderSection: some View {
         Section(String(localized: "filter.order", defaultValue: "Order", table: "LocalizableFilter")) {
-            Picker(String(localized: "filter.order", defaultValue: "Order", table: "LocalizableFilter"), selection: $filterOldestFirst) {
+            Picker(String(localized: "filter.order", defaultValue: "Order", table: "LocalizableFilter"), selection: $sortOrder) {
+                Text(String(localized: "filter.order.random", defaultValue: "Random", table: "LocalizableFilter"))
+                    .tag(ReviewSortOrder.random)
                 Text(String(localized: "filter.order.newestFirst", defaultValue: "Newest First", table: "LocalizableFilter"))
-                    .tag(false)
+                    .tag(ReviewSortOrder.newestFirst)
                 Text(String(localized: "filter.order.oldestFirst", defaultValue: "Oldest First", table: "LocalizableFilter"))
-                    .tag(true)
+                    .tag(ReviewSortOrder.oldestFirst)
             }
             .pickerStyle(.segmented)
         }
@@ -320,11 +322,11 @@ struct FilterSheet: View {
     }
 
     private var displayedYears: [Int] {
-        filterOldestFirst ? availableYears.sorted() : availableYears.sorted(by: >)
+        sortOrder == .oldestFirst ? availableYears.sorted() : availableYears.sorted(by: >)
     }
 
     private var displayedMonths: [Int] {
-        filterOldestFirst ? availableMonths.sorted() : availableMonths.sorted(by: >)
+        sortOrder == .oldestFirst ? availableMonths.sorted() : availableMonths.sorted(by: >)
     }
 
     private func monthName(for month: Int) -> String {

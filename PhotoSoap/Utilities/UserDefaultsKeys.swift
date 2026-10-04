@@ -8,6 +8,6 @@ enum UserDefaultsKeys {
     static let hasSeenPhotoPreviewHint = "hasSeenPhotoPreviewHint"
     static let hasSeenPhotoZoomHint = "hasSeenPhotoZoomHint"
     static let filterHideFavorites = "filterHideFavorites"
-    static let filterOldestFirst = "filterOldestFirst"
+    static let reviewSortOrder = "reviewSortOrder"
     static let reviewMediaKind = "reviewMediaKind"
 }

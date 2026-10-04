@@ -140,14 +140,14 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     @Published var currentFilter: PhotoFilter = .all
     @Published private(set) var currentMediaKind: ReviewMediaKind = .photos
     @Published private(set) var libraryRevision = 0
-    @Published private(set) var isOldestFirst = false
+    @Published private(set) var sortOrder: ReviewSortOrder = .random
     @Published private(set) var isHidingFavorites = true
 
     // MARK: - Private State
     private let imageManager = PHCachingImageManager()
     private var cachedAssets: PHFetchResult<PHAsset>?
     private var totalAssetCount: Int = 0
-    private var nextAssetIndex = 0
+    private var assetCursor = ReviewAssetCursor()
 
     private var cachedAlbums: [AlbumInfo] = []
     private var cachedYears: [Int] = []
@@ -199,7 +199,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     }
 
     func resetAssetCursor() {
-        nextAssetIndex = 0
+        assetCursor.reset()
     }
 
     // MARK: - PHPhotoLibraryChangeObserver
@@ -303,15 +303,15 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         switch currentFilter {
         case .all:
-            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst, hidesFavorites: isHidingFavorites)
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: sortOrder == .oldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(with: options)
         case .year(let year):
             let interval = dateIntervalForYear(year)
-            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: isOldestFirst, hidesFavorites: isHidingFavorites)
+            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: sortOrder == .oldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(with: options)
         case .month(let year, let month):
             let interval = dateIntervalForMonth(year: year, month: month)
-            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: isOldestFirst, hidesFavorites: isHidingFavorites)
+            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: sortOrder == .oldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(with: options)
         case .album(let identifier, _):
             guard let collection = fetchAssetCollection(identifier: identifier) else {
@@ -320,7 +320,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 resetAssetCursor()
                 return
             }
-            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: isOldestFirst, hidesFavorites: isHidingFavorites)
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: sortOrder == .oldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(in: collection, options: options)
         }
 
@@ -336,9 +336,8 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         var failedAssetIDs = Set<String>()
 
-        for index in min(nextAssetIndex, assets.count)..<assets.count {
+        while let index = assetCursor.nextIndex(count: assets.count, order: sortOrder) {
             let asset = assets.object(at: index)
-            nextAssetIndex = index + 1
 
             if sessionReviewedIDs.contains(asset.localIdentifier)
                 || excludedIDs.contains(asset.localIdentifier)
@@ -749,9 +748,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         resetAssetCursor()
     }
 
-    func setSortOrder(oldestFirst: Bool) {
-        guard oldestFirst != isOldestFirst else { return }
-        isOldestFirst = oldestFirst
+    func setSortOrder(_ order: ReviewSortOrder) {
+        guard order != sortOrder else { return }
+        sortOrder = order
         cachedAssets = nil
         totalAssetCount = 0
         resetAssetCursor()

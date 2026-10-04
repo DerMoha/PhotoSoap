@@ -515,6 +515,22 @@
         }
       }
     },
+    "filter.order.random" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zufällig"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Random"
+          }
+        }
+      }
+    },
     "filter.order.newestFirst" : {
       "localizations" : {
         "de" : {
