@@ -108,6 +108,7 @@ struct PhotoReviewView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar { reviewToolbar }
             .safeAreaInset(edge: .bottom) {
                 bottomChrome
             }
@@ -245,6 +246,49 @@ struct PhotoReviewView: View {
         }
     }
 
+    private var isFilterActive: Bool {
+        !viewModel.currentFilter.isAll || viewModel.currentMediaKind != .photos
+    }
+
+    @ToolbarContentBuilder
+    private var reviewToolbar: some ToolbarContent {
+        if !viewModel.noMorePhotos {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    viewModel.showFilterSheet = true
+                } label: {
+                    Label(
+                        String(localized: "filter.accessibility", defaultValue: "Filter media", table: "LocalizableFilter"),
+                        systemImage: "line.3.horizontal.decrease"
+                    )
+                }
+                .tint(isFilterActive ? .blue : .primary)
+                .accessibilityValue(Text(isFilterActive
+                    ? String(localized: "filter.active", defaultValue: "Active", table: "LocalizableFilter")
+                    : String(localized: "filter.inactive", defaultValue: "Inactive", table: "LocalizableFilter")))
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ForEach(dailyGoalOptions, id: \.self) { goal in
+                        Button {
+                            hapticsService.selection()
+                            stats.updateDailyChallengeTarget(goal)
+                        } label: {
+                            let title = "\(goal) \(String(localized: "common.items", defaultValue: "items", table: "LocalizableShared"))"
+                            if goal == stats.dailyChallengeTarget {
+                                Label(title, systemImage: "checkmark")
+                            } else {
+                                Text(title)
+                            }
+                        }
+                    }
+                } label: {
+                    Label(String(localized: "dailyGoal.title", defaultValue: "Daily Goal", table: "LocalizableReview"), systemImage: "target")
+                }
+            }
+        }
+    }
+
     private var compactHeaderSection: some View {
         let challenge = gamificationService.getCurrentDailyChallenge(stats: stats)
         let current = challenge.progress(from: stats)
@@ -255,15 +299,6 @@ struct PhotoReviewView: View {
             progress: progress,
             current: current,
             target: stats.dailyChallengeTarget,
-            isFilterActive: !viewModel.currentFilter.isAll || viewModel.currentMediaKind != .photos,
-            goalOptions: dailyGoalOptions,
-            onFilterTap: {
-                viewModel.showFilterSheet = true
-            },
-            onGoalSelect: { newTarget in
-                hapticsService.selection()
-                stats.updateDailyChallengeTarget(newTarget)
-            },
             onDailyGoalComplete: {
                 viewModel.showDailyGoalToast = true
             }

@@ -94,16 +94,10 @@ struct CompactHeader: View {
     let progress: Double
     let current: Int
     let target: Int
-    let isFilterActive: Bool
-    let goalOptions: [Int]
-    let onFilterTap: () -> Void
-    let onGoalSelect: (Int) -> Void
     let onDailyGoalComplete: () -> Void
 
     @State private var isAnimating = false
     @State private var wasCompleted = false
-
-    private let itemsLabel = String(localized: "common.items", defaultValue: "items", table: "LocalizableShared")
 
     var body: some View {
         HStack(spacing: 12) {
@@ -125,27 +119,9 @@ struct CompactHeader: View {
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(Capsule())
 
-            FilterButton(isActive: isFilterActive, action: onFilterTap)
-
             Spacer()
 
-            Menu {
-                ForEach(goalOptions, id: \.self) { goal in
-                    Button {
-                        onGoalSelect(goal)
-                    } label: {
-                        if goal == target {
-                            Label("\(goal) \(itemsLabel)", systemImage: "checkmark")
-                        } else {
-                            Text("\(goal) \(itemsLabel)")
-                        }
-                    }
-                }
-            } label: {
-                goalLabel
-            }
-            .menuStyle(.button)
-            .buttonStyle(.plain)
+            goalLabel
         }
         .onChange(of: todayReviewCount) { oldValue, newValue in
             if newValue > oldValue {
@@ -208,12 +184,6 @@ struct CompactHeader: View {
             Text("\(current)/\(target)")
                 .font(.caption)
                 .fontWeight(.semibold)
-
-            if progress < 1.0 {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
