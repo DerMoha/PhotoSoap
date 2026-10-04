@@ -48,7 +48,6 @@ struct DeleteQueueSheet: View {
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
-
                         }
                         .modifier(NativeGlassButtonStyle(isProminent: true))
                         .tint(.red)

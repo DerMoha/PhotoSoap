@@ -55,7 +55,7 @@ struct PhotoPreviewSheet: View {
                 .scaleEffect(buttonScale)
                 .opacity(contentOpacity)
                 .offset(y: dismissDragOffset * 0.35)
-                .padding(.top, geometry.safeAreaInsets.top + 4)
+                .padding(.top, 4)
                 .padding(.trailing, 8)
                 .allowsHitTesting(!isDismissing)
             }
@@ -164,7 +164,6 @@ struct PhotoPreviewSheet: View {
                 } label: {
                     Text(String(localized: "common.retry", defaultValue: "Retry", table: "LocalizableShared"))
                         .font(.subheadline.weight(.semibold))
-
                 }
                 .modifier(NativeGlassButtonStyle())
 
@@ -173,7 +172,6 @@ struct PhotoPreviewSheet: View {
                 } label: {
                     Text(String(localized: "common.done", defaultValue: "Done", table: "LocalizableShared"))
                         .font(.subheadline.weight(.semibold))
-
                 }
                 .modifier(NativeGlassButtonStyle(isProminent: true))
             }

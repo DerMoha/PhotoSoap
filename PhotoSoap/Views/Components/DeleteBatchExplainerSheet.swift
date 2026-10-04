@@ -43,7 +43,6 @@ struct DeleteBatchExplainerSheet: View {
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
-
                     }
                     .disabled(isCommitting)
                     .modifier(NativeGlassButtonStyle(isProminent: true))
