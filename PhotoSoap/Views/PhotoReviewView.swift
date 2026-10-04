@@ -860,7 +860,6 @@ struct PhotoReviewView: View {
             .padding(.horizontal, 12)
             .padding(.top, 4)
             .padding(.bottom, 8)
-            .background(Color(.systemGroupedBackground).opacity(0.96))
         }
     }
 

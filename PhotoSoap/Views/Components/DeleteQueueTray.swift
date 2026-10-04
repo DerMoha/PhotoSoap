@@ -36,12 +36,7 @@ struct DeleteQueueTray: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
-        .clipShape(Capsule())
-        .overlay {
-            Capsule()
-                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
-        }
+        .modifier(DeleteQueueTraySurface())
     }
 
     private var summaryText: String {
@@ -56,12 +51,26 @@ struct DeleteQueueTray: View {
             Label(title, systemImage: systemImage)
                 .font(.footnote.weight(.semibold))
                 .lineLimit(1)
+                .contentShape(Capsule())
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(Color.secondary.opacity(0.12))
-                .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct DeleteQueueTraySurface: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.regular, in: .capsule)
+        } else {
+            content
+                .background(.ultraThinMaterial, in: Capsule())
+                .overlay {
+                    Capsule()
+                        .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+                }
+        }
     }
 }
 
