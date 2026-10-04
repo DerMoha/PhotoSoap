@@ -48,15 +48,14 @@ struct DeleteQueueSheet: View {
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(.red)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+
                         }
-                        .buttonStyle(.plain)
+                        .modifier(NativeGlassButtonStyle(isProminent: true))
+                        .tint(.red)
+                        .controlSize(.large)
                     }
                     .padding(16)
-                    .background(.ultraThinMaterial)
+                    .background(Color(.systemGroupedBackground))
                 }
             }
             .navigationTitle(String(localized: "review.queue.title", defaultValue: "Delete List", table: "LocalizableReview"))

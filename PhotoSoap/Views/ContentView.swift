@@ -372,7 +372,8 @@ private struct QuickStartInfoView: View {
                     Button(String(localized: "onboarding.cta", table: "LocalizableOnboarding")) {
                         completeOnboarding()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .modifier(NativeGlassButtonStyle(isProminent: true))
+                    .controlSize(.large)
                     .disabled(analyticsConsent == nil)
                     .padding()
                     .frame(maxWidth: .infinity)

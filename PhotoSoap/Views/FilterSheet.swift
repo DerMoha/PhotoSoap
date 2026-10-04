@@ -59,11 +59,9 @@ struct FilterSheet: View {
                     }
                 }
             }
+            .navigationTitle(String(localized: "filter.title", table: "LocalizableFilter"))
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Text(String(localized: "filter.title", table: "LocalizableFilter"))
-                        .font(.headline)
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(String(localized: "common.done", table: "LocalizableShared")) {
                         dismiss()
