@@ -684,7 +684,7 @@ final class SmokeTests: XCTestCase {
         XCTAssertFalse(collectedTypes.isEmpty)
         XCTAssertEqual(plist["NSPrivacyTracking"] as? Bool, false)
         XCTAssertTrue(collectedTypeNames.contains("NSPrivacyCollectedDataTypeProductInteraction"))
-        XCTAssertTrue(collectedTypeNames.contains("NSPrivacyCollectedDataTypeUserID"))
+        XCTAssertTrue(collectedTypeNames.contains("NSPrivacyCollectedDataTypeDeviceID"))
         XCTAssertTrue(collectedTypes.allSatisfy { ($0["NSPrivacyCollectedDataTypeTracking"] as? Bool) == false })
     }
 
