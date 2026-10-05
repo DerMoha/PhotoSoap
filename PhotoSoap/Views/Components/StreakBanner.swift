@@ -94,33 +94,36 @@ struct CompactHeader: View {
     let progress: Double
     let current: Int
     let target: Int
+    let isFilterActive: Bool
+    let goalOptions: [Int]
+    let onFilterTap: () -> Void
+    let onGoalSelect: (Int) -> Void
     let onDailyGoalComplete: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var isAnimating = false
     @State private var wasCompleted = false
 
     var body: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "flame.fill")
-                    .font(.subheadline)
-                    .foregroundStyle(.orange)
-                    .scaleEffect(isAnimating ? 1.2 : 1.0)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isAnimating)
-
-                Text("\(todayReviewCount)")
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .contentTransition(.numericText())
-                    .animation(.spring(), value: todayReviewCount)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        streakBadge
+                        Spacer()
+                        filterControl
+                    }
+                    goalMenu
+                }
+            } else {
+                HStack(spacing: 12) {
+                    streakBadge
+                    filterControl
+                    Spacer(minLength: 0)
+                    goalMenu
+                }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .modifier(ReviewHeaderBadgeSurface())
-
-            Spacer()
-
-            goalLabel
         }
         .onChange(of: todayReviewCount) { oldValue, newValue in
             if newValue > oldValue {
@@ -140,6 +143,62 @@ struct CompactHeader: View {
                 }
             }
         }
+    }
+
+    private var streakBadge: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "flame.fill")
+                .font(.subheadline)
+                .foregroundStyle(.orange)
+                .scaleEffect(isAnimating ? 1.2 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isAnimating)
+
+            Text("\(todayReviewCount)")
+                .font(.subheadline)
+                .fontWeight(.bold)
+                .contentTransition(.numericText())
+                .animation(.spring(), value: todayReviewCount)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .modifier(ReviewHeaderBadgeSurface())
+    }
+
+    private var filterControl: some View {
+        Button(action: onFilterTap) {
+            Label(String(localized: "filter.accessibility", defaultValue: "Filter media", table: "LocalizableFilter"), systemImage: "line.3.horizontal.decrease")
+                .labelStyle(.iconOnly)
+                .frame(minWidth: 28, minHeight: 28)
+        }
+        .modifier(NativeGlassButtonStyle())
+        .buttonBorderShape(.circle)
+        .tint(isFilterActive ? .blue : .primary)
+        .accessibilityValue(Text(isFilterActive
+            ? String(localized: "filter.active", defaultValue: "Active", table: "LocalizableFilter")
+            : String(localized: "filter.inactive", defaultValue: "Inactive", table: "LocalizableFilter")))
+    }
+
+    private var goalMenu: some View {
+        Menu {
+            ForEach(goalOptions, id: \.self) { goal in
+                Button {
+                    onGoalSelect(goal)
+                } label: {
+                    let title = "\(goal) \(String(localized: "common.items", defaultValue: "items", table: "LocalizableShared"))"
+                    if goal == target {
+                        Label(title, systemImage: "checkmark")
+                    } else {
+                        Text(title)
+                    }
+                }
+            }
+        } label: {
+            goalLabel
+        }
+        .modifier(NativeGlassButtonStyle())
+        .buttonBorderShape(.capsule)
+        .accessibilityLabel(String(localized: "dailyGoal.title", defaultValue: "Daily Goal", table: "LocalizableReview"))
+        .accessibilityValue("\(current)/\(target)")
     }
 
     private var progressColor: Color {
@@ -181,12 +240,13 @@ struct CompactHeader: View {
             progressIndicator
 
             Text("\(current)/\(target)")
-                .font(.caption)
-                .fontWeight(.semibold)
+                .font(.subheadline.weight(.semibold))
+
+            Image(systemName: "chevron.down")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .modifier(ReviewHeaderBadgeSurface())
+        .frame(minHeight: 28)
     }
 }
 
