@@ -17,7 +17,6 @@ struct ContentView: View {
     @EnvironmentObject private var hapticsService: HapticsService
     @State private var selectedTab: MainTab = .review
     @State private var showBootstrapAlert = false
-    @State private var showAnalyticsConsentPrompt = false
     @State private var hasTrackedAppOpen = false
     @State private var activeStats: UserStats?
 
@@ -71,7 +70,6 @@ struct ContentView: View {
                 photoLibraryService.authorizationStatus,
                 privacyCollectionService: privacyCollectionService
             )
-            presentAnalyticsConsentPromptIfNeeded()
         }
         .onChange(of: scenePhase) { _, newPhase in
             startupRoutingService.handleScenePhase(
@@ -83,7 +81,6 @@ struct ContentView: View {
         }
         .onChange(of: photoLibraryService.authorizationStatus) { _, status in
             startupRoutingService.trackPermissionStatus(status, privacyCollectionService: privacyCollectionService)
-            presentAnalyticsConsentPromptIfNeeded()
         }
         .onChange(of: hasSeenQuickStartInfo) { _, _ in
             refreshPhotoLibraryStateIfNeeded()
@@ -95,11 +92,6 @@ struct ContentView: View {
             Button(String(localized: "common.ok", defaultValue: "OK", table: "LocalizableShared")) {}
         } message: {
             Text(bootstrapErrorMessage ?? "")
-        }
-        .fullScreenCover(isPresented: $showAnalyticsConsentPrompt) {
-            QuickStartInfoView(showsFullIntro: false) {
-                showAnalyticsConsentPrompt = false
-            }
         }
     }
 
@@ -179,13 +171,6 @@ struct ContentView: View {
         )
     }
 
-    private func presentAnalyticsConsentPromptIfNeeded() {
-        guard startupRoute == .main else { return }
-        guard hasSeenQuickStartInfo else { return }
-        guard PrivacyCollectionService.requiresConsentChoice() else { return }
-
-        showAnalyticsConsentPrompt = true
-    }
 }
 
 private enum MainTab: Hashable {
@@ -341,7 +326,7 @@ private struct QuickStartInfoView: View {
 
     @EnvironmentObject private var privacyCollectionService: PrivacyCollectionService
     @AppStorage("hasSeenQuickStartInfo") private var hasSeenQuickStartInfo = false
-    @State private var analyticsConsent: AnalyticsConsent?
+    @State private var analyticsConsent: AnalyticsConsent? = .share
     @State private var showsPrivacyPolicy = false
 
     let showsFullIntro: Bool
@@ -433,7 +418,7 @@ private struct QuickStartInfoView: View {
                     Text(String(localized: "onboarding.analytics.title", defaultValue: "Build the PhotoSoap community", table: "LocalizableOnboarding"))
                         .font(.headline)
 
-                    Text(String(localized: "onboarding.analytics.description", defaultValue: "Share totals for what the community reviews, keeps, and cleans up.", table: "LocalizableOnboarding"))
+                    Text(String(localized: "onboarding.analytics.description", defaultValue: "Community totals are shared by default. You can turn this off here or anytime in Settings.", table: "LocalizableOnboarding"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

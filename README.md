@@ -16,7 +16,7 @@ Photo and video cleanup for iPhone with fast swipe reviews, per-media stats, and
 - Favorites are hidden by default; include them with the switch in the filter sheet.
 - Swipe to keep or queue items for deletion.
 - Track overall progress plus photo/video stats with daily goals, streaks, achievements, and storage freed.
-- Invite users to contribute optional, privacy-focused community totals during onboarding.
+- Share privacy-focused community totals by default, with opt-out during onboarding and in Settings.
 
 ## Release Links
 

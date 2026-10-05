@@ -16,7 +16,7 @@ PhotoSoap stores app preferences and review progress locally, including settings
 
 ## Optional Usage Analytics
 
-During onboarding, PhotoSoap asks whether you want to share aggregate product interaction metrics to help build public community totals and improve the app. Collection begins only if you actively choose to share. You can decline without losing any app functionality and change your choice at any time in Settings.
+PhotoSoap shares aggregate product interaction metrics by default to help build public community totals and improve the app. You can turn collection off during onboarding or anytime in Settings without losing any app functionality. Existing opt-out choices are preserved.
 
 The optional analytics payload can include:
 

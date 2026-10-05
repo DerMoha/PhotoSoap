@@ -54,13 +54,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Teile Gesamtzahlen darüber, was die Community überprüft, behält und aufräumt."
+            "value" : "Community-Gesamtzahlen werden standardmäßig geteilt. Du kannst dies hier oder jederzeit in den Einstellungen ausschalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share totals for what the community reviews, keeps, and cleans up."
+            "value" : "Community totals are shared by default. You can turn this off here or anytime in Settings."
           }
         }
       }
@@ -151,13 +151,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap fragt dich beim Einrichten, ob du Community-Nutzungszahlen teilen möchtest. Ohne deine Zustimmung werden keine Nutzungsanalysen gesammelt oder hochgeladen."
+            "value" : "PhotoSoap teilt standardmäßig Community-Nutzungszahlen. Du kannst dies beim Einrichten oder jederzeit in den Einstellungen ausschalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap asks during setup whether you want to share community usage totals. Without your consent, no usage analytics are collected or uploaded."
+            "value" : "PhotoSoap shares community usage totals by default. You can turn this off during setup or anytime in Settings."
           }
         }
       }

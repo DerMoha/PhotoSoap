@@ -4,7 +4,7 @@ Use these answers in App Store Connect for PhotoSoap 1.0. They mirror the shippi
 
 ## Data collected
 
-Collection begins only after the user explicitly opts in. The app remains fully functional when the user declines.
+Collection is enabled by default. Users can disable it during onboarding or in Settings, and the app remains fully functional. Existing opt-out choices are preserved.
 
 | App Store data type | Purpose | Linked to the user | Tracking |
 | --- | --- | --- | --- |
