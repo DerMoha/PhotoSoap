@@ -414,6 +414,10 @@ struct PhotoReviewView: View {
     private func reviewContent(photo: Photo) -> some View {
         photoCardSection(photo: photo)
             .frame(maxHeight: .infinity)
+            .overlay(alignment: .topTrailing) {
+                PhotoShareButton(photo: photo, photoLibraryService: photoLibraryService)
+                    .padding(12)
+            }
             .task(id: photo.id) {
                 await schedulePreviewHintIfNeeded()
             }

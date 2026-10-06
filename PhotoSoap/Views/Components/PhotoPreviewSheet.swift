@@ -42,6 +42,11 @@ struct PhotoPreviewSheet: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
+                PhotoShareButton(photo: photo, photoLibraryService: photoLibraryService)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
+                    .padding(.leading, 8)
+
                 Button {
                     dismissPreview()
                 } label: {

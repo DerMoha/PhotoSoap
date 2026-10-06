@@ -497,6 +497,39 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         await fetchHighResolutionPreviewImage(for: photo.asset)
     }
 
+    func exportShareFile(for photo: Photo) async throws -> URL {
+        let resources = PHAssetResource.assetResources(for: photo.asset)
+        let preferredType: PHAssetResourceType = photo.isVideo ? .fullSizeVideo : .fullSizePhoto
+        let fallbackType: PHAssetResourceType = photo.isVideo ? .video : .photo
+        guard let resource = resources.first(where: { $0.type == preferredType })
+            ?? resources.first(where: { $0.type == fallbackType }) else {
+            throw PhotoLibraryError.loadingFailed
+        }
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent(resource.originalFilename)
+        let options = PHAssetResourceRequestOptions()
+        options.isNetworkAccessAllowed = true
+
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                PHAssetResourceManager.default().writeData(for: resource, toFile: url, options: options) { error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume()
+                    }
+                }
+            }
+            return url
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            throw error
+        }
+    }
+
     func fetchVideoPlayerItem(for asset: PHAsset) async -> AVPlayerItem? {
         guard asset.mediaType == .video else { return nil }
 
