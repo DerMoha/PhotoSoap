@@ -4,6 +4,7 @@ import UIKit
 struct PhotoShareButton: View {
     let photo: Photo
     @ObservedObject var photoLibraryService: PhotoLibraryService
+    var controlSize: CGFloat = 32
 
     @State private var isPreparingShare = false
     @State private var shareFile: ShareFile?
@@ -22,7 +23,7 @@ struct PhotoShareButton: View {
                         .font(.title3.weight(.semibold))
                 }
             }
-            .frame(minWidth: 32, minHeight: 32)
+            .frame(minWidth: controlSize, minHeight: controlSize)
         }
         .modifier(NativeGlassButtonStyle())
         .buttonBorderShape(.circle)

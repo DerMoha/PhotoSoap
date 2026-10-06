@@ -53,7 +53,7 @@ struct PhotoReviewView: View {
                 .allowsHitTesting(false)
 
                 VStack(spacing: 0) {
-                    if !viewModel.noMorePhotos {
+                    if !viewModel.noMorePhotos || viewModel.canUndo {
                         compactHeaderSection
                             .padding(.horizontal)
                             .padding(.top, 8)
@@ -261,6 +261,9 @@ struct PhotoReviewView: View {
             current: current,
             target: stats.dailyChallengeTarget,
             isFilterActive: isFilterActive,
+            canUndo: viewModel.canUndo,
+            onUndo: { viewModel.undoLastReview() },
+            shareControl: headerShareButton,
             goalOptions: dailyGoalOptions,
             onFilterTap: { viewModel.showFilterSheet = true },
             onGoalSelect: { target in
@@ -271,6 +274,14 @@ struct PhotoReviewView: View {
                 viewModel.showDailyGoalToast = true
             }
         )
+    }
+
+    @ViewBuilder
+    private var headerShareButton: some View {
+        if let photo = viewModel.currentPhoto {
+            PhotoShareButton(photo: photo, photoLibraryService: photoLibraryService, controlSize: 28)
+                .disabled(viewModel.isProcessingAction || viewModel.isLoading)
+        }
     }
 
     private func photoCardSection(photo: Photo) -> some View {
@@ -414,10 +425,6 @@ struct PhotoReviewView: View {
     private func reviewContent(photo: Photo) -> some View {
         photoCardSection(photo: photo)
             .frame(maxHeight: .infinity)
-            .overlay(alignment: .topTrailing) {
-                PhotoShareButton(photo: photo, photoLibraryService: photoLibraryService)
-                    .padding(12)
-            }
             .task(id: photo.id) {
                 await schedulePreviewHintIfNeeded()
             }
@@ -813,10 +820,6 @@ struct PhotoReviewView: View {
     private var deleteQueueTray: some View {
         DeleteQueueTray(
             queueCount: viewModel.pendingDeletionCount,
-            canUndo: viewModel.canUndo,
-            onUndo: {
-                viewModel.undoLastReview()
-            },
             onReviewQueue: {
                 viewModel.isShowingDeleteQueueSheet = true
             }
@@ -825,7 +828,7 @@ struct PhotoReviewView: View {
 
     @ViewBuilder
     private var bottomChrome: some View {
-        if viewModel.pendingDeletionCount > 0 || viewModel.canUndo {
+        if viewModel.pendingDeletionCount > 0 && !viewModel.noMorePhotos {
             VStack(spacing: 8) {
                 deleteQueueTray
             }

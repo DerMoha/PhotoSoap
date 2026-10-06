@@ -2,8 +2,6 @@ import SwiftUI
 
 struct DeleteQueueTray: View {
     let queueCount: Int
-    var canUndo: Bool = true
-    let onUndo: () -> Void
     let onReviewQueue: () -> Void
 
     var body: some View {
@@ -20,14 +18,6 @@ struct DeleteQueueTray: View {
             }
 
             Spacer(minLength: 0)
-
-            trayButton(
-                title: String(localized: "review.queue.undo", defaultValue: "Undo", table: "LocalizableReview"),
-                systemImage: "arrow.uturn.backward"
-            ) {
-                onUndo()
-            }
-            .disabled(!canUndo)
 
             trayButton(
                 title: String(localized: "review.queue.shortTitle", defaultValue: "List", table: "LocalizableReview"),
@@ -82,7 +72,6 @@ private struct DeleteQueueTraySurface: ViewModifier {
         Spacer()
         DeleteQueueTray(
             queueCount: 12,
-            onUndo: {},
             onReviewQueue: {}
         )
     }

@@ -89,12 +89,15 @@ struct StreakBanner: View {
     }
 }
 
-struct CompactHeader: View {
+struct CompactHeader<ShareControl: View>: View {
     let todayReviewCount: Int
     let progress: Double
     let current: Int
     let target: Int
     let isFilterActive: Bool
+    let canUndo: Bool
+    let onUndo: () -> Void
+    let shareControl: ShareControl
     let goalOptions: [Int]
     let onFilterTap: () -> Void
     let onGoalSelect: (Int) -> Void
@@ -113,6 +116,8 @@ struct CompactHeader: View {
                         streakBadge
                         Spacer()
                         filterControl
+                        undoControl
+                        shareControl
                     }
                     goalMenu
                 }
@@ -120,6 +125,8 @@ struct CompactHeader: View {
                 HStack(spacing: 12) {
                     streakBadge
                     filterControl
+                    undoControl
+                    shareControl
                     Spacer(minLength: 0)
                     goalMenu
                 }
@@ -176,6 +183,20 @@ struct CompactHeader: View {
         .accessibilityValue(Text(isFilterActive
             ? String(localized: "filter.active", defaultValue: "Active", table: "LocalizableFilter")
             : String(localized: "filter.inactive", defaultValue: "Inactive", table: "LocalizableFilter")))
+    }
+
+    private var undoControl: some View {
+        Button(action: onUndo) {
+            Label(
+                String(localized: "review.queue.undo", defaultValue: "Undo", table: "LocalizableReview"),
+                systemImage: "arrow.uturn.backward"
+            )
+            .labelStyle(.iconOnly)
+            .frame(minWidth: 28, minHeight: 28)
+        }
+        .modifier(NativeGlassButtonStyle())
+        .buttonBorderShape(.circle)
+        .disabled(!canUndo)
     }
 
     private var goalMenu: some View {
