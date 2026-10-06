@@ -813,8 +813,9 @@ struct PhotoReviewView: View {
     private var deleteQueueTray: some View {
         DeleteQueueTray(
             queueCount: viewModel.pendingDeletionCount,
+            canUndo: viewModel.canUndo,
             onUndo: {
-                viewModel.undoLastQueuedDeletion()
+                viewModel.undoLastReview()
             },
             onReviewQueue: {
                 viewModel.isShowingDeleteQueueSheet = true
@@ -824,7 +825,7 @@ struct PhotoReviewView: View {
 
     @ViewBuilder
     private var bottomChrome: some View {
-        if viewModel.pendingDeletionCount > 0 && !viewModel.noMorePhotos {
+        if viewModel.pendingDeletionCount > 0 || viewModel.canUndo {
             VStack(spacing: 8) {
                 deleteQueueTray
             }

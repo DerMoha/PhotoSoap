@@ -1,5 +1,6 @@
 import XCTest
 import SwiftData
+import Photos
 @testable import PhotoSoap
 
 final class ArchitectureSeamTests: XCTestCase {
@@ -38,6 +39,98 @@ final class ArchitectureSeamTests: XCTestCase {
         XCTAssertEqual(stats.totalDeleted, 0)
         XCTAssertEqual(stats.storageFreed, 0)
         XCTAssertEqual(try context.fetchCount(FetchDescriptor<ReviewedPhoto>()), 0)
+    }
+
+    @MainActor
+    func testUndoRestoresLatestDecisionInMixedKeepAndDeleteSequence() async throws {
+        let container = try makeArchitectureReviewContainer()
+        let context = container.mainContext
+        let stats = UserStats()
+        context.insert(stats)
+        let defaults = makeArchitectureTestDefaults()
+        defaults.set(true, forKey: UserDefaultsKeys.deleteQueueEnabled)
+        let library = PhotoLibraryService()
+        let accounting = ReviewAccountingService(gamificationService: GamificationService())
+        let privacy = PrivacyCollectionService(
+            analyticsService: AnalyticsService(defaults: defaults, recorder: { _ in }),
+            aggregateMetricsService: AggregateMetricsService(
+                defaults: defaults,
+                sink: ArchitectureTestAggregateMetricsSink(isConfigured: false),
+                allowsAutomaticFlush: false
+            )
+        )
+        let viewModel = PhotoReviewViewModel(
+            photoLibraryService: library,
+            reviewAccountingService: accounting,
+            privacyCollectionService: privacy,
+            hapticsService: HapticsService(defaults: defaults),
+            defaults: defaults
+        )
+        viewModel.setModelContext(context)
+        viewModel.setStats(stats)
+        let keptPhoto = Photo(asset: ArchitectureTestPhotoAsset(identifier: "kept-photo"), fileSize: 1_024)
+        let queuedPhoto = Photo(asset: ArchitectureTestPhotoAsset(identifier: "queued-photo"), fileSize: 2_048)
+        viewModel.currentPhoto = keptPhoto
+        await viewModel.performKeepAction()
+        XCTAssertTrue(viewModel.canUndo)
+        XCTAssertEqual(stats.totalKept, 1)
+
+        viewModel.currentPhoto = queuedPhoto
+        await viewModel.performDeleteAction()
+        XCTAssertEqual(viewModel.pendingDeletionCount, 1)
+        XCTAssertEqual(stats.totalReviewed, 2)
+
+        viewModel.undoLastReview()
+        XCTAssertEqual(viewModel.currentPhoto?.id, queuedPhoto.id)
+        XCTAssertFalse(viewModel.noMorePhotos)
+        XCTAssertEqual(viewModel.pendingDeletionCount, 0)
+        XCTAssertEqual(stats.totalReviewed, 1)
+
+        viewModel.undoLastReview()
+        XCTAssertEqual(viewModel.currentPhoto?.id, keptPhoto.id)
+        XCTAssertEqual(stats.totalKept, 0)
+        XCTAssertEqual(viewModel.cycleKeptCount, 0)
+        XCTAssertFalse(library.isReviewed(keptPhoto.id))
+        XCTAssertFalse(viewModel.canUndo)
+
+        await viewModel.performDeleteAction()
+        XCTAssertEqual(viewModel.pendingDeletionItems.first?.id, keptPhoto.id)
+        XCTAssertEqual(stats.totalReviewed, 1)
+        XCTAssertEqual(stats.totalKept, 0)
+    }
+
+    @MainActor
+    func testUndoKeepRestoresVideoStatsAndAllowsDeletionReview() throws {
+        let container = try makeArchitectureReviewContainer()
+        let context = container.mainContext
+        let stats = UserStats()
+        context.insert(stats)
+        let service = ReviewAccountingService(gamificationService: GamificationService())
+        let beforeKeep = service.makeSnapshot(for: ["video-1"], stats: stats, context: context)
+        try service.recordKeep(photoID: "video-1", stats: stats, context: context, mediaType: .video)
+        try service.save(context: context)
+        XCTAssertEqual(stats.videosKept, 1)
+
+        let beforeQueue = service.makeSnapshot(for: ["photo-2"], stats: stats, context: context)
+        try service.recordQueuedDeletionReview(photoID: "photo-2", stats: stats, context: context)
+        try service.save(context: context)
+        _ = try service.restore(beforeQueue, affectedPhotoIDs: ["photo-2"], stats: stats, context: context)
+        XCTAssertEqual(stats.totalReviewed, 1)
+        XCTAssertEqual(stats.videosKept, 1)
+        XCTAssertTrue(service.isPhotoReviewed(id: "video-1", context: context))
+
+        _ = try service.restore(beforeKeep, affectedPhotoIDs: ["video-1"], stats: stats, context: context)
+        XCTAssertEqual(stats.totalReviewed, 0)
+        XCTAssertEqual(stats.totalKept, 0)
+        XCTAssertEqual(stats.videosKept, 0)
+        XCTAssertEqual(stats.todayReviewCount, 0)
+        XCTAssertFalse(service.isPhotoReviewed(id: "video-1", context: context))
+
+        try service.recordQueuedDeletionReview(photoID: "video-1", stats: stats, context: context, mediaType: .video)
+        try service.save(context: context)
+        XCTAssertEqual(stats.totalReviewed, 1)
+        XCTAssertEqual(stats.videosReviewed, 1)
+        XCTAssertEqual(stats.videosKept, 0)
     }
 
     @MainActor
@@ -140,4 +233,16 @@ private actor ArchitectureTestAggregateMetricsSink: AggregateMetricsSink {
             throw MetricsError.notConfigured
         }
     }
+}
+
+private final class ArchitectureTestPhotoAsset: PHAsset {
+    private let identifier: String
+
+    init(identifier: String) {
+        self.identifier = identifier
+        super.init()
+    }
+
+    override var localIdentifier: String { identifier }
+    override var mediaType: PHAssetMediaType { .image }
 }

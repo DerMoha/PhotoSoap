@@ -8,6 +8,12 @@ private enum PendingDeleteBatchAction {
     case commit
 }
 
+private struct UndoableReview {
+    let photo: Photo
+    let snapshot: ReviewAccountingSnapshot
+    let wasKept: Bool
+}
+
 @MainActor
 final class PhotoReviewViewModel: ObservableObject {
     @Published var currentPhoto: Photo?
@@ -44,6 +50,13 @@ final class PhotoReviewViewModel: ObservableObject {
     @Published var showDeletionCancelledToast = false
     @Published var showDeleteListIntroToast = false
     @Published var showQueuePrunedToast = false
+
+    @Published private var undoHistory: [UndoableReview] = []
+
+    var canUndo: Bool {
+        !isProcessingAction && !isCommittingDeletionBatch
+            && (!undoHistory.isEmpty || !pendingDeletionItems.isEmpty)
+    }
 
     var pendingDeletionCount: Int {
         pendingDeletionItems.count
@@ -211,6 +224,7 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     func loadInitialPhoto() async {
+        undoHistory.removeAll()
         preloadTask?.cancel()
         preloadTask = nil
         isLoading = true
@@ -514,6 +528,7 @@ final class PhotoReviewViewModel: ObservableObject {
     private func keepPhoto() async {
         guard let photo = currentPhoto, let stats, let modelContext else { return }
 
+        let snapshot = reviewAccountingService.makeSnapshot(for: [photo.id], stats: stats, context: modelContext)
         do {
             try reviewAccountingService.recordKeep(
                 photoID: photo.id,
@@ -530,6 +545,7 @@ final class PhotoReviewViewModel: ObservableObject {
             return
         }
 
+        rememberReview(photo: photo, snapshot: snapshot, wasKept: true)
         cycleKeptCount += 1
         privacyCollectionService.track(.photoKept(filter: currentFilter, mediaKind: currentMediaKind))
         privacyCollectionService.recordReview()
@@ -579,6 +595,7 @@ final class PhotoReviewViewModel: ObservableObject {
                 return
             }
 
+            undoHistory.removeAll()
             photoLibraryService.markReviewed(photo.id)
             cycleDeletedCount += 1
             privacyCollectionService.track(.photoDeleted(filter: currentFilter, mediaKind: currentMediaKind))
@@ -593,7 +610,8 @@ final class PhotoReviewViewModel: ObservableObject {
     }
 
     private func queuePhotoForDeletion() async {
-        guard let photo = currentPhoto else { return }
+        guard let photo = currentPhoto, let stats, let modelContext else { return }
+        let snapshot = reviewAccountingService.makeSnapshot(for: [photo.id], stats: stats, context: modelContext)
 
         var resolvedFileSize: Int64 = photo.fileSize
         if resolvedFileSize == 0 {
@@ -614,6 +632,7 @@ final class PhotoReviewViewModel: ObservableObject {
             }
         }
 
+        rememberReview(photo: photo, snapshot: snapshot, wasKept: false)
         deleteQueueLifecycle.enqueue(item)
         syncPendingDeletionItems()
 
@@ -631,6 +650,58 @@ final class PhotoReviewViewModel: ObservableObject {
 
         hapticsService.impact(.rigid)
         await advanceToNextPhoto()
+    }
+
+    private func rememberReview(photo: Photo, snapshot: ReviewAccountingSnapshot, wasKept: Bool) {
+        undoHistory.append(UndoableReview(photo: photo, snapshot: snapshot, wasKept: wasKept))
+        if undoHistory.count > 20 {
+            undoHistory.removeFirst()
+        }
+    }
+
+    func undoLastReview() {
+        guard canUndo, let stats, let modelContext else { return }
+        guard let review = undoHistory.last else {
+            undoLastQueuedDeletion()
+            return
+        }
+
+        do {
+            let result = try reviewAccountingService.restore(
+                review.snapshot,
+                affectedPhotoIDs: [review.photo.id],
+                stats: stats,
+                context: modelContext
+            )
+            if result.unreviewedPhotoIDs.contains(review.photo.id) {
+                persistedReviewedIDs.remove(review.photo.id)
+                knownUnreviewedIDs.insert(review.photo.id)
+                photoLibraryService.unmarkReviewed(review.photo.id)
+            }
+        } catch {
+            modelContext.rollback()
+            presentError("Failed to restore review progress: \(error.localizedDescription)")
+            return
+        }
+
+        undoHistory.removeLast()
+        if review.wasKept {
+            cycleKeptCount = max(0, cycleKeptCount - 1)
+        } else if let item = pendingDeletionItems.first(where: { $0.id == review.photo.id }) {
+            deleteQueueLifecycle.remove(item)
+            syncPendingDeletionItems()
+        }
+
+        preloadTask?.cancel()
+        preloadTask = nil
+        nextPhoto = nil
+        photoLibraryService.resetAssetCursor()
+        currentPhoto = review.photo
+        noMorePhotos = false
+        resetSwipeState()
+        showDailyGoalToast = false
+        startPreloadingNextPhoto()
+        hapticsService.impact(.light)
     }
 
     func undoLastQueuedDeletion() {
@@ -655,6 +726,7 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let item = photoPendingQueueRemoval else { return }
         guard rollbackQueuedDeletionReviewIfNeeded(for: [item]) else { return }
 
+        undoHistory.removeAll()
         deleteQueueLifecycle.remove(item)
         syncPendingDeletionItems()
 
@@ -679,6 +751,7 @@ final class PhotoReviewViewModel: ObservableObject {
     func confirmClearQueue() {
         guard rollbackQueuedDeletionReviewIfNeeded(for: pendingDeletionItems) else { return }
 
+        undoHistory.removeAll()
         deleteQueueLifecycle.clear()
         syncPendingDeletionItems()
 
@@ -778,6 +851,7 @@ final class PhotoReviewViewModel: ObservableObject {
                 return
             }
 
+            undoHistory.removeAll()
             let deletedCount = itemsToDelete.count
             cycleDeletedCount += deletedCount
             privacyCollectionService.track(.photoDeleted(filter: currentFilter, mediaKind: currentMediaKind))
@@ -1033,6 +1107,7 @@ final class PhotoReviewViewModel: ObservableObject {
 
         guard rollbackQueuedDeletionReviewIfNeeded(for: missingItems) else { return }
 
+        undoHistory.removeAll()
         deleteQueueLifecycle.pruneUnavailableItems(availableIDs: availableIDs)
         syncPendingDeletionItems()
         showQueuePrunedFeedback()
