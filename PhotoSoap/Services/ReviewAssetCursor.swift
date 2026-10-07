@@ -18,3 +18,16 @@ struct ReviewAssetCursor {
         return shuffledIndices?[position] ?? position
     }
 }
+
+struct AssetSizeOrdering {
+    static func indices(for sizes: [Int64?]) -> [Int] {
+        sizes.indices.sorted { left, right in
+            switch (sizes[left], sizes[right]) {
+            case let (lhs?, rhs?) where lhs != rhs: return lhs > rhs
+            case (_?, nil): return true
+            case (nil, _?): return false
+            default: return left < right
+            }
+        }
+    }
+}

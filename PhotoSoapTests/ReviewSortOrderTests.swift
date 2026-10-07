@@ -3,6 +3,11 @@ import Photos
 @testable import PhotoSoap
 
 final class ReviewSortOrderTests: XCTestCase {
+    func testLargestFirstPlacesUnknownLastAndKeepsTiesStable() {
+        XCTAssertEqual(AssetSizeOrdering.indices(for: [nil, 200, 500, 200, nil]), [2, 1, 3, 0, 4])
+        XCTAssertEqual(AssetSizeOrdering.indices(for: []), [])
+    }
+
     func testRandomCursorVisitsEveryAssetOnceAndStops() {
         var cursor = ReviewAssetCursor()
         var indices: [Int] = []

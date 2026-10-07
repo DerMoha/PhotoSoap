@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "review.queue.sizeNote" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some sizes unavailable. Space freed may vary."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manche Größen unbekannt. Freier Speicher kann abweichen."
+          }
+        }
+      }
+    },
     "challenge.daily" : {
       "localizations" : {
         "de" : {

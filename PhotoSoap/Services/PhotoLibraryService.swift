@@ -148,6 +148,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     private var cachedAssets: PHFetchResult<PHAsset>?
     private var totalAssetCount: Int = 0
     private var assetCursor = ReviewAssetCursor()
+    private var sizeOrderedIndices: [Int]?
 
     private var cachedAlbums: [AlbumInfo] = []
     private var cachedYears: [Int] = []
@@ -199,6 +200,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     func resetAssetCursor() {
         assetCursor.reset()
+        sizeOrderedIndices = nil
     }
 
     // MARK: - PHPhotoLibraryChangeObserver
@@ -334,10 +336,25 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             return nil
         }
 
+        if sortOrder == .largestFirst && sizeOrderedIndices == nil {
+            var sizes: [Int64?] = []
+            let revision = libraryRevision
+            for index in 0..<assets.count {
+                try Task.checkCancellation()
+                sizes.append(knownFileSize(for: assets.object(at: index)))
+                if index.isMultiple(of: 64) { await Task.yield() }
+                guard cachedAssets === assets, libraryRevision == revision, sortOrder == .largestFirst else {
+                    throw CancellationError()
+                }
+            }
+            sizeOrderedIndices = AssetSizeOrdering.indices(for: sizes)
+            assetSizeStore.persist()
+        }
+
         var failedAssetIDs = Set<String>()
 
         while let index = assetCursor.nextIndex(count: assets.count, order: sortOrder) {
-            let asset = assets.object(at: index)
+            let asset = assets.object(at: sizeOrderedIndices?[index] ?? index)
 
             if sessionReviewedIDs.contains(asset.localIdentifier)
                 || excludedIDs.contains(asset.localIdentifier)
