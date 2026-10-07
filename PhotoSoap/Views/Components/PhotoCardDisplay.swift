@@ -27,10 +27,10 @@ struct PhotoCardDisplay: View {
                 return
             }
 
-            let size = await photoLibraryService.fetchFileSize(for: photo, allowNetworkAccess: false)
+            let size = await photoLibraryService.fetchFileSize(for: photo)
             guard !Task.isCancelled else { return }
 
-            if size > 0 {
+            if let size {
                 fetchedFileSize = size
             }
         }

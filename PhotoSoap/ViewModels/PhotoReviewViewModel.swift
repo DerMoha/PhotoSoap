@@ -129,7 +129,7 @@ final class PhotoReviewViewModel: ObservableObject {
         let persistedItems = deleteQueueLifecycle.loadPersistedItems()
         guard !persistedItems.isEmpty else { return }
 
-        let fileSizesByIdentifier = Dictionary(uniqueKeysWithValues: persistedItems.map { ($0.id, $0.fileSize) })
+        let fileSizesByIdentifier = Dictionary(uniqueKeysWithValues: persistedItems.map { ($0.id, $0.fileSize ?? 0) })
         let photosByIdentifier = photoLibraryService.photos(
             withLocalIdentifiers: persistedItems.map(\.id),
             fileSizesByIdentifier: fileSizesByIdentifier
@@ -562,7 +562,7 @@ final class PhotoReviewViewModel: ObservableObject {
             if photo.fileSize > 0 {
                 resolvedFileSize = photo.fileSize
             } else {
-                resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo)
+                resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo) ?? 0
             }
 
             let snapshot = try reviewAccountingService.prepareImmediateDeletion(
@@ -615,14 +615,14 @@ final class PhotoReviewViewModel: ObservableObject {
 
         var resolvedFileSize: Int64 = photo.fileSize
         if resolvedFileSize == 0 {
-            resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo)
+            resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo) ?? 0
         }
 
         let item = PendingDeletionItem(
             id: photo.id,
             photo: photo,
             queuedAt: Date(),
-            fileSize: resolvedFileSize,
+            fileSize: resolvedFileSize > 0 ? resolvedFileSize : nil,
             createdReviewOnQueue: !isKnownReviewed(photo.id)
         )
 
@@ -818,9 +818,13 @@ final class PhotoReviewViewModel: ObservableObject {
             isShowingDeleteBatchExplainer = false
         }
 
-        let itemsToDelete = pendingDeletionItems
+        var itemsToDelete = pendingDeletionItems
+        for index in itemsToDelete.indices {
+            // Recheck metadata: a previously unavailable resource may now have a size.
+            itemsToDelete[index].fileSize = await photoLibraryService.fetchFileSize(for: itemsToDelete[index].photo)
+        }
         let photosToDelete = itemsToDelete.map { $0.photo }
-        let totalBytes = itemsToDelete.reduce(0) { $0 + $1.fileSize }
+        let totalBytes = itemsToDelete.reduce(0) { $0 + ($1.fileSize ?? 0) }
         let photoIDs = itemsToDelete.map(\.id)
         do {
             let snapshot = try reviewAccountingService.prepareDeletionBatch(

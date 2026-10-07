@@ -176,7 +176,7 @@ struct DeleteQueueItemRow: View {
     }
 
     private var fileSizeText: String {
-        Photo.formattedFileSizeText(item.fileSize)
+        item.fileSize.flatMap { Photo.formattedFileSizeText($0) }
             ?? item.photo.fileSizeDisplayText
             ?? Int64(0).formattedBytes
     }

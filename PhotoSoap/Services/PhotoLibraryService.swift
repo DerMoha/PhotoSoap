@@ -159,7 +159,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     ]
 
     private var sessionReviewedIDs: Set<String> = []
-    private let fileSizeCache = NSCache<NSString, NSNumber>()
+    private let assetSizeStore = AssetSizeStore()
     private var cachedPreloadPhotos: [Photo] = []
     private var isObservingPhotoLibrary = false
 
@@ -167,7 +167,6 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     override init() {
         super.init()
-        fileSizeCache.countLimit = 1000
     }
 
     deinit {
@@ -210,6 +209,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                   let changes = changeInstance.changeDetails(for: assets) else {
                 return
             }
+            self.assetSizeStore.invalidate((changes.changedObjects + changes.removedObjects).map(\.localIdentifier))
             self.cachedAssets = changes.fetchResultAfterChanges
             self.totalAssetCount = self.cachedAssets?.count ?? 0
             self.cachedAlbums = []
@@ -637,51 +637,27 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     // MARK: - File Size
 
-    func fetchFileSize(for asset: PHAsset, allowNetworkAccess: Bool = false) async -> Int64 {
-        let assetID = asset.localIdentifier
-
-        if let cachedSize = fileSizeCache.object(forKey: assetID as NSString) {
-            return cachedSize.int64Value
+    /// Returns the original photo/video resource size, not recovered device storage.
+    func knownFileSize(for asset: PHAsset) -> Int64? {
+        if let bytes = assetSizeStore.size(for: asset.localIdentifier, modificationDate: asset.modificationDate) {
+            return bytes
         }
-
-        let resources = PHAssetResource.assetResources(for: asset)
-        guard let resource = preferredResource(from: resources) else {
-            return 0
-        }
-
-        let options = PHAssetResourceRequestOptions()
-        options.isNetworkAccessAllowed = allowNetworkAccess
-
-        let fileSize: Int64 = await withCheckedContinuation { (continuation: CheckedContinuation<Int64, Never>) in
-            var totalBytes: Int64 = 0
-
-            PHAssetResourceManager.default().requestData(
-                for: resource,
-                options: options
-            ) { data in
-                totalBytes += Int64(data.count)
-            } completionHandler: { error in
-                if let error {
-#if DEBUG
-                    print("PhotoSoap: Failed to fetch file size for asset: \(error.localizedDescription)")
-#endif
-                    continuation.resume(returning: 0)
-                    return
-                }
-
-                continuation.resume(returning: totalBytes)
-            }
-        }
-
-        if fileSize > 0 {
-            fileSizeCache.setObject(NSNumber(value: fileSize), forKey: assetID as NSString)
-        }
-
-        return fileSize
+        guard #available(iOS 27, *),
+              let resource = originalResource(for: asset),
+              let bytes = resource.dataSize, bytes > 0 else { return nil }
+        assetSizeStore.set(Int64(bytes), for: asset.localIdentifier, modificationDate: asset.modificationDate)
+        return Int64(bytes)
     }
 
-    func fetchFileSize(for photo: Photo, allowNetworkAccess: Bool = false) async -> Int64 {
-        await fetchFileSize(for: photo.asset, allowNetworkAccess: allowNetworkAccess)
+    func fetchFileSize(for photo: Photo) async -> Int64? {
+        let bytes = knownFileSize(for: photo.asset)
+        assetSizeStore.persist()
+        return bytes
+    }
+
+    private func originalResource(for asset: PHAsset) -> PHAssetResource? {
+        let type: PHAssetResourceType = asset.mediaType == .video ? .video : .photo
+        return PHAssetResource.assetResources(for: asset).first { $0.type == type }
     }
 
     func fetchAssets(withLocalIdentifiers identifiers: [String]) -> [String: PHAsset] {
@@ -1021,14 +997,6 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         return DateInterval(start: startDate, end: endDate)
-    }
-
-    private func preferredResource(from resources: [PHAssetResource]) -> PHAssetResource? {
-        resources.first {
-            $0.type == .fullSizeVideo || $0.type == .video || $0.type == .pairedVideo
-        } ?? resources.first {
-            $0.type == .fullSizePhoto || $0.type == .photo
-        } ?? resources.first
     }
 
     // MARK: - View Controller Helpers

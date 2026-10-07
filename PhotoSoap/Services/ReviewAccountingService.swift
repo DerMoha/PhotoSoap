@@ -193,7 +193,7 @@ final class ReviewAccountingService: ObservableObject {
         for item in items {
             if snapshot.reviewedPhotoIDs.contains(item.id) {
                 gamificationService.processQueuedDeletionCommit(
-                    fileSize: item.fileSize,
+                    fileSize: item.fileSize ?? 0,
                     stats: stats,
                     challengeType: challengeType,
                     context: context,
@@ -207,7 +207,7 @@ final class ReviewAccountingService: ObservableObject {
                 )
                 gamificationService.processPhotoReview(
                     action: .delete,
-                    fileSize: item.fileSize,
+                    fileSize: item.fileSize ?? 0,
                     stats: stats,
                     challengeType: challengeType,
                     context: context,

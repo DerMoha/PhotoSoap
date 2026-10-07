@@ -4,7 +4,7 @@ struct PendingDeletionItem: Identifiable, Equatable {
     let id: String
     let photo: Photo
     let queuedAt: Date
-    var fileSize: Int64
+    var fileSize: Int64?
     let createdReviewOnQueue: Bool
 
     static func == (lhs: PendingDeletionItem, rhs: PendingDeletionItem) -> Bool {
@@ -15,13 +15,13 @@ struct PendingDeletionItem: Identifiable, Equatable {
 struct PersistedPendingDeletionItem: Codable, Equatable {
     let id: String
     let queuedAt: Date
-    let fileSize: Int64
+    let fileSize: Int64?
     let createdReviewOnQueue: Bool
 
-    init(id: String, queuedAt: Date, fileSize: Int64, createdReviewOnQueue: Bool) {
+    init(id: String, queuedAt: Date, fileSize: Int64?, createdReviewOnQueue: Bool) {
         self.id = id
         self.queuedAt = queuedAt
-        self.fileSize = fileSize
+        self.fileSize = fileSize.flatMap { $0 > 0 ? $0 : nil }
         self.createdReviewOnQueue = createdReviewOnQueue
     }
 
@@ -29,7 +29,7 @@ struct PersistedPendingDeletionItem: Codable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)
         self.queuedAt = try container.decode(Date.self, forKey: .queuedAt)
-        self.fileSize = try container.decode(Int64.self, forKey: .fileSize)
+        self.fileSize = try container.decodeIfPresent(Int64.self, forKey: .fileSize).flatMap { $0 > 0 ? $0 : nil }
         self.createdReviewOnQueue = try container.decodeIfPresent(Bool.self, forKey: .createdReviewOnQueue) ?? false
     }
 }
