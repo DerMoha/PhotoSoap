@@ -22,11 +22,6 @@ struct PhotoCardDisplay: View {
         .task(id: photo.id) {
             fetchedFileSize = nil
 
-            guard photo.fileSize <= 0 else {
-                fetchedFileSize = photo.fileSize > 0 ? photo.fileSize : nil
-                return
-            }
-
             let size = await photoLibraryService.fetchFileSize(for: photo)
             guard !Task.isCancelled else { return }
 

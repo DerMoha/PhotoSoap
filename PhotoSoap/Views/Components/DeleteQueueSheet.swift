@@ -106,6 +106,7 @@ struct DeleteQueueItemRow: View {
     let onRemove: () -> Void
 
     @State private var image: UIImage?
+    @State private var resolvedFileSize: Int64?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -137,7 +138,8 @@ struct DeleteQueueItemRow: View {
             .buttonStyle(.plain)
         }
         .padding(.vertical, 4)
-        .task {
+        .task(id: item.id) {
+            resolvedFileSize = await photoLibraryService.fetchFileSize(for: item.photo)
             await loadImage()
         }
     }
@@ -179,9 +181,8 @@ struct DeleteQueueItemRow: View {
     }
 
     private var fileSizeText: String {
-        item.fileSize.flatMap { Photo.formattedFileSizeText($0) }
-            ?? item.photo.fileSizeDisplayText
-            ?? Int64(0).formattedBytes
+        resolvedFileSize.flatMap { Photo.formattedFileSizeText($0) }
+            ?? String(localized: "review.queue.sizeUnavailable", defaultValue: "Size unavailable", table: "LocalizableReview")
     }
 
     private var videoDurationText: String {

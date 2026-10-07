@@ -558,12 +558,7 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let photo = currentPhoto, let stats, let modelContext else { return }
 
         do {
-            let resolvedFileSize: Int64
-            if photo.fileSize > 0 {
-                resolvedFileSize = photo.fileSize
-            } else {
-                resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo) ?? 0
-            }
+            let resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo) ?? 0
 
             let snapshot = try reviewAccountingService.prepareImmediateDeletion(
                 photoID: photo.id,
@@ -613,16 +608,13 @@ final class PhotoReviewViewModel: ObservableObject {
         guard let photo = currentPhoto, let stats, let modelContext else { return }
         let snapshot = reviewAccountingService.makeSnapshot(for: [photo.id], stats: stats, context: modelContext)
 
-        var resolvedFileSize: Int64 = photo.fileSize
-        if resolvedFileSize == 0 {
-            resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo) ?? 0
-        }
+        let resolvedFileSize = await photoLibraryService.fetchFileSize(for: photo)
 
         let item = PendingDeletionItem(
             id: photo.id,
             photo: photo,
             queuedAt: Date(),
-            fileSize: resolvedFileSize > 0 ? resolvedFileSize : nil,
+            fileSize: resolvedFileSize,
             createdReviewOnQueue: !isKnownReviewed(photo.id)
         )
 

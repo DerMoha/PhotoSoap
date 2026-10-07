@@ -1,6 +1,7 @@
 import XCTest
 @testable import PhotoSoap
 
+@MainActor
 final class AssetSizeStoreTests: XCTestCase {
     func testPersistsKnownSizesAndRejectsChangedAssets() throws {
         let suite = "AssetSizeStoreTests.\(UUID().uuidString)"
