@@ -107,12 +107,7 @@ struct FilterSheet: View {
                         .tag(mediaKind)
                 }
             }
-            .pickerStyle(.menu)
-            if sortOrder == .largestFirst {
-                Text(String(localized: "filter.order.sizeNote", defaultValue: "Known sizes first. Space freed may vary.", table: "LocalizableFilter"))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+            .pickerStyle(.segmented)
 
             Text(mediaHelpText)
                 .font(.caption)
@@ -142,7 +137,12 @@ struct FilterSheet: View {
                 Text(String(localized: "filter.order.largestFirst", defaultValue: "Largest First", table: "LocalizableFilter"))
                     .tag(ReviewSortOrder.largestFirst)
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
+            if sortOrder == .largestFirst {
+                Text(String(localized: "filter.order.sizeNote", defaultValue: "Some sizes aren’t available. Deleting may free less space.", table: "LocalizableFilter"))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 

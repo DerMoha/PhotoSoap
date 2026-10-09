@@ -22,13 +22,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Some sizes unavailable. Space freed may vary."
+            "value" : "Some sizes aren’t available. Deleting may free less space."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Manche Größen unbekannt. Freier Speicher kann abweichen."
+            "value" : "Manche Größen sind unbekannt. Löschen schafft eventuell weniger Platz."
           }
         }
       }

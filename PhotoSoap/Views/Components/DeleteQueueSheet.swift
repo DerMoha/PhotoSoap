@@ -27,7 +27,7 @@ struct DeleteQueueSheet: View {
                     .listStyle(.plain)
 
                     VStack(spacing: 12) {
-                        Text(String(localized: "review.queue.sizeNote", defaultValue: "Some sizes unavailable. Space freed may vary.", table: "LocalizableReview"))
+                        Text(String(localized: "review.queue.sizeNote", defaultValue: "Some sizes aren’t available. Deleting may free less space.", table: "LocalizableReview"))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         Text(String(localized: "review.queue.sheet.note", defaultValue: "Items in your Delete List stay in your library until you confirm the iOS deletion prompt.", table: "LocalizableReview"))
