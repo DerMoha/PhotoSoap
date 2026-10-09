@@ -666,10 +666,52 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return Int64(bytes)
     }
 
-    func fetchFileSize(for photo: Photo) async -> Int64? {
-        let bytes = knownFileSize(for: photo.asset)
+    func fetchFileSize(for photo: Photo, allowResourceRead: Bool = true) async -> Int64? {
+        if let bytes = knownFileSize(for: photo.asset) {
+            assetSizeStore.persist()
+            return bytes
+        }
+        // Newer systems use metadata only. Older systems can measure one local item.
+        if #available(iOS 27, *) { return nil }
+        guard allowResourceRead, !Task.isCancelled,
+              let resource = originalResource(for: photo.asset) else { return nil }
+        let revision = libraryRevision
+        let bytes = await readResourceSize(resource)
+        guard !Task.isCancelled, libraryRevision == revision, let bytes else { return nil }
+        assetSizeStore.set(bytes, for: photo.id, modificationDate: photo.asset.modificationDate)
         assetSizeStore.persist()
         return bytes
+    }
+
+    private func readResourceSize(_ resource: PHAssetResource) async -> Int64? {
+        let manager = PHAssetResourceManager.default()
+        let options = PHAssetResourceRequestOptions()
+        options.isNetworkAccessAllowed = false
+        let request = ResourceSizeRequestHolder()
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                let state = ResourceSizeRequest(
+                    completion: { continuation.resume(returning: $0) },
+                    cancelRequest: { manager.cancelDataRequest($0) }
+                )
+                request.install(state)
+                guard !Task.isCancelled else {
+                    state.cancel()
+                    return
+                }
+                let id = manager.requestData(for: resource, options: options) {
+                    state.receive($0)
+                } completionHandler: { error in
+                    state.finish(succeeded: error == nil)
+                }
+                state.setRequestID(id)
+                DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+                    state.cancel()
+                }
+            }
+        } onCancel: {
+            request.cancel()
+        }
     }
 
     private func originalResource(for asset: PHAsset) -> PHAssetResource? {

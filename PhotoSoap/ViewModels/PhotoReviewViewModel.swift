@@ -813,7 +813,7 @@ final class PhotoReviewViewModel: ObservableObject {
         var itemsToDelete = pendingDeletionItems
         for index in itemsToDelete.indices {
             // Recheck metadata: a previously unavailable resource may now have a size.
-            itemsToDelete[index].fileSize = await photoLibraryService.fetchFileSize(for: itemsToDelete[index].photo)
+            itemsToDelete[index].fileSize = await photoLibraryService.fetchFileSize(for: itemsToDelete[index].photo, allowResourceRead: false)
         }
         let photosToDelete = itemsToDelete.map { $0.photo }
         let totalBytes = itemsToDelete.reduce(0) { $0 + ($1.fileSize ?? 0) }

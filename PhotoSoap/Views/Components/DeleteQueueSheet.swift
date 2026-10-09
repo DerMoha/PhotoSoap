@@ -139,7 +139,7 @@ struct DeleteQueueItemRow: View {
         }
         .padding(.vertical, 4)
         .task(id: item.id) {
-            resolvedFileSize = await photoLibraryService.fetchFileSize(for: item.photo)
+            resolvedFileSize = await photoLibraryService.fetchFileSize(for: item.photo, allowResourceRead: false)
             await loadImage()
         }
     }
