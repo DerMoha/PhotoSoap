@@ -42,6 +42,9 @@ xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Release
 - Confirm batch deletion
 - Cancel iOS deletion prompt and confirm stats/review state rolls back
 - Confirm video keep, queued deletion, queue removal, batch deletion, and stats rollback paths
+- Largest First sorts known original resource sizes ahead of unknown sizes
+- Older iOS size reads stop promptly and never trigger iCloud downloads
+- Unknown sizes appear as unavailable; displayed sizes are not guaranteed recovered device space
 - Large library scrolling/review performance
 - Analytics off: no pending metrics and no install ID
 - Analytics on: install registration and aggregate metrics are queued/flushed
@@ -52,7 +55,7 @@ xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap -configuration Release
 - Category: Utilities
 - Bundle ID: com.dermoha.PhotoSoap
 - Version: 1.0
-- Build: 16
+- Build: 17
 - Privacy Policy URL: https://dermoha.github.io/PhotoSoap/privacy.html
 - Support URL: https://dermoha.github.io/PhotoSoap/support.html
 - Review notes explain that PhotoSoap uses Photos permission for local review and iOS shows the final deletion confirmation.
