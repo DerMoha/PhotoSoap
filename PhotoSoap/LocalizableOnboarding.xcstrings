@@ -1,19 +1,163 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "onboarding.analytics.changeLater" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jederzeit in den Einstellungen änderbar. PhotoSoap funktioniert mit beiden Optionen gleich."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change this anytime in Settings. PhotoSoap works the same either way."
+          }
+        }
+      }
+    },
+    "onboarding.analytics.choose" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle eine Option aus."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an option."
+          }
+        }
+      }
+    },
+    "onboarding.analytics.decline" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht jetzt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not now"
+          }
+        }
+      }
+    },
+    "onboarding.analytics.description" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community-Gesamtzahlen werden standardmäßig geteilt. Du kannst dies hier oder jederzeit in den Einstellungen ausschalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community totals are shared by default. You can turn this off here or anytime in Settings."
+          }
+        }
+      }
+    },
+    "onboarding.analytics.privacy" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Foto- oder Videoinhalte, Asset-IDs oder Standortdaten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No photo or video contents, asset IDs, or location data"
+          }
+        }
+      }
+    },
+    "onboarding.analytics.identifier" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthält eine zufällige App-Kennung, App-Version und Plattform."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Includes a random app identifier, app version, and platform."
+          }
+        }
+      }
+    },
+    "onboarding.analytics.privacyPolicy" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenschutzerklärung lesen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read the privacy policy"
+          }
+        }
+      }
+    },
+    "onboarding.analytics.share" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community-Gesamtzahlen teilen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share community totals"
+          }
+        }
+      }
+    },
+    "onboarding.analytics.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baue die PhotoSoap-Community mit auf"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build the PhotoSoap community"
+          }
+        }
+      }
+    },
     "onboarding.card.anonymity.description" : {
       "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap führt anonyme Gesamtzahlen. Analysen sind aus und enthalten keine Fotos, IDs oder Standort."
+            "value" : "PhotoSoap teilt standardmäßig Community-Nutzungszahlen. Du kannst dies beim Einrichten oder jederzeit in den Einstellungen ausschalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap keeps anonymous totals. Analytics are off and never include photos, IDs, or location."
+            "value" : "PhotoSoap shares community usage totals by default. You can turn this off during setup or anytime in Settings."
           }
         }
       }
@@ -24,13 +168,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Community-Gesamtzahlen bleiben anonym"
+            "value" : "Optionale Nutzungsanalysen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Community totals stay anonymous"
+            "value" : "Optional usage analytics"
           }
         }
       }
@@ -72,13 +216,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wenn du Ausgewählte Fotos wählst, zeigt PhotoSoap nur diese Fotos. Du kannst später mehr hinzufügen. Videos erscheinen nicht."
+            "value" : "Wenn du Ausgewählte Fotos wählst, prüft PhotoSoap nur diese Auswahl. Du kannst später mehr hinzufügen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If you choose Selected Photos, PhotoSoap reviews only those photos. You can add more later. Videos will not appear."
+            "value" : "If you choose Selected Photos, PhotoSoap reviews only that selection. You can add more later."
           }
         }
       }
@@ -396,13 +540,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap braucht Zugriff auf deine Fotobibliothek.\n\nAlle Fotos ist am einfachsten. Mit Ausgewählte Fotos prüfst du nur diese Auswahl und kannst später mehr hinzufügen.\n\nPhotoSoap prüft nur Fotos. Ausgewählte Videos erscheinen nicht."
+            "value" : "PhotoSoap braucht Zugriff auf deine Fotobibliothek.\n\nAlle Fotos ist am einfachsten. Mit Ausgewählte Fotos prüfst du nur diese Auswahl und kannst später mehr hinzufügen.\n\nPhotoSoap startet mit Fotos. Videos kannst du später im Filter einschalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PhotoSoap needs access to your photo library.\n\nAll Photos is the simplest option. If you choose Selected Photos, PhotoSoap reviews only that selection and you can add more later.\n\nPhotoSoap reviews photos only. Videos you select will not appear."
+            "value" : "PhotoSoap needs access to your photo library.\n\nAll Photos is the simplest option. If you choose Selected Photos, PhotoSoap reviews only that selection and you can add more later.\n\nPhotoSoap starts with photos. You can turn on videos later from filters."
           }
         }
       }

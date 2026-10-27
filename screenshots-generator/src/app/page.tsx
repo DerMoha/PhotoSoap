@@ -210,7 +210,7 @@ function Slide1({ canvasW = W }: { canvasW?: number }) {
           width: canvasW * 0.83,
           bottom: 0,
           left: "50%",
-          transform: "translateX(-50%) translateY(10%)",
+          transform: "translateX(-50%) translateY(20%)",
         }}
       />
     </div>
@@ -263,7 +263,7 @@ function Slide2({ canvasW = W }: { canvasW?: number }) {
           width: canvasW * 0.63,
           bottom: 0,
           left: "-6%",
-          transform: "rotate(-5deg) translateY(6%)",
+          transform: "rotate(-5deg) translateY(17%)",
           opacity: 0.5,
         }}
       />
@@ -277,7 +277,7 @@ function Slide2({ canvasW = W }: { canvasW?: number }) {
           width: canvasW * 0.80,
           bottom: 0,
           right: "-5%",
-          transform: "translateY(7%)",
+          transform: "translateY(18%)",
         }}
       />
     </div>
@@ -342,7 +342,7 @@ function Slide3({ canvasW = W }: { canvasW?: number }) {
           width: canvasW * 0.83,
           bottom: 0,
           left: "50%",
-          transform: "translateX(-50%) translateY(12%)",
+          transform: "translateX(-50%) translateY(20%)",
         }}
       />
     </div>
@@ -350,7 +350,7 @@ function Slide3({ canvasW = W }: { canvasW?: number }) {
 }
 
 // ─── Slide 4: Build a Streak ──────────────────────────────────────────────────
-// "Stay on track. Watch it shrink." — warm peach, streak motif
+// "Build a habit. Keep it going." — warm peach, streak motif
 function Slide4({ canvasW = W }: { canvasW?: number }) {
   const h = (canvasW / W) * H;
   const sf = canvasW / W;
@@ -405,7 +405,7 @@ function Slide4({ canvasW = W }: { canvasW?: number }) {
       <div style={{ position: "absolute", top: canvasW * 0.115, left: canvasW * 0.088 }}>
         <Caption
           label="Build a Streak"
-          lines={["Stay on track.", "Watch it shrink."]}
+          lines={["Build a habit.", "Keep it going."]}
           labelColor="#FF9500"
           canvasW={canvasW}
         />
@@ -420,7 +420,7 @@ function Slide4({ canvasW = W }: { canvasW?: number }) {
           width: canvasW * 0.83,
           bottom: 0,
           left: "50%",
-          transform: "translateX(-50%) translateY(12%)",
+          transform: "translateX(-50%) translateY(20%)",
         }}
       />
     </div>
@@ -469,7 +469,7 @@ function Slide5({ canvasW = W }: { canvasW?: number }) {
           width: canvasW * 0.83,
           bottom: 0,
           left: "50%",
-          transform: "translateX(-50%) translateY(10%)",
+          transform: "translateX(-50%) translateY(20%)",
         }}
       />
     </div>

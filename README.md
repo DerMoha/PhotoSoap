@@ -1,6 +1,8 @@
 # PhotoSoap
 
-Photo cleanup for iPhone with fast swipe reviews, simple stats, and streak-based progress.
+Photo and video cleanup for iPhone with fast swipe reviews, per-media stats, and streak-based progress.
+
+**[Join the TestFlight Beta](https://testflight.apple.com/join/gPcKDwjC)** — Try PhotoSoap on your iPhone and share your feedback.
 
 <p align="center">
   <img src="Screens/Simulator%20Screenshot%20-%20iPhone%2016e%20-%202026-03-17%20at%2018.06.12.png" width="220" alt="PhotoSoap onboarding and privacy overview" />
@@ -16,10 +18,18 @@ Photo cleanup for iPhone with fast swipe reviews, simple stats, and streak-based
 
 ## What It Does
 
-- Review your photo library one image at a time.
-- Swipe to keep or queue photos for deletion.
-- Track progress with daily goals, streaks, achievements, and storage freed.
-- Keep analytics optional and privacy-focused.
+- Review your photo and video library one item at a time.
+- Use the media filter to review photos, videos, or both.
+- Year and month filters show review progress as a percentage of currently accessible media, respecting media and favorite filters.
+- Favorites are hidden by default; include them with the switch in the filter sheet.
+- Swipe to keep or queue items for deletion.
+- Track overall progress plus photo/video stats with daily goals, streaks, achievements, and storage freed.
+- Share privacy-focused community totals by default, with opt-out during onboarding and in Settings.
+
+## Release Links
+
+- [Privacy Policy](https://dermoha.github.io/PhotoSoap/privacy.html)
+- [Support](https://dermoha.github.io/PhotoSoap/support.html)
 
 ## Contributing
 

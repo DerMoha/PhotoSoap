@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 import Photos
 import PhotosUI
 import UIKit
@@ -20,11 +21,11 @@ enum PhotoLibraryError: Error, LocalizedError {
         case .accessRestricted:
             return String(localized: "error.accessRestricted", defaultValue: "Photo library access is restricted.", table: "LocalizableShared")
         case .noPhotosAvailable:
-            return String(localized: "error.noPhotosAvailable", defaultValue: "No photos available to review.", table: "LocalizableShared")
+            return String(localized: "error.noPhotosAvailable", defaultValue: "No media available to review.", table: "LocalizableShared")
         case .deletionFailed:
-            return String(localized: "error.deletionFailed", defaultValue: "Failed to delete the photo.", table: "LocalizableShared")
+            return String(localized: "error.deletionFailed", defaultValue: "Failed to delete the item.", table: "LocalizableShared")
         case .loadingFailed:
-            return String(localized: "error.loadingFailed", defaultValue: "Failed to load photo.", table: "LocalizableShared")
+            return String(localized: "error.loadingFailed", defaultValue: "Failed to load item.", table: "LocalizableShared")
         }
     }
 }
@@ -49,6 +50,7 @@ struct FilterData {
     let albums: [AlbumInfo]
     let availableYears: [Int]
     let availableMonthsByYear: [Int: [Int]]
+    let reviewProgress: ReviewCalendarProgress
 }
 
 // MARK: - Constants
@@ -60,6 +62,73 @@ private enum Constants {
     static let cachingThumbnailSize = CGSize(width: 400, height: 400)
 }
 
+private final class VideoPlayerItemRequestState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var requestID: PHImageRequestID = PHInvalidImageRequestID
+    private var continuation: CheckedContinuation<AVPlayerItem?, Never>?
+    private var isFinished = false
+
+    func setContinuation(_ continuation: CheckedContinuation<AVPlayerItem?, Never>) {
+        var shouldResume = false
+
+        lock.lock()
+        if isFinished {
+            shouldResume = true
+        } else {
+            self.continuation = continuation
+        }
+        lock.unlock()
+
+        if shouldResume {
+            continuation.resume(returning: nil)
+        }
+    }
+
+    func setRequestID(_ requestID: PHImageRequestID) -> Bool {
+        lock.lock()
+        self.requestID = requestID
+        let shouldCancelRequest = isFinished
+        lock.unlock()
+        return shouldCancelRequest
+    }
+
+    func complete(_ value: AVPlayerItem?) {
+        let continuationToResume: CheckedContinuation<AVPlayerItem?, Never>?
+
+        lock.lock()
+        if isFinished {
+            continuationToResume = nil
+        } else {
+            isFinished = true
+            continuationToResume = continuation
+            continuation = nil
+        }
+        lock.unlock()
+
+        continuationToResume?.resume(returning: value)
+    }
+
+    func cancel() -> PHImageRequestID {
+        let continuationToResume: CheckedContinuation<AVPlayerItem?, Never>?
+        let requestIDToCancel: PHImageRequestID
+
+        lock.lock()
+        if isFinished {
+            continuationToResume = nil
+            requestIDToCancel = PHInvalidImageRequestID
+        } else {
+            isFinished = true
+            continuationToResume = continuation
+            continuation = nil
+            requestIDToCancel = requestID
+        }
+        lock.unlock()
+
+        continuationToResume?.resume(returning: nil)
+        return requestIDToCancel
+    }
+}
+
 // MARK: - PhotoLibraryService
 
 @MainActor
@@ -69,13 +138,17 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     @Published var isLoading = false
     @Published var error: PhotoLibraryError?
     @Published var currentFilter: PhotoFilter = .all
+    @Published private(set) var currentMediaKind: ReviewMediaKind = .photos
     @Published private(set) var libraryRevision = 0
-    @Published private(set) var isOldestFirst = false
+    @Published private(set) var sortOrder: ReviewSortOrder = .random
+    @Published private(set) var isHidingFavorites = true
 
     // MARK: - Private State
     private let imageManager = PHCachingImageManager()
     private var cachedAssets: PHFetchResult<PHAsset>?
     private var totalAssetCount: Int = 0
+    private var assetCursor = ReviewAssetCursor()
+    private var sizeOrderedIndices: [Int]?
 
     private var cachedAlbums: [AlbumInfo] = []
     private var cachedYears: [Int] = []
@@ -87,7 +160,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     ]
 
     private var sessionReviewedIDs: Set<String> = []
-    private let fileSizeCache = NSCache<NSString, NSNumber>()
+    private let assetSizeStore = AssetSizeStore()
     private var cachedPreloadPhotos: [Photo] = []
     private var isObservingPhotoLibrary = false
 
@@ -95,7 +168,6 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     override init() {
         super.init()
-        fileSizeCache.countLimit = 1000
     }
 
     deinit {
@@ -106,6 +178,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     func setSessionReviewedIDs(_ ids: Set<String>) {
         sessionReviewedIDs = ids
+        resetAssetCursor()
     }
 
     func markReviewed(_ id: String) {
@@ -125,6 +198,11 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         sessionReviewedIDs.contains(id)
     }
 
+    func resetAssetCursor() {
+        assetCursor.reset()
+        sizeOrderedIndices = nil
+    }
+
     // MARK: - PHPhotoLibraryChangeObserver
 
     nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
@@ -133,12 +211,14 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                   let changes = changeInstance.changeDetails(for: assets) else {
                 return
             }
+            self.assetSizeStore.invalidate((changes.changedObjects + changes.removedObjects).map(\.localIdentifier))
             self.cachedAssets = changes.fetchResultAfterChanges
             self.totalAssetCount = self.cachedAssets?.count ?? 0
             self.cachedAlbums = []
             self.cachedYears = []
             self.cachedMonthsByYear = [:]
-            self.libraryRevision &+= 1
+            self.resetAssetCursor()
+            self.libraryRevision += 1
         }
     }
 
@@ -197,7 +277,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: presenter) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.refreshLibraryAccessState()
-                self?.libraryRevision &+= 1
+                self?.libraryRevision += 1
             }
         }
     }
@@ -215,30 +295,34 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         guard authorizationStatus.hasPhotoAccess else {
             cachedAssets = nil
             totalAssetCount = 0
+            resetAssetCursor()
             return
         }
 
         guard cachedAssets == nil else { return }
 
+        resetAssetCursor()
+
         switch currentFilter {
         case .all:
-            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
-            cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: sortOrder == .oldestFirst, hidesFavorites: isHidingFavorites)
+            cachedAssets = PHAsset.fetchAssets(with: options)
         case .year(let year):
             let interval = dateIntervalForYear(year)
-            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
-            cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
+            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: sortOrder == .oldestFirst, hidesFavorites: isHidingFavorites)
+            cachedAssets = PHAsset.fetchAssets(with: options)
         case .month(let year, let month):
             let interval = dateIntervalForMonth(year: year, month: month)
-            let options = Self.makeFetchOptions(dateInterval: interval, includeMediaTypePredicate: false, oldestFirst: isOldestFirst)
-            cachedAssets = PHAsset.fetchAssets(with: .image, options: options)
+            let options = Self.makeFetchOptions(dateInterval: interval, mediaKind: currentMediaKind, oldestFirst: sortOrder == .oldestFirst, hidesFavorites: isHidingFavorites)
+            cachedAssets = PHAsset.fetchAssets(with: options)
         case .album(let identifier, _):
             guard let collection = fetchAssetCollection(identifier: identifier) else {
                 cachedAssets = nil
                 totalAssetCount = 0
+                resetAssetCursor()
                 return
             }
-            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true, oldestFirst: isOldestFirst)
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: currentMediaKind, oldestFirst: sortOrder == .oldestFirst, hidesFavorites: isHidingFavorites)
             cachedAssets = PHAsset.fetchAssets(in: collection, options: options)
         }
 
@@ -252,10 +336,25 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
             return nil
         }
 
+        if sortOrder == .largestFirst && sizeOrderedIndices == nil {
+            var sizes: [Int64?] = []
+            let revision = libraryRevision
+            for index in 0..<assets.count {
+                try Task.checkCancellation()
+                sizes.append(knownFileSize(for: assets.object(at: index)))
+                if index.isMultiple(of: 64) { await Task.yield() }
+                guard cachedAssets === assets, libraryRevision == revision, sortOrder == .largestFirst else {
+                    throw CancellationError()
+                }
+            }
+            sizeOrderedIndices = AssetSizeOrdering.indices(for: sizes)
+            assetSizeStore.persist()
+        }
+
         var failedAssetIDs = Set<String>()
 
-        for index in 0..<assets.count {
-            let asset = assets.object(at: index)
+        while let index = assetCursor.nextIndex(count: assets.count, order: sortOrder) {
+            let asset = assets.object(at: sizeOrderedIndices?[index] ?? index)
 
             if sessionReviewedIDs.contains(asset.localIdentifier)
                 || excludedIDs.contains(asset.localIdentifier)
@@ -392,7 +491,9 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
                 }
 
                 if let error = info?[PHImageErrorKey] as? Error {
+#if DEBUG
                     print("PhotoSoap: Failed to load high-resolution preview: \(error.localizedDescription)")
+#endif
                     guard !hasResumed else { return }
                     hasResumed = true
                     continuation.resume(returning: nil)
@@ -405,6 +506,134 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
                 hasResumed = true
                 continuation.resume(returning: image)
+            }
+        }
+    }
+
+    func fetchHighResolutionPreviewImage(for photo: Photo) async -> UIImage? {
+        await fetchHighResolutionPreviewImage(for: photo.asset)
+    }
+
+    func exportShareFile(for photo: Photo) async throws -> URL {
+        let resources = PHAssetResource.assetResources(for: photo.asset)
+        let preferredType: PHAssetResourceType = photo.isVideo ? .fullSizeVideo : .fullSizePhoto
+        let fallbackType: PHAssetResourceType = photo.isVideo ? .video : .photo
+        guard let resource = resources.first(where: { $0.type == preferredType })
+            ?? resources.first(where: { $0.type == fallbackType }) else {
+            throw PhotoLibraryError.loadingFailed
+        }
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent(resource.originalFilename)
+        let options = PHAssetResourceRequestOptions()
+        options.isNetworkAccessAllowed = true
+
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                PHAssetResourceManager.default().writeData(for: resource, toFile: url, options: options) { error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume()
+                    }
+                }
+            }
+            return url
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            throw error
+        }
+    }
+
+    func fetchVideoPlayerItem(for asset: PHAsset) async -> AVPlayerItem? {
+        guard asset.mediaType == .video else { return nil }
+
+        let options = PHVideoRequestOptions()
+        options.deliveryMode = .automatic
+        options.isNetworkAccessAllowed = true
+        let requestState = VideoPlayerItemRequestState()
+
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<AVPlayerItem?, Never>) in
+                requestState.setContinuation(continuation)
+
+                guard !Task.isCancelled else {
+                    _ = requestState.cancel()
+                    return
+                }
+
+                let requestID = imageManager.requestPlayerItem(forVideo: asset, options: options) { playerItem, info in
+                    if let error = info?[PHImageErrorKey] as? Error {
+#if DEBUG
+                        print("PhotoSoap: Failed to load video preview: \(error.localizedDescription)")
+#endif
+                    }
+
+                    let isCancelled = info?[PHImageCancelledKey] as? Bool ?? false
+                    guard !isCancelled else {
+                        requestState.complete(nil)
+                        return
+                    }
+
+                    requestState.complete(playerItem)
+                }
+
+                if requestState.setRequestID(requestID) {
+                    imageManager.cancelImageRequest(requestID)
+                }
+            }
+        } onCancel: {
+            Task { @MainActor in
+                let requestID = requestState.cancel()
+                if requestID != PHInvalidImageRequestID {
+                    self.imageManager.cancelImageRequest(requestID)
+                }
+            }
+        }
+    }
+
+    func fetchVideoPlayerItem(for photo: Photo) async -> AVPlayerItem? {
+        await fetchVideoPlayerItem(for: photo.asset)
+    }
+
+    func fetchThumbnail(for photo: Photo, targetSize: CGSize) async -> UIImage? {
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .opportunistic
+        options.isSynchronous = false
+        options.isNetworkAccessAllowed = true
+        options.resizeMode = .fast
+
+        return await withCheckedContinuation { (continuation: CheckedContinuation<UIImage?, Never>) in
+            var hasResumed = false
+
+            imageManager.requestImage(
+                for: photo.asset,
+                targetSize: targetSize,
+                contentMode: .aspectFill,
+                options: options
+            ) { image, info in
+                guard !hasResumed else { return }
+
+                let isCancelled = info?[PHImageCancelledKey] as? Bool ?? false
+                if isCancelled {
+                    hasResumed = true
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                if let image {
+                    hasResumed = true
+                    continuation.resume(returning: image)
+                    return
+                }
+
+                let isDegraded = info?[PHImageResultIsDegradedKey] as? Bool ?? false
+                guard !isDegraded else { return }
+
+                hasResumed = true
+                continuation.resume(returning: nil)
             }
         }
     }
@@ -425,45 +654,69 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     // MARK: - File Size
 
-    func fetchFileSize(for asset: PHAsset, allowNetworkAccess: Bool = false) async -> Int64 {
-        let assetID = asset.localIdentifier
-
-        if let cachedSize = fileSizeCache.object(forKey: assetID as NSString) {
-            return cachedSize.int64Value
+    /// Returns the original photo/video resource size, not recovered device storage.
+    func knownFileSize(for asset: PHAsset) -> Int64? {
+        if let bytes = assetSizeStore.size(for: asset.localIdentifier, modificationDate: asset.modificationDate) {
+            return bytes
         }
+        guard #available(iOS 27, *),
+              let resource = originalResource(for: asset),
+              let bytes = resource.dataSize, bytes > 0 else { return nil }
+        assetSizeStore.set(Int64(bytes), for: asset.localIdentifier, modificationDate: asset.modificationDate)
+        return Int64(bytes)
+    }
 
-        let resources = PHAssetResource.assetResources(for: asset)
-        guard let resource = preferredResource(from: resources) else {
-            return 0
+    func fetchFileSize(for photo: Photo, allowResourceRead: Bool = true) async -> Int64? {
+        if let bytes = knownFileSize(for: photo.asset) {
+            assetSizeStore.persist()
+            return bytes
         }
+        // Newer systems use metadata only. Older systems can measure one local item.
+        if #available(iOS 27, *) { return nil }
+        guard allowResourceRead, !Task.isCancelled,
+              let resource = originalResource(for: photo.asset) else { return nil }
+        let revision = libraryRevision
+        let bytes = await readResourceSize(resource)
+        guard !Task.isCancelled, libraryRevision == revision, let bytes else { return nil }
+        assetSizeStore.set(bytes, for: photo.id, modificationDate: photo.asset.modificationDate)
+        assetSizeStore.persist()
+        return bytes
+    }
 
+    private func readResourceSize(_ resource: PHAssetResource) async -> Int64? {
+        let manager = PHAssetResourceManager.default()
         let options = PHAssetResourceRequestOptions()
-        options.isNetworkAccessAllowed = allowNetworkAccess
-
-        let fileSize: Int64 = await withCheckedContinuation { (continuation: CheckedContinuation<Int64, Never>) in
-            var totalBytes: Int64 = 0
-
-            PHAssetResourceManager.default().requestData(
-                for: resource,
-                options: options
-            ) { data in
-                totalBytes += Int64(data.count)
-            } completionHandler: { error in
-                if let error {
-                    print("PhotoSoap: Failed to fetch file size for asset: \(error.localizedDescription)")
-                    continuation.resume(returning: 0)
+        options.isNetworkAccessAllowed = false
+        let request = ResourceSizeRequestHolder()
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                let state = ResourceSizeRequest(
+                    completion: { continuation.resume(returning: $0) },
+                    cancelRequest: { manager.cancelDataRequest($0) }
+                )
+                request.install(state)
+                guard !Task.isCancelled else {
+                    state.cancel()
                     return
                 }
-
-                continuation.resume(returning: totalBytes)
+                let id = manager.requestData(for: resource, options: options) {
+                    state.receive($0)
+                } completionHandler: { error in
+                    state.finish(succeeded: error == nil)
+                }
+                state.setRequestID(id)
+                DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+                    state.cancel()
+                }
             }
+        } onCancel: {
+            request.cancel()
         }
+    }
 
-        if fileSize > 0 {
-            fileSizeCache.setObject(NSNumber(value: fileSize), forKey: assetID as NSString)
-        }
-
-        return fileSize
+    private func originalResource(for asset: PHAsset) -> PHAssetResource? {
+        let type: PHAssetResourceType = asset.mediaType == .video ? .video : .photo
+        return PHAssetResource.assetResources(for: asset).first { $0.type == type }
     }
 
     func fetchAssets(withLocalIdentifiers identifiers: [String]) -> [String: PHAsset] {
@@ -479,6 +732,17 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return assetsByIdentifier
     }
 
+    func photos(withLocalIdentifiers identifiers: [String], fileSizesByIdentifier: [String: Int64] = [:]) -> [String: Photo] {
+        let assetsByIdentifier = fetchAssets(withLocalIdentifiers: identifiers)
+        return assetsByIdentifier.mapValues { asset in
+            Photo(asset: asset, fileSize: fileSizesByIdentifier[asset.localIdentifier] ?? 0)
+        }
+    }
+
+    func availablePhotoIDs(withLocalIdentifiers identifiers: [String]) -> Set<String> {
+        Set(fetchAssets(withLocalIdentifiers: identifiers).keys)
+    }
+
     // MARK: - Deletion
 
     func deletePhoto(_ photo: Photo) async throws {
@@ -492,6 +756,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         try await PHPhotoLibrary.shared().performChanges {
             PHAssetChangeRequest.deleteAssets(assets as NSFastEnumeration)
         }
+    }
+
+    nonisolated static func isDeletionCancellation(_ error: Error) -> Bool {
+        (error as NSError).code == 3072
     }
 
     // MARK: - Library Refresh
@@ -520,6 +788,7 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
     private func invalidateCaches() {
         cachedAssets = nil
         totalAssetCount = 0
+        resetAssetCursor()
         cachedAlbums = []
         cachedYears = []
         cachedMonthsByYear = [:]
@@ -544,37 +813,48 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         currentFilter = filter
         cachedAssets = nil
         totalAssetCount = 0
+        resetAssetCursor()
     }
 
-    func setSortOrder(oldestFirst: Bool) {
-        guard oldestFirst != isOldestFirst else { return }
-        isOldestFirst = oldestFirst
+    func setSortOrder(_ order: ReviewSortOrder) {
+        guard order != sortOrder else { return }
+        sortOrder = order
         cachedAssets = nil
         totalAssetCount = 0
+        resetAssetCursor()
     }
 
-    func loadFilterData() async -> FilterData {
-        if !cachedAlbums.isEmpty && !cachedYears.isEmpty {
-            return FilterData(
-                albums: cachedAlbums,
-                availableYears: cachedYears,
-                availableMonthsByYear: cachedMonthsByYear
-            )
-        }
+    func setHidesFavorites(_ hidesFavorites: Bool) {
+        guard hidesFavorites != isHidingFavorites else { return }
+        isHidingFavorites = hidesFavorites
+        invalidateCaches()
+    }
 
+    func setMediaKind(_ mediaKind: ReviewMediaKind) {
+        guard mediaKind != currentMediaKind else { return }
+        currentMediaKind = mediaKind
+        invalidateCaches()
+    }
+
+    func loadFilterData(reviewedIDs: Set<String> = []) async -> FilterData {
         let excludedSubtypes = excludedSmartAlbumSubtypes
+        let hidesFavorites = isHidingFavorites
+        let mediaKind = currentMediaKind
+        let revision = libraryRevision
         let filterData = await Task.detached(priority: .userInitiated) {
-            Self.buildFilterData(excludedSmartAlbumSubtypes: excludedSubtypes)
+            Self.buildFilterData(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSubtypes, hidesFavorites: hidesFavorites, reviewedIDs: reviewedIDs)
         }.value
 
-        cachedAlbums = filterData.albums
-        cachedYears = filterData.availableYears
-        cachedMonthsByYear = filterData.availableMonthsByYear
+        if mediaKind == currentMediaKind && hidesFavorites == isHidingFavorites && revision == libraryRevision {
+            cachedAlbums = filterData.albums
+            cachedYears = filterData.availableYears
+            cachedMonthsByYear = filterData.availableMonthsByYear
+        }
         return filterData
     }
 
     func fetchAlbums() -> [AlbumInfo] {
-        Self.buildAlbums(excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
+        Self.buildAlbums(mediaKind: currentMediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes, hidesFavorites: isHidingFavorites)
     }
 
     func getAvailableYears() -> [Int] {
@@ -593,8 +873,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         Task.detached(priority: .userInitiated) { [weak self] in
             guard let self = self else { return }
 
-            let options = Self.makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
-            let assets = PHAsset.fetchAssets(with: .image, options: options)
+            let mediaKind = await self.currentMediaKind
+            let hidesFavorites = await self.isHidingFavorites
+            let options = Self.makeFetchOptions(dateInterval: nil, mediaKind: mediaKind, hidesFavorites: hidesFavorites)
+            let assets = PHAsset.fetchAssets(with: options)
             let calendar = Calendar.current
             var years = Set<Int>()
             var monthsByYear: [Int: Set<Int>] = [:]
@@ -619,32 +901,32 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
     // MARK: - Static Helpers
 
-    private nonisolated static func buildFilterData(excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> FilterData {
-        let albums = buildAlbums(excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes)
-        let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: false)
-        let assets = PHAsset.fetchAssets(with: .image, options: options)
+    private nonisolated static func buildFilterData(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>, hidesFavorites: Bool, reviewedIDs: Set<String>) -> FilterData {
+        let albums = buildAlbums(mediaKind: mediaKind, excludedSmartAlbumSubtypes: excludedSmartAlbumSubtypes, hidesFavorites: hidesFavorites)
+        let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind, hidesFavorites: hidesFavorites)
+        let assets = PHAsset.fetchAssets(with: options)
         let calendar = Calendar.current
-        var years = Set<Int>()
-        var monthsByYear: [Int: Set<Int>] = [:]
+        var reviewProgress = ReviewCalendarProgress()
 
         assets.enumerateObjects { asset, _, _ in
-            guard let date = asset.creationDate else { return }
-            let year = calendar.component(.year, from: date)
-            let month = calendar.component(.month, from: date)
-            years.insert(year)
-            monthsByYear[year, default: []].insert(month)
+            reviewProgress.record(
+                creationDate: asset.creationDate,
+                isReviewed: reviewedIDs.contains(asset.localIdentifier),
+                calendar: calendar
+            )
         }
 
         return FilterData(
             albums: albums,
-            availableYears: years.sorted(by: >),
-            availableMonthsByYear: monthsByYear.mapValues { $0.sorted() }
+            availableYears: reviewProgress.monthsByYear.keys.sorted(by: >),
+            availableMonthsByYear: reviewProgress.monthsByYear.mapValues { $0.keys.sorted() },
+            reviewProgress: reviewProgress
         )
     }
 
-    private nonisolated static func buildAlbums(excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>) -> [AlbumInfo] {
+    private nonisolated static func buildAlbums(mediaKind: ReviewMediaKind, excludedSmartAlbumSubtypes: Set<PHAssetCollectionSubtype>, hidesFavorites: Bool) -> [AlbumInfo] {
         var albums: [AlbumInfo] = []
-        let options = makeFetchOptions(dateInterval: nil, includeMediaTypePredicate: true)
+        let options = makeFetchOptions(dateInterval: nil, mediaKind: mediaKind, hidesFavorites: hidesFavorites)
 
         let userAlbumCollections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
         userAlbumCollections.enumerateObjects { collection, _, _ in
@@ -684,10 +966,11 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         return smartAlbums + userAlbums
     }
 
-    private nonisolated static func makeFetchOptions(
+    nonisolated static func makeFetchOptions(
         dateInterval: DateInterval?,
-        includeMediaTypePredicate: Bool,
-        oldestFirst: Bool = false
+        mediaKind: ReviewMediaKind,
+        oldestFirst: Bool = false,
+        hidesFavorites: Bool = true
     ) -> PHFetchOptions {
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: oldestFirst)]
@@ -695,8 +978,10 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
 
         var predicates: [NSPredicate] = []
 
-        if includeMediaTypePredicate {
-            predicates.append(NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue))
+        predicates.append(mediaTypePredicate(for: mediaKind))
+
+        if hidesFavorites {
+            predicates.append(NSPredicate(format: "favorite == NO"))
         }
 
         if let interval = dateInterval {
@@ -714,6 +999,21 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         return fetchOptions
+    }
+
+    private nonisolated static func mediaTypePredicate(for mediaKind: ReviewMediaKind) -> NSPredicate {
+        switch mediaKind {
+        case .photos:
+            return NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
+        case .videos:
+            return NSPredicate(format: "mediaType == %d", PHAssetMediaType.video.rawValue)
+        case .all:
+            return NSPredicate(
+                format: "mediaType == %d OR mediaType == %d",
+                PHAssetMediaType.image.rawValue,
+                PHAssetMediaType.video.rawValue
+            )
+        }
     }
 
     // MARK: - Private Helpers
@@ -756,12 +1056,6 @@ class PhotoLibraryService: NSObject, ObservableObject, PHPhotoLibraryChangeObser
         }
 
         return DateInterval(start: startDate, end: endDate)
-    }
-
-    private func preferredResource(from resources: [PHAssetResource]) -> PHAssetResource? {
-        resources.first {
-            $0.type == .fullSizePhoto || $0.type == .photo
-        } ?? resources.first
     }
 
     // MARK: - View Controller Helpers

@@ -1,9 +1,9 @@
 import SwiftUI
-import PhotosUI
-import Photos
+import UIKit
 
 struct DeleteQueueSheet: View {
     let items: [PendingDeletionItem]
+    @ObservedObject var photoLibraryService: PhotoLibraryService
     let onRemoveFromQueue: (PendingDeletionItem) -> Void
     let onClearQueue: () -> Void
     let onDeleteAll: () -> Void
@@ -19,7 +19,7 @@ struct DeleteQueueSheet: View {
                 } else {
                     List {
                         ForEach(items) { item in
-                            DeleteQueueItemRow(item: item) {
+                            DeleteQueueItemRow(item: item, photoLibraryService: photoLibraryService) {
                                 onRemoveFromQueue(item)
                             }
                         }
@@ -27,7 +27,10 @@ struct DeleteQueueSheet: View {
                     .listStyle(.plain)
 
                     VStack(spacing: 12) {
-                        Text(String(localized: "review.queue.sheet.note", defaultValue: "Photos in your Delete List stay in Photos until you confirm the iOS deletion prompt.", table: "LocalizableReview"))
+                        Text(String(localized: "review.queue.sizeNote", defaultValue: "Some sizes aren’t available. Deleting may free less space.", table: "LocalizableReview"))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Text(String(localized: "review.queue.sheet.note", defaultValue: "Items in your Delete List stay in your library until you confirm the iOS deletion prompt.", table: "LocalizableReview"))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -44,19 +47,17 @@ struct DeleteQueueSheet: View {
                             HStack {
                                 Image(systemName: "trash.fill")
 
-                                Text(String(localized: "review.queue.deleteInPhotos", defaultValue: "Delete These Photos", table: "LocalizableReview"))
+                                Text(String(localized: "review.queue.deleteInPhotos", defaultValue: "Delete These Items", table: "LocalizableReview"))
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(.red)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
-                        .buttonStyle(.plain)
+                        .modifier(NativeGlassButtonStyle(isProminent: true))
+                        .tint(.red)
+                        .controlSize(.large)
                     }
                     .padding(16)
-                    .background(.ultraThinMaterial)
+                    .background(Color(.systemGroupedBackground))
                 }
             }
             .navigationTitle(String(localized: "review.queue.title", defaultValue: "Delete List", table: "LocalizableReview"))
@@ -75,7 +76,7 @@ struct DeleteQueueSheet: View {
                     onDismiss()
                 }
             } message: {
-                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All photos will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All items will be removed from your Delete List and kept in your library.", table: "LocalizableReview"))
             }
         }
     }
@@ -86,11 +87,11 @@ struct DeleteQueueSheet: View {
                 .font(.system(size: 50))
                 .foregroundStyle(.secondary)
 
-            Text(String(localized: "review.queue.empty.title", defaultValue: "No photos in Delete List", table: "LocalizableReview"))
+            Text(String(localized: "review.queue.empty.title", defaultValue: "No items in Delete List", table: "LocalizableReview"))
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            Text(String(localized: "reviewqueue.empty.description", defaultValue: "Swipe left on photos to add them to your Delete List.", table: "LocalizableReview"))
+            Text(String(localized: "reviewqueue.empty.description", defaultValue: "Swipe left on items to add them to your Delete List.", table: "LocalizableReview"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -101,35 +102,30 @@ struct DeleteQueueSheet: View {
 
 struct DeleteQueueItemRow: View {
     let item: PendingDeletionItem
+    @ObservedObject var photoLibraryService: PhotoLibraryService
     let onRemove: () -> Void
 
     @State private var image: UIImage?
+    @State private var resolvedFileSize: Int64?
 
     var body: some View {
         HStack(spacing: 12) {
-            if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 60, height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(.systemGray5))
-                    .frame(width: 60, height: 60)
-                    .overlay {
-                        ProgressView()
-                    }
-            }
+            thumbnail
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.photo.formattedDate)
                     .font(.subheadline)
                     .fontWeight(.medium)
 
-                Text(fileSizeText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    if item.photo.isVideo {
+                        Label(videoDurationText, systemImage: "video.fill")
+                    }
+
+                    Text(fileSizeText)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -142,44 +138,62 @@ struct DeleteQueueItemRow: View {
             .buttonStyle(.plain)
         }
         .padding(.vertical, 4)
-        .task {
+        .task(id: item.id) {
+            resolvedFileSize = await photoLibraryService.fetchFileSize(for: item.photo, allowResourceRead: false)
             await loadImage()
         }
     }
 
-    private func loadImage() async {
-        let options = PHImageRequestOptions()
-        options.deliveryMode = .opportunistic
-        options.isSynchronous = false
-        options.isNetworkAccessAllowed = true
-
-        let size = CGSize(width: 120, height: 120)
-        PHImageManager.default().requestImage(
-            for: item.photo.asset,
-            targetSize: size,
-            contentMode: .aspectFill,
-            options: options
-        ) { result, _ in
-            if let result = result {
-                Task { @MainActor in
-                    self.image = result
-                }
+    private var thumbnail: some View {
+        ZStack {
+            if let image = image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 60, height: 60)
+                    .overlay {
+                        ProgressView()
+                    }
             }
+
+            if item.photo.isVideo {
+                Image(systemName: "play.fill")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(.black.opacity(0.45))
+                    .clipShape(Circle())
+            }
+        }
+        .frame(width: 60, height: 60)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func loadImage() async {
+        let size = CGSize(width: 120, height: 120)
+        if let result = await photoLibraryService.fetchThumbnail(for: item.photo, targetSize: size) {
+            image = result
         }
     }
 
     private var fileSizeText: String {
-        guard item.fileSize > 0 else {
-            return item.photo.fileSizeFormatted
-        }
+        resolvedFileSize.flatMap { Photo.formattedFileSizeText($0) }
+            ?? String(localized: "review.queue.sizeUnavailable", defaultValue: "Size unavailable", table: "LocalizableReview")
+    }
 
-        return item.fileSize.formattedBytes
+    private var videoDurationText: String {
+        item.photo.formattedDuration ?? String(localized: "review.preview.video", defaultValue: "Video", table: "LocalizableReview")
     }
 }
 
 #Preview {
     DeleteQueueSheet(
         items: [],
+        photoLibraryService: PhotoLibraryService(),
         onRemoveFromQueue: { _ in },
         onClearQueue: {},
         onDeleteAll: {},

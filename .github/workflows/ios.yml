@@ -1,0 +1,57 @@
+name: iOS CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select an available iPhone simulator
+        run: |
+          xcodebuild -version
+          device_id=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          candidates = [(runtime, device) for runtime, items in devices.items()
+                        if "iOS" in runtime for device in items
+                        if device["name"].startswith("iPhone")]
+          if not candidates:
+              sys.exit("No available iPhone simulator")
+          candidates.sort(key=lambda item: tuple(int(part) for part in item[0].split("iOS-")[1].split("-")), reverse=True)
+          print(candidates[0][1]["udid"])
+          ')
+          echo "SIMULATOR_ID=$device_id" >> "$GITHUB_ENV"
+      - name: Build and run tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project PhotoSoap.xcodeproj \
+            -scheme PhotoSoap \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee xcodebuild.log
+      - name: Upload test results and build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: |
+            TestResults.xcresult
+            xcodebuild.log
+          retention-days: 14

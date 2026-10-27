@@ -1,6 +1,5 @@
 import XCTest
 import SwiftData
-import Photos
 @testable import PhotoSoap
 
 final class SmokeTests: XCTestCase {
@@ -15,15 +14,32 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(stats.totalDeleted, 0)
         XCTAssertEqual(stats.currentStreak, 1)
         XCTAssertEqual(stats.sessionReviewCount, 1)
+        XCTAssertEqual(stats.photosReviewed, 1)
+        XCTAssertEqual(stats.photosKept, 1)
+        XCTAssertEqual(stats.videosReviewed, 0)
     }
 
     @MainActor
-    func testAnalyticsServiceIsDisabledByDefault() {
+    func testAnalyticsServiceIsEnabledByDefault() {
         let defaults = makeTestDefaults()
 
         let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
 
-        XCTAssertFalse(analyticsService.isEnabled)
+        XCTAssertTrue(analyticsService.isEnabled)
+        XCTAssertTrue(AnalyticsService.isEnabled(in: defaults))
+    }
+
+    @MainActor
+    func testDecliningAnalyticsPersistsAnExplicitChoice() {
+        let defaults = makeTestDefaults()
+        let analyticsService = AnalyticsService(defaults: defaults, recorder: { _ in })
+
+        XCTAssertNil(defaults.object(forKey: AnalyticsService.analyticsEnabledKey))
+
+        analyticsService.setEnabled(false)
+
+        XCTAssertEqual(defaults.object(forKey: AnalyticsService.analyticsEnabledKey) as? Bool, false)
+        XCTAssertFalse(AnalyticsService(defaults: defaults, recorder: { _ in }).isEnabled)
     }
 
     @MainActor
@@ -38,6 +54,80 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(analyticsService.recordedEvents.count, 1)
         XCTAssertEqual(analyticsService.recordedEvents.first?.name, "stats_viewed")
         XCTAssertTrue(analyticsService.recordedEvents.first?.properties.isEmpty == true)
+    }
+
+    func testReviewMediaKindDefaultsToPhotosFirst() {
+        XCTAssertEqual(ReviewMediaKind.allCases.map(\.rawValue), ["photos", "videos", "all"])
+    }
+
+    func testMediaStatsTrackPhotosAndVideosSeparately() {
+        let stats = UserStats()
+
+        stats.incrementReviewed(mediaType: .photo)
+        stats.incrementKept(mediaType: .photo)
+        stats.incrementReviewed(mediaType: .video)
+        stats.incrementDeleted(fileSize: 8_192, mediaType: .video)
+
+        XCTAssertEqual(stats.totalReviewed, 2)
+        XCTAssertEqual(stats.totalKept, 1)
+        XCTAssertEqual(stats.totalDeleted, 1)
+        XCTAssertEqual(stats.storageFreed, 8_192)
+        XCTAssertEqual(stats.photosReviewed, 1)
+        XCTAssertEqual(stats.photosKept, 1)
+        XCTAssertEqual(stats.photosDeleted, 0)
+        XCTAssertEqual(stats.videosReviewed, 1)
+        XCTAssertEqual(stats.videosKept, 0)
+        XCTAssertEqual(stats.videosDeleted, 1)
+        XCTAssertEqual(stats.videoStorageFreed, 8_192)
+    }
+
+    func testLegacyStatsMigrateToPhotoBreakdown() {
+        let stats = UserStats()
+        stats.mediaStatsMigrationVersion = 0
+        stats.totalReviewed = 7
+        stats.totalDeleted = 2
+        stats.totalKept = 5
+        stats.storageFreed = 16_384
+
+        stats.migrateLegacyMediaStatsIfNeeded()
+
+        XCTAssertEqual(stats.photosReviewed, 7)
+        XCTAssertEqual(stats.photosDeleted, 2)
+        XCTAssertEqual(stats.photosKept, 5)
+        XCTAssertEqual(stats.photoStorageFreed, 16_384)
+        XCTAssertEqual(stats.videosReviewed, 0)
+        XCTAssertEqual(stats.mediaStatsMigrationVersion, 1)
+    }
+
+    @MainActor
+    func testStatsViewModelExposesSeparateMediaBreakdown() {
+        let stats = UserStats()
+        stats.incrementReviewed(mediaType: .photo)
+        stats.incrementReviewed(mediaType: .video)
+        stats.incrementDeleted(fileSize: 4_096, mediaType: .video)
+
+        let items = StatsViewModel().getMediaStats(from: stats)
+
+        XCTAssertEqual(items.map(\.mediaType), [.photo, .video])
+        XCTAssertEqual(items.first?.reviewed, 1)
+        XCTAssertEqual(items.first?.deleted, 0)
+        XCTAssertEqual(items.last?.reviewed, 1)
+        XCTAssertEqual(items.last?.deleted, 1)
+        XCTAssertEqual(items.last?.storageFreed, 4_096)
+    }
+
+    func testPhotoFileSizeDisplayTextTreatsNonPositiveSizesAsUnknown() {
+        XCTAssertNil(Photo.formattedFileSizeText(0))
+        XCTAssertNil(Photo.formattedFileSizeText(-1))
+        XCTAssertEqual(Photo.formattedFileSizeText(4_096), Int64(4_096).formattedBytes)
+    }
+
+    func testReviewAnalyticsIncludesMediaTypeWithoutRenamingEvents() {
+        let event = AnalyticsEvent.filterApplied(.all, mediaKind: .videos)
+
+        XCTAssertEqual(event.name, "filter_applied")
+        XCTAssertEqual(event.properties["filter"], "all")
+        XCTAssertEqual(event.properties["media_type"], "video")
     }
 
     @MainActor
@@ -232,15 +322,17 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(service.pendingMetrics.isEmpty)
 
         service.recordReview()
-        service.flushPendingMetricsIfNeeded()
-        await Task.yield()
+        if let flushTask = service.flushPendingMetricsIfNeeded() {
+            await flushTask.value
+        }
 
         payloads = await sink.payloads
         XCTAssertEqual(payloads.count, 1)
 
         clock.now = clock.now.addingTimeInterval(24 * 60 * 60 + 1)
-        service.flushPendingMetricsIfNeeded()
-        await Task.yield()
+        if let flushTask = service.flushPendingMetricsIfNeeded() {
+            await flushTask.value
+        }
 
         payloads = await sink.payloads
         XCTAssertEqual(payloads.count, 2)
@@ -262,6 +354,7 @@ final class SmokeTests: XCTestCase {
             sink: sink,
             allowsAutomaticFlush: false
         )
+        service.setEnabled(false)
 
         service.registerInstallIfNeeded()
         service.recordReview()
@@ -285,6 +378,74 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(stats.totalReviewed, 1)
         XCTAssertEqual(stats.totalDeleted, 1)
         XCTAssertEqual(stats.storageFreed, 2_048)
+        XCTAssertEqual(stats.photosReviewed, 1)
+        XCTAssertEqual(stats.photosDeleted, 1)
+        XCTAssertEqual(stats.photoStorageFreed, 2_048)
+    }
+
+    @MainActor
+    func testVideoReviewUpdatesVideoStatsAndReviewHistory() throws {
+        let container = try makeInMemoryReviewContainer()
+        let context = container.mainContext
+        let stats = UserStats()
+        context.insert(stats)
+
+        let service = GamificationService()
+        try service.markPhotoReviewed(id: "video-1", context: context, mediaType: .video)
+        service.processPhotoReview(
+            action: .keep,
+            fileSize: 0,
+            stats: stats,
+            challengeType: .review,
+            context: context,
+            mediaType: .video
+        )
+        try context.save()
+
+        let review = try XCTUnwrap(context.fetch(FetchDescriptor<ReviewedPhoto>()).first)
+        XCTAssertEqual(review.reviewMediaType, .video)
+        XCTAssertEqual(stats.totalReviewed, 1)
+        XCTAssertEqual(stats.totalKept, 1)
+        XCTAssertEqual(stats.photosReviewed, 0)
+        XCTAssertEqual(stats.videosReviewed, 1)
+        XCTAssertEqual(stats.videosKept, 1)
+    }
+
+    @MainActor
+    func testQueuedVideoDeletionUsesVideoStatsAndRollsBackVideoReview() throws {
+        let container = try makeInMemoryReviewContainer()
+        let context = container.mainContext
+        let stats = UserStats()
+        stats.dailyChallengeType = DailyChallengeType.review.rawValue
+        stats.dailyChallengeDate = Date()
+        context.insert(stats)
+
+        let service = GamificationService()
+        try service.markPhotoReviewed(id: "queued-video", context: context, mediaType: .video)
+        service.processQueuedDeletionReview(
+            stats: stats,
+            challengeType: .review,
+            context: context,
+            mediaType: .video
+        )
+        try context.save()
+
+        XCTAssertEqual(stats.videosReviewed, 1)
+        XCTAssertEqual(stats.videosDeleted, 0)
+        XCTAssertEqual(stats.dailyChallengeProgress, 1)
+
+        try service.rollbackQueuedDeletionReview(
+            id: "queued-video",
+            stats: stats,
+            challengeType: .review,
+            context: context
+        )
+        try context.save()
+
+        XCTAssertEqual(stats.totalReviewed, 0)
+        XCTAssertEqual(stats.videosReviewed, 0)
+        XCTAssertEqual(stats.dailyChallengeProgress, 0)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<ReviewedPhoto>()), 0)
     }
 
     @MainActor
@@ -297,7 +458,7 @@ final class SmokeTests: XCTestCase {
         stats.totalReviewed = 49
         context.insert(stats)
 
-        let service = GameificationService()
+        let service = GamificationService()
         service.processPhotoReview(
             action: .keep,
             fileSize: 0,
@@ -319,7 +480,7 @@ final class SmokeTests: XCTestCase {
         stats.dailyChallengeDate = Date()
         context.insert(stats)
 
-        let service = GameificationService()
+        let service = GamificationService()
         try service.markPhotoReviewed(id: "queued-photo", context: context)
         service.processQueuedDeletionReview(
             stats: stats,
@@ -356,7 +517,7 @@ final class SmokeTests: XCTestCase {
         stats.dailyChallengeDate = Date()
         context.insert(stats)
 
-        let service = GameificationService()
+        let service = GamificationService()
         try service.markPhotoReviewed(id: "queued-photo", context: context)
         service.processQueuedDeletionReview(
             stats: stats,
@@ -390,7 +551,7 @@ final class SmokeTests: XCTestCase {
         stats.dailyChallengeDate = Date()
         context.insert(stats)
 
-        let service = GameificationService()
+        let service = GamificationService()
         try service.markPhotoReviewed(id: "queued-photo", context: context)
         service.processQueuedDeletionReview(
             stats: stats,
@@ -522,7 +683,7 @@ final class SmokeTests: XCTestCase {
         XCTAssertFalse(collectedTypes.isEmpty)
         XCTAssertEqual(plist["NSPrivacyTracking"] as? Bool, false)
         XCTAssertTrue(collectedTypeNames.contains("NSPrivacyCollectedDataTypeProductInteraction"))
-        XCTAssertTrue(collectedTypeNames.contains("NSPrivacyCollectedDataTypeUserID"))
+        XCTAssertTrue(collectedTypeNames.contains("NSPrivacyCollectedDataTypeDeviceID"))
         XCTAssertTrue(collectedTypes.allSatisfy { ($0["NSPrivacyCollectedDataTypeTracking"] as? Bool) == false })
     }
 
@@ -536,7 +697,9 @@ private func makeInMemoryReviewContainer() throws -> ModelContainer {
 
 private func makeTestDefaults() -> UserDefaults {
     let suiteName = "PhotoSoapTests.\(UUID().uuidString)"
-    let defaults = UserDefaults(suiteName: suiteName)!
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+        fatalError("Cannot create test UserDefaults for suite: \(suiteName)")
+    }
     defaults.removePersistentDomain(forName: suiteName)
     return defaults
 }

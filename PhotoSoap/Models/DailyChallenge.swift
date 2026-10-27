@@ -14,10 +14,7 @@ enum DailyChallengeType: String, CaseIterable {
     }
 
     var unit: String {
-        switch self {
-        case .review, .delete: return String(localized: "common.photos", defaultValue: "photos", table: "LocalizableShared")
-        case .streak: return String(localized: "common.photos", defaultValue: "photos", table: "LocalizableShared")
-        }
+        String(localized: "common.items", defaultValue: "items", table: "LocalizableShared")
     }
 }
 
@@ -38,7 +35,7 @@ struct DailyChallenge: Identifiable {
         case .review, .delete:
             return "\(type.verb) \(target) \(type.unit)"
         case .streak:
-            return String(localized: "challenge.streak.title", defaultValue: "%d-photo streak", table: "LocalizableReview")
+            return String(localized: "challenge.streak.title", defaultValue: "%d-item streak", table: "LocalizableReview")
                 .replacingOccurrences(of: "%d", with: "\(target)")
         }
     }
@@ -55,11 +52,11 @@ struct DailyChallenge: Identifiable {
     var description: String {
         switch type {
         case .review:
-            return String(localized: "challenge.description.review", defaultValue: "Review \(target) photos today to complete this challenge", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
+            return String(localized: "challenge.description.review", defaultValue: "Review \(target) items today to complete this challenge", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
         case .delete:
-            return String(localized: "challenge.description.delete", defaultValue: "Delete \(target) photos today to free up space", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
+            return String(localized: "challenge.description.delete", defaultValue: "Delete \(target) items today to free up space", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
         case .streak:
-            return String(localized: "challenge.description.streak", defaultValue: "Maintain a streak of \(target) consecutive photo reviews", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
+            return String(localized: "challenge.description.streak", defaultValue: "Maintain a streak of \(target) consecutive item reviews", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(target)")
         }
     }
 

@@ -1,5 +1,4 @@
 import SwiftUI
-import Photos
 
 struct PhotoCardDisplay: View {
     let photo: Photo
@@ -21,13 +20,12 @@ struct PhotoCardDisplay: View {
             fileSizeOverride: fetchedFileSize
         )
         .task(id: photo.id) {
-            guard photo.fileSize <= 0 else {
-                fetchedFileSize = photo.fileSize > 0 ? photo.fileSize : nil
-                return
-            }
+            fetchedFileSize = nil
 
-            let size = await photoLibraryService.fetchFileSize(for: photo.asset, allowNetworkAccess: true)
-            if size > 0 {
+            let size = await photoLibraryService.fetchFileSize(for: photo)
+            guard !Task.isCancelled else { return }
+
+            if let size {
                 fetchedFileSize = size
             }
         }

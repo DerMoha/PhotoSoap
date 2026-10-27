@@ -20,7 +20,7 @@ struct DeleteBatchExplainerSheet: View {
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Text(String(localized: "review.queue.explainer.message", defaultValue: "PhotoSoap will ask iOS to delete \(itemCount) photos. Nothing is removed until you confirm the next iOS prompt. Deleted photos move to Recently Deleted.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.explainer.message", defaultValue: "PhotoSoap will ask iOS to delete \(itemCount) items. Nothing is removed until you confirm the next iOS prompt. Deleted items move to Recently Deleted.", table: "LocalizableReview"))
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -43,23 +43,22 @@ struct DeleteBatchExplainerSheet: View {
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(.red)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .disabled(isCommitting)
-                    .buttonStyle(.plain)
+                    .modifier(NativeGlassButtonStyle(isProminent: true))
+                    .tint(.red)
+                    .controlSize(.large)
 
                     Button(action: onCancel) {
                         Text(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"))
                             .fontWeight(.medium)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.borderless)
                     .disabled(isCommitting)
                 }
                 .padding(16)
             }
+            .navigationTitle(String(localized: "review.queue.explainer.title", defaultValue: "Confirm in iOS", table: "LocalizableReview"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -67,6 +66,7 @@ struct DeleteBatchExplainerSheet: View {
                         Image(systemName: "xmark")
                     }
                     .disabled(isCommitting)
+                    .accessibilityLabel(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"))
                 }
             }
         }

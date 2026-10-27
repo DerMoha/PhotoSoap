@@ -71,13 +71,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wenn aktiviert, legt ein Wisch nach links Fotos in die Löschliste, damit du sie später zusammen löschen kannst. Wenn deaktiviert, fragt iOS bei jedem Foto sofort nach dem Löschen."
+            "value" : "Wenn aktiviert, legt ein Wisch nach links Medien in die Löschliste, damit du sie später zusammen löschen kannst. Wenn deaktiviert, fragt iOS bei jedem Medium sofort nach dem Löschen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When on, swipe left adds photos to your Delete List so you can delete them together later. When off, iOS asks to delete each photo right away."
+            "value" : "When on, swipe left adds items to your Delete List so you can delete them together later. When off, iOS asks to delete each item right away."
           }
         }
       }
@@ -100,6 +100,7 @@
       }
     },
     "stats.adFreeUnlock" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -120,13 +121,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Optionale Nutzungsanalysen sind deaktiviert. Du kannst die App weiterhin nutzen, ohne sie zu aktivieren."
+            "value" : "Nutzungsanalysen sind deaktiviert. PhotoSoap sammelt oder lädt keine Nutzungsdaten hoch."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Optional usage analytics are currently off. You can keep using the app without enabling them."
+            "value" : "Usage analytics are off. PhotoSoap does not collect or upload usage data."
           }
         }
       }
@@ -266,13 +267,125 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Übersicht"
+            "value" : "Alle Medien"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Overview"
+            "value" : "All Media"
+          }
+        }
+      }
+    },
+    "stats.itemsDeleted" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelöschte Medien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Items Deleted"
+          }
+        }
+      }
+    },
+    "stats.itemsKept" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behaltene Medien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Items Kept"
+          }
+        }
+      }
+    },
+    "stats.itemsReviewed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überprüfte Medien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Items Reviewed"
+          }
+        }
+      }
+    },
+    "stats.mediaBreakdown" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Medientyp"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By Media Type"
+          }
+        }
+      }
+    },
+    "stats.reviewed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überprüft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reviewed"
+          }
+        }
+      }
+    },
+    "stats.kept" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept"
+          }
+        }
+      }
+    },
+    "stats.deleted" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelöscht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted"
           }
         }
       }
@@ -346,13 +459,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nutzungsanalysen helfen, PhotoSoap zu verbessern, und sind standardmäßig deaktiviert. Wenn du sie aktivierst, teilt PhotoSoap Nutzungs-Gesamtzahlen wie Installationen, überprüfte und gelöschte Fotos mit einer zufälligen App-Installationskennung; niemals Fotoinhalte, Asset-IDs oder Standortdaten."
+            "value" : "Wenn du zustimmst, teilt PhotoSoap Nutzungs-Gesamtzahlen wie Installationen, überprüfte und gelöschte Objekte mit einer zufälligen App-Installationskennung; niemals Foto- oder Videoinhalte, Asset-IDs oder Standortdaten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Usage analytics help improve PhotoSoap and are off by default. If you turn them on, PhotoSoap shares usage totals like installs, photos reviewed, and photos deleted with a random app install identifier; never photo contents, asset IDs, or location data."
+            "value" : "If you consent, PhotoSoap shares usage totals like installs, items reviewed, and items deleted with a random app install identifier; never photo or video contents, asset IDs, or location data."
           }
         }
       }

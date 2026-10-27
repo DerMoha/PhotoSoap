@@ -1,4 +1,5 @@
 import SwiftUI
+import AVKit
 import UIKit
 
 struct PhotoPreviewSheet: View {
@@ -18,6 +19,9 @@ struct PhotoPreviewSheet: View {
     @State private var isContentVisible = false
     @State private var isDismissing = false
     @State private var previewImage: UIImage?
+    @State private var videoPlayer: AVPlayer?
+    @State private var isVideoPreviewLoading = false
+    @State private var videoPreviewFailed = false
     @State private var zoomScale: CGFloat = 1
     @State private var showZoomHint = false
     @State private var dismissDragOffset: CGFloat = 0
@@ -29,66 +33,58 @@ struct PhotoPreviewSheet: View {
                     .opacity(backdropOpacity)
                     .ignoresSafeArea()
 
-                if let previewImage {
-                    ZoomablePhotoView(
-                        image: previewImage,
-                        zoomScale: $zoomScale,
-                        onDismissDragChanged: handleDismissDragChanged,
-                        onDismissDragEnded: { translation, velocity in
-                            handleDismissDragEnded(
-                                translation: translation,
-                                velocity: velocity,
-                                containerHeight: geometry.size.height
-                            )
-                        }
-                    )
-                    .scaleEffect(contentScale)
-                    .opacity(contentOpacity)
-                    .offset(y: dismissDragOffset)
-                    .ignoresSafeArea()
-                } else {
-                    ProgressView()
-                        .tint(.white)
-                        .scaleEffect(isContentVisible ? max(1.2 - (dismissDragProgress * 0.08), 1.08) : 1.08)
-                        .opacity(contentOpacity)
-                        .offset(y: dismissDragOffset)
-                }
+                previewContent(containerHeight: geometry.size.height)
 
-                if showZoomHint {
+                if showZoomHint && !photo.isVideo {
                     zoomHintChip
                         .padding(.bottom, geometry.safeAreaInsets.bottom + 28)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
+                PhotoShareButton(photo: photo, photoLibraryService: photoLibraryService)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
+                    .padding(.leading, 8)
+
                 Button {
                     dismissPreview()
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 30))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 3)
-                        .padding(12)
+                    Image(systemName: "xmark")
+                        .font(.title3.weight(.semibold))
+                        .frame(minWidth: 32, minHeight: 32)
                 }
-                .buttonStyle(.plain)
+                .modifier(NativeGlassButtonStyle())
+                .buttonBorderShape(.circle)
                 .accessibilityLabel(String(localized: "common.done", table: "LocalizableShared"))
                 .scaleEffect(buttonScale)
                 .opacity(contentOpacity)
                 .offset(y: dismissDragOffset * 0.35)
-                .padding(.top, geometry.safeAreaInsets.top + 4)
+                .padding(.top, 4)
                 .padding(.trailing, 8)
                 .allowsHitTesting(!isDismissing)
             }
+            .preferredColorScheme(.dark)
             .animation(.easeOut(duration: 0.22), value: isContentVisible)
             .animation(.easeInOut(duration: 0.2), value: showZoomHint)
         }
         .task(id: photo.id) {
-            await loadPreviewImage()
+            if photo.isVideo {
+                await loadVideoPreview()
+            } else {
+                await loadPreviewImage()
+            }
         }
         .task {
             await presentHintsAndTransition()
         }
+        .onDisappear {
+            videoPlayer?.pause()
+            videoPlayer?.replaceCurrentItem(with: nil)
+            videoPlayer = nil
+        }
         .onChange(of: zoomScale) { _, newValue in
+            guard !photo.isVideo else { return }
             guard newValue > 1.02 else { return }
 
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -97,12 +93,157 @@ struct PhotoPreviewSheet: View {
         }
     }
 
+    @ViewBuilder
+    private func previewContent(containerHeight: CGFloat) -> some View {
+        if photo.isVideo {
+            videoPreview
+                .scaleEffect(contentScale)
+                .opacity(contentOpacity)
+                .offset(y: dismissDragOffset)
+        } else if let previewImage {
+            ZoomablePhotoView(
+                image: previewImage,
+                zoomScale: $zoomScale,
+                onDismissDragChanged: handleDismissDragChanged,
+                onDismissDragEnded: { translation, velocity in
+                    handleDismissDragEnded(
+                        translation: translation,
+                        velocity: velocity,
+                        containerHeight: containerHeight
+                    )
+                }
+            )
+            .scaleEffect(contentScale)
+            .opacity(contentOpacity)
+            .offset(y: dismissDragOffset)
+            .ignoresSafeArea()
+        } else {
+            loadingView
+        }
+    }
+
+    @ViewBuilder
+    private var videoPreview: some View {
+        if let videoPlayer {
+            VideoPlayer(player: videoPlayer)
+                .ignoresSafeArea()
+                .onAppear {
+                    videoPlayer.play()
+                }
+                .overlay(alignment: .bottomLeading) {
+                    videoMetadataBadge
+                        .padding(.leading, 16)
+                        .padding(.bottom, 28)
+                }
+        } else if videoPreviewFailed {
+            videoPreviewFailureView
+        } else if isVideoPreviewLoading {
+            loadingView
+        } else {
+            loadingView
+        }
+    }
+
+    private var videoPreviewFailureView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "video.slash")
+                .font(.system(size: 44, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.86))
+
+            VStack(spacing: 6) {
+                Text(String(localized: "review.preview.videoUnavailable.title", defaultValue: "Video Preview Unavailable", table: "LocalizableReview"))
+                    .font(.headline)
+                    .foregroundStyle(.white)
+
+                Text(String(localized: "review.preview.videoUnavailable.message", defaultValue: "PhotoSoap couldn't load this video preview right now.", table: "LocalizableReview"))
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.72))
+                    .multilineTextAlignment(.center)
+            }
+
+            HStack(spacing: 12) {
+                Button {
+                    Task {
+                        await loadVideoPreview()
+                    }
+                } label: {
+                    Text(String(localized: "common.retry", defaultValue: "Retry", table: "LocalizableShared"))
+                        .font(.subheadline.weight(.semibold))
+                }
+                .modifier(NativeGlassButtonStyle())
+
+                Button {
+                    dismissPreview()
+                } label: {
+                    Text(String(localized: "common.done", defaultValue: "Done", table: "LocalizableShared"))
+                        .font(.subheadline.weight(.semibold))
+                }
+                .modifier(NativeGlassButtonStyle(isProminent: true))
+            }
+            .padding(.top, 4)
+        }
+        .padding(28)
+        .frame(maxWidth: 360)
+        .opacity(contentOpacity)
+        .offset(y: dismissDragOffset)
+    }
+
+    private var loadingView: some View {
+        ProgressView()
+            .tint(.white)
+            .scaleEffect(isContentVisible ? max(1.2 - (dismissDragProgress * 0.08), 1.08) : 1.08)
+            .opacity(contentOpacity)
+            .offset(y: dismissDragOffset)
+    }
+
     private func loadPreviewImage() async {
         previewImage = photo.image
 
-        if let highResolutionImage = await photoLibraryService.fetchHighResolutionPreviewImage(for: photo.asset) {
+        if let highResolutionImage = await photoLibraryService.fetchHighResolutionPreviewImage(for: photo) {
             previewImage = highResolutionImage
         }
+    }
+
+    private func loadVideoPreview() async {
+        videoPlayer?.pause()
+        videoPlayer?.replaceCurrentItem(with: nil)
+        videoPlayer = nil
+        isVideoPreviewLoading = true
+        videoPreviewFailed = false
+
+        defer {
+            if !Task.isCancelled {
+                isVideoPreviewLoading = false
+            }
+        }
+
+        guard let playerItem = await photoLibraryService.fetchVideoPlayerItem(for: photo) else {
+            if !Task.isCancelled {
+                videoPreviewFailed = true
+            }
+            return
+        }
+
+        guard !Task.isCancelled else { return }
+        videoPlayer = AVPlayer(playerItem: playerItem)
+    }
+
+    private var videoMetadataBadge: some View {
+        Label(videoDurationText, systemImage: "play.fill")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.black.opacity(0.55))
+            .clipShape(Capsule())
+            .overlay {
+                Capsule()
+                    .stroke(.white.opacity(0.14), lineWidth: 1)
+            }
+    }
+
+    private var videoDurationText: String {
+        photo.formattedDuration ?? String(localized: "review.preview.video", defaultValue: "Video", table: "LocalizableReview")
     }
 
     private var zoomHintChip: some View {
@@ -154,6 +295,7 @@ struct PhotoPreviewSheet: View {
             }
         }
 
+        guard !photo.isVideo else { return }
         guard !hasSeenPhotoZoomHint else { return }
 
         try? await Task.sleep(nanoseconds: 500_000_000)

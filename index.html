@@ -105,12 +105,12 @@
     <a href="https://apps.apple.com" class="download-btn">Download on App Store</a>
     
     <p class="footer">
-      Privacy-first • No tracking • <a href="#">Privacy Policy</a>
+      Privacy-first • No tracking • <a href="https://github.com/DerMoha/PhotoSoap/blob/main/PRIVACY.md">Privacy Policy</a>
     </p>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://csmluwnhkirnbrvtnxwn.supabase.co';
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
     const SUPABASE_KEY = 'YOUR_SUPABASE_PUBLISHABLE_KEY';
 
     function formatNumber(num) {
@@ -131,11 +131,10 @@
     async function fetchStats() {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/aggregated_stats?select=*`,
+          `${SUPABASE_URL}/rest/v1/aggregate_metrics_summary?select=total_deleted,total_bytes_freed,total_reviewed`,
           {
             headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': `Bearer ${SUPABASE_KEY}`
+              'apikey': SUPABASE_KEY
             }
           }
         );

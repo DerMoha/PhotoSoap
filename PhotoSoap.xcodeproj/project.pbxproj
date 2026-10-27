@@ -21,6 +21,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		715E1C9D2F21612300CD8842 /* PhotoSoap/Configuration/Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PhotoSoap/Configuration/Base.xcconfig; sourceTree = "<group>"; };
 		715E1CA72F21612300CD8842 /* PhotoSoap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoSoap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		71A100000000000000000001 /* PhotoSoapTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PhotoSoapTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		71A10000000000000000000D /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = System/Library/Frameworks/XCTest.framework; sourceTree = SDKROOT; };
@@ -30,7 +31,11 @@
 		7116D4272F689DA200789ECE /* Exceptions for "PhotoSoap" folder in "PhotoSoap" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Configuration/Base.xcconfig,
+				Configuration/Secrets.xcconfig,
+				Configuration/Secrets.xcconfig.example,
 				Info.plist,
+				Info.plist.example,
 			);
 			target = 715E1CA62F21612300CD8842 /* PhotoSoap */;
 		};
@@ -47,8 +52,6 @@
 		};
 		71A100000000000000000002 /* PhotoSoapTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = PhotoSoapTests;
 			sourceTree = "<group>";
 		};
@@ -80,6 +83,7 @@
 				71A100000000000000000002 /* PhotoSoapTests */,
 				71A10000000000000000000C /* Frameworks */,
 				715E1CA82F21612300CD8842 /* Products */,
+				71F4F1DF30717868005A2BB4 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -98,6 +102,14 @@
 				71A10000000000000000000D /* XCTest.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		71F4F1DF30717868005A2BB4 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				715E1C9D2F21612300CD8842 /* PhotoSoap/Configuration/Base.xcconfig */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -352,17 +364,19 @@
 		};
 		715E1CB52F21612400CD8842 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 715E1C9D2F21612300CD8842 /* PhotoSoap/Configuration/Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = M8869GQ6Z6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PhotoSoap/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PhotoSoap;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoSoap needs access to your photo library to help you review and organize your photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoSoap needs photo library access so you can review photos and videos and choose which ones to delete.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -385,23 +399,25 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
 		715E1CB62F21612400CD8842 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 715E1C9D2F21612300CD8842 /* PhotoSoap/Configuration/Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = M8869GQ6Z6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PhotoSoap/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PhotoSoap;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoSoap needs access to your photo library to help you review and organize your photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoSoap needs photo library access so you can review photos and videos and choose which ones to delete.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,7 +440,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -433,7 +449,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = M8869GQ6Z6;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -448,7 +464,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PhotoSoap.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PhotoSoap";
 			};
 			name = Debug;
@@ -458,7 +474,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = M8869GQ6Z6;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -472,7 +488,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PhotoSoap.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PhotoSoap";
 			};
 			name = Release;

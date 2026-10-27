@@ -6,7 +6,6 @@ Keep guidance short, practical, and aligned with the current SwiftUI codebase.
 - Main app target and shared scheme: `PhotoSoap`.
 - Open `PhotoSoap.xcodeproj` directly for local development; the workspace no longer has dependency-specific setup.
 - A `PhotoSoapTests` XCTest target is configured in the project.
-- Historical references to `Bommel` are stale and only appear in user-specific Xcode metadata and git history.
 ## Repository Layout
 - `PhotoSoap/PhotoSoapApp.swift`: app entry, model container bootstrap, migration helpers.
 - `PhotoSoap/Models/`: SwiftData models and small domain enums.
@@ -47,6 +46,10 @@ xcodebuild test -project PhotoSoap.xcodeproj -scheme PhotoSoap -destination 'pla
 ```bash
 xcodebuild -project PhotoSoap.xcodeproj -scheme PhotoSoap analyze
 ```
+### CI
+- GitHub Actions workflow: `.github/workflows/ios.yml`, triggered by pushes, pull requests, and manual runs.
+- Uses macOS 15 with Xcode 26.3 and an available iPhone simulator to build and run all tests without signing.
+- Test result bundles and build logs are uploaded as `ios-test-results` artifacts.
 ### Lint / format
 - No `SwiftLint`, `SwiftFormat`, or other lint config is checked in.
 - Use Xcode formatting (`Editor > Structure > Re-Indent`, or `Ctrl+I`) and match existing file style.

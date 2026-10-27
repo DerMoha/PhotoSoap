@@ -11,31 +11,30 @@ struct PhotoReviewView: View {
     @State private var showPreviewHint = false
     @StateObject private var viewModel: PhotoReviewViewModel
     @ObservedObject var photoLibraryService: PhotoLibraryService
-    @ObservedObject var gameificationService: GameificationService
+    @ObservedObject var gamificationService: GamificationService
     @Bindable var stats: UserStats
-    @ObservedObject var analyticsService: AnalyticsService
-    @ObservedObject var aggregateMetricsService: AggregateMetricsService
+    @ObservedObject var reviewAccountingService: ReviewAccountingService
+    @ObservedObject var privacyCollectionService: PrivacyCollectionService
 
     private let dailyGoalOptions = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
     init(
         photoLibraryService: PhotoLibraryService,
-        gameificationService: GameificationService,
+        gamificationService: GamificationService,
         stats: UserStats,
-        analyticsService: AnalyticsService,
-        aggregateMetricsService: AggregateMetricsService,
+        reviewAccountingService: ReviewAccountingService,
+        privacyCollectionService: PrivacyCollectionService,
         hapticsService: HapticsService
     ) {
         self.photoLibraryService = photoLibraryService
-        self.gameificationService = gameificationService
+        self.gamificationService = gamificationService
         self.stats = stats
-        self.analyticsService = analyticsService
-        self.aggregateMetricsService = aggregateMetricsService
+        self.reviewAccountingService = reviewAccountingService
+        self.privacyCollectionService = privacyCollectionService
         self._viewModel = StateObject(wrappedValue: PhotoReviewViewModel(
             photoLibraryService: photoLibraryService,
-            gameificationService: gameificationService,
-            analyticsService: analyticsService,
-            aggregateMetricsService: aggregateMetricsService,
+            reviewAccountingService: reviewAccountingService,
+            privacyCollectionService: privacyCollectionService,
             hapticsService: hapticsService,
             defaults: UserDefaults.standard
         ))
@@ -47,10 +46,18 @@ struct PhotoReviewView: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
 
+                GeometryReader { geometry in
+                    swipeDecisionBackdrop(cardWidth: geometry.size.width)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .allowsHitTesting(false)
+
                 VStack(spacing: 0) {
-                    compactHeaderSection
-                        .padding(.horizontal)
-                        .padding(.top, 8)
+                    if !viewModel.noMorePhotos || viewModel.canUndo {
+                        compactHeaderSection
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                    }
 
                     if shouldShowLimitedAccessBanner {
                         limitedAccessBanner
@@ -63,9 +70,10 @@ struct PhotoReviewView: View {
                         loadingView
                         Spacer()
                     } else if viewModel.noMorePhotos {
-                        Spacer()
-                        noMorePhotosView
-                        Spacer()
+                        ScrollView {
+                            noMorePhotosView
+                                .frame(maxWidth: .infinity)
+                        }
                     } else if let photo = viewModel.currentPhoto {
                         reviewContent(photo: photo)
                             .padding(.top, 6)
@@ -100,6 +108,7 @@ struct PhotoReviewView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .safeAreaInset(edge: .bottom) {
                 bottomChrome
             }
@@ -113,10 +122,10 @@ struct PhotoReviewView: View {
                     await viewModel.loadInitialPhoto()
                 }
             }
-            .onChange(of: gameificationService.showAchievementBanner) { _, isShowing in
+            .onChange(of: gamificationService.showAchievementBanner) { _, isShowing in
                 viewModel.onAchievementBannerChanged(isShowing)
             }
-            .onChange(of: gameificationService.showStreakCelebration) { _, isShowing in
+            .onChange(of: gamificationService.showStreakCelebration) { _, isShowing in
                 viewModel.onStreakCelebrationChanged(isShowing)
             }
             .onChange(of: viewModel.showDailyGoalToast) { _, isShowing in
@@ -139,7 +148,7 @@ struct PhotoReviewView: View {
                 Text(String(localized: "review.startOver.confirmation", table: "LocalizableReview"))
             }
             .confirmationDialog(
-                String(localized: "review.startOver.withQueue.title", defaultValue: "Review again with photos in your Delete List?", table: "LocalizableReview"),
+                String(localized: "review.startOver.withQueue.title", defaultValue: "Review again with items in your Delete List?", table: "LocalizableReview"),
                 isPresented: $viewModel.showQueuedStartOverConfirmation,
                 titleVisibility: .visible
             ) {
@@ -159,11 +168,18 @@ struct PhotoReviewView: View {
                 FilterSheet(
                     photoLibraryService: photoLibraryService,
                     currentFilter: viewModel.currentFilter,
+                    currentMediaKind: viewModel.currentMediaKind,
                     onSelect: { filter in
                         viewModel.applyFilter(filter)
                     },
-                    onSortOrderChange: { oldestFirst in
-                        viewModel.applySortOrder(oldestFirst: oldestFirst)
+                    onMediaKindChange: { mediaKind in
+                        viewModel.applyMediaKind(mediaKind)
+                    },
+                    onHidesFavoritesChange: { hidesFavorites in
+                        viewModel.applyFavoriteVisibility(hidesFavorites: hidesFavorites)
+                    },
+                    onSortOrderChange: { order in
+                        viewModel.applySortOrder(order)
                     }
                 )
             }
@@ -172,6 +188,7 @@ struct PhotoReviewView: View {
             }) {
                 DeleteQueueSheet(
                     items: viewModel.pendingDeletionItems,
+                    photoLibraryService: photoLibraryService,
                     onRemoveFromQueue: { item in
                         viewModel.requestRemoveFromQueue(item)
                     },
@@ -214,7 +231,7 @@ struct PhotoReviewView: View {
                     viewModel.confirmRemoveFromQueue()
                 }
             } message: {
-                Text(String(localized: "review.queue.remove.confirmation.message", defaultValue: "This photo will stay in your library and won't be included in the next delete batch.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.remove.confirmation.message", defaultValue: "This item will stay in your library and won't be included in the next delete batch.", table: "LocalizableReview"))
             }
             .alert(String(localized: "review.queue.clear.confirmation.title", defaultValue: "Clear Delete List?", table: "LocalizableReview"), isPresented: $viewModel.isShowingClearQueueConfirmation) {
                 Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "LocalizableShared"), role: .cancel) {
@@ -224,13 +241,17 @@ struct PhotoReviewView: View {
                     viewModel.confirmClearQueue()
                 }
             } message: {
-                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All photos will be removed from your Delete List and kept in Photos.", table: "LocalizableReview"))
+                Text(String(localized: "review.queue.clear.confirmation.message", defaultValue: "All items will be removed from your Delete List and kept in your library.", table: "LocalizableReview"))
             }
         }
     }
 
+    private var isFilterActive: Bool {
+        !viewModel.currentFilter.isAll || viewModel.currentMediaKind != .photos
+    }
+
     private var compactHeaderSection: some View {
-        let challenge = gameificationService.getCurrentDailyChallenge(stats: stats)
+        let challenge = gamificationService.getCurrentDailyChallenge(stats: stats)
         let current = challenge.progress(from: stats)
         let progress = Double(current) / Double(max(stats.dailyChallengeTarget, 1))
 
@@ -239,14 +260,15 @@ struct PhotoReviewView: View {
             progress: progress,
             current: current,
             target: stats.dailyChallengeTarget,
-            isFilterActive: !viewModel.currentFilter.isAll,
+            isFilterActive: isFilterActive,
+            canUndo: viewModel.canUndo,
+            onUndo: { viewModel.undoLastReview() },
+            shareControl: headerShareButton,
             goalOptions: dailyGoalOptions,
-            onFilterTap: {
-                viewModel.showFilterSheet = true
-            },
-            onGoalSelect: { newTarget in
+            onFilterTap: { viewModel.showFilterSheet = true },
+            onGoalSelect: { target in
                 hapticsService.selection()
-                stats.updateDailyChallengeTarget(newTarget)
+                stats.updateDailyChallengeTarget(target)
             },
             onDailyGoalComplete: {
                 viewModel.showDailyGoalToast = true
@@ -254,37 +276,40 @@ struct PhotoReviewView: View {
         )
     }
 
-    private func photoCardSection(photo: Photo) -> some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .bottom) {
-                swipeDecisionBackdrop(cardWidth: geometry.size.width)
-
-                PhotoCardDisplay(
-                    photo: photo,
-                    photoLibraryService: photoLibraryService,
-                    offset: viewModel.cardOffset,
-                    rotation: viewModel.cardRotation,
-                    swipeProgress: viewModel.swipeProgress,
-                    swipeDirection: viewModel.swipeDirection
-                )
-
-                if shouldShowPreviewHint {
-                    previewHintChip
-                        .padding(.bottom, 56)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    @ViewBuilder
+    private var headerShareButton: some View {
+        if let photo = viewModel.currentPhoto {
+            PhotoShareButton(photo: photo, photoLibraryService: photoLibraryService, controlSize: 28)
+                .disabled(viewModel.isProcessingAction || viewModel.isLoading)
         }
+    }
+
+    private func photoCardSection(photo: Photo) -> some View {
+        ZStack(alignment: .bottom) {
+            PhotoCardDisplay(
+                photo: photo,
+                photoLibraryService: photoLibraryService,
+                offset: viewModel.cardOffset,
+                rotation: viewModel.cardRotation,
+                swipeProgress: viewModel.swipeProgress,
+                swipeDirection: viewModel.swipeDirection
+            )
+
+            if shouldShowPreviewHint {
+                previewHintChip
+                    .padding(.bottom, 56)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
         .gesture(
             DragGesture()
                 .onChanged { value in
                     viewModel.handleDragGesture(value)
                 }
                 .onEnded { value in
-                    Task {
-                        await viewModel.handleDragEnd(value)
-                    }
+                    viewModel.handleDragEnd(value)
                 }
         )
         .simultaneousGesture(
@@ -293,7 +318,23 @@ struct PhotoReviewView: View {
                     presentPreview(for: photo)
                 }
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel(for: photo))
+        .accessibilityHint(String(localized: "review.accessibility.hint", defaultValue: "Double-tap to preview. Swipe right to keep or swipe left to delete.", table: "LocalizableReview"))
+        .accessibilityAction(named: Text(String(localized: "review.action.keep", defaultValue: "Keep item", table: "LocalizableReview"))) {
+            Task { await viewModel.performKeepAction() }
+        }
+        .accessibilityAction(named: Text(String(localized: "review.action.delete", defaultValue: "Delete item", table: "LocalizableReview"))) {
+            Task { await viewModel.performDeleteAction() }
+        }
         .animation(.easeInOut(duration: 0.2), value: shouldShowPreviewHint)
+    }
+
+    private func accessibilityLabel(for photo: Photo) -> String {
+        let mediaType = photo.isVideo
+            ? String(localized: "review.preview.video", defaultValue: "Video", table: "LocalizableReview")
+            : String(localized: "review.preview.photo", defaultValue: "Photo", table: "LocalizableReview")
+        return "\(mediaType), \(photo.formattedDate), \(photo.compactDimensions)"
     }
 
     private func presentPreview(for photo: Photo) {
@@ -424,20 +465,20 @@ struct PhotoReviewView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text(String(localized: "review.loading", table: "LocalizableReview"))
+            Text(loadingText)
                 .foregroundStyle(.secondary)
         }
     }
 
     private var emptyStateView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "photo.badge.plus")
+            Image(systemName: emptyStateSymbolName)
                 .font(.system(size: 60))
                 .foregroundStyle(.secondary)
-            Text(String(localized: "review.empty", table: "LocalizableReview"))
+            Text(emptyStateTitle)
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text(String(localized: "review.empty.description", table: "LocalizableReview"))
+            Text(emptyStateDescription)
                 .foregroundStyle(.secondary)
         }
     }
@@ -458,7 +499,7 @@ struct PhotoReviewView: View {
             .multilineTextAlignment(.center)
 
             VStack(spacing: 8) {
-                Text(String(localized: "review.stats", defaultValue: "%d photos reviewed", table: "LocalizableReview").replacingOccurrences(of: "%d", with: "\(viewModel.persistedReviewedIDs.count)"))
+                Text(reviewedCountSummary)
                     .foregroundStyle(.secondary)
 
                 Text(
@@ -481,13 +522,28 @@ struct PhotoReviewView: View {
                     buttonTitle: String(localized: "limitedAccess.chooseMore", table: "LocalizableShared"),
                     style: .completion,
                     onManage: {
-                        analyticsService.track(.limitedLibraryPickerOpened())
+                        privacyCollectionService.track(.limitedLibraryPickerOpened())
                         photoLibraryService.presentLimitedLibraryPicker()
                     }
                 )
             }
 
             VStack(spacing: 12) {
+                Button {
+                    viewModel.showFilterSheet = true
+                } label: {
+                    Label(
+                        String(localized: "review.changeFilter", defaultValue: "Change filter", table: "LocalizableReview"),
+                        systemImage: "line.3.horizontal.decrease.circle"
+                    )
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .foregroundStyle(.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
                 if viewModel.pendingDeletionCount > 0 {
                     Button {
                         viewModel.isShowingDeleteQueueSheet = true
@@ -526,6 +582,50 @@ struct PhotoReviewView: View {
             && viewModel.currentPhoto != nil
     }
 
+    private var loadingText: String {
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String(localized: "review.loading", defaultValue: "Loading photos...", table: "LocalizableReview")
+        case .videos:
+            return String(localized: "review.loading.videos", defaultValue: "Loading videos...", table: "LocalizableReview")
+        case .all:
+            return String(localized: "review.loading.media", defaultValue: "Loading your library...", table: "LocalizableReview")
+        }
+    }
+
+    private var emptyStateSymbolName: String {
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return "photo.badge.plus"
+        case .videos:
+            return "video.badge.plus"
+        case .all:
+            return "rectangle.stack.badge.plus"
+        }
+    }
+
+    private var emptyStateTitle: String {
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String(localized: "review.empty", defaultValue: "No photos to review", table: "LocalizableReview")
+        case .videos:
+            return String(localized: "review.empty.videos", defaultValue: "No videos to review", table: "LocalizableReview")
+        case .all:
+            return String(localized: "review.empty.media", defaultValue: "No media to review", table: "LocalizableReview")
+        }
+    }
+
+    private var emptyStateDescription: String {
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String(localized: "review.empty.description", defaultValue: "Your photo library appears to be empty", table: "LocalizableReview")
+        case .videos:
+            return String(localized: "review.empty.videos.description", defaultValue: "Your video library appears to be empty", table: "LocalizableReview")
+        case .all:
+            return String(localized: "review.empty.media.description", defaultValue: "Your photo and video library appears to be empty", table: "LocalizableReview")
+        }
+    }
+
     private var limitedAccessBanner: some View {
         LimitedAccessCard(
             title: String(localized: "limitedAccess.title", table: "LocalizableShared"),
@@ -533,35 +633,75 @@ struct PhotoReviewView: View {
             buttonTitle: String(localized: "limitedAccess.chooseMore", table: "LocalizableShared"),
             style: .stats,
             onManage: {
-                analyticsService.track(.limitedLibraryPickerOpened())
+                privacyCollectionService.track(.limitedLibraryPickerOpened())
                 photoLibraryService.presentLimitedLibraryPicker()
             }
         )
     }
 
     private var completionTitle: String {
-        photoLibraryService.authorizationStatus == .limited
-            ? String(localized: "review.complete.title.limited", defaultValue: "Selected Photos Reviewed", table: "LocalizableReview")
-            : String(localized: "review.complete.title", table: "LocalizableReview")
+        if photoLibraryService.authorizationStatus == .limited {
+            switch viewModel.currentMediaKind {
+            case .photos:
+                return String(localized: "review.complete.title.limited", defaultValue: "Selected Photos Reviewed", table: "LocalizableReview")
+            case .videos:
+                return String(localized: "review.complete.title.limited.videos", defaultValue: "Selected Videos Reviewed", table: "LocalizableReview")
+            case .all:
+                return String(localized: "review.complete.title.limited.media", defaultValue: "Selected Media Reviewed", table: "LocalizableReview")
+            }
+        }
+
+        return String(localized: "review.complete.title", table: "LocalizableReview")
     }
 
     private var completionSubtitle: String {
-        photoLibraryService.authorizationStatus == .limited
-            ? String(localized: "review.complete.subtitle.limited", table: "LocalizableReview")
-            : String(localized: "review.complete.subtitle", table: "LocalizableReview")
+        if photoLibraryService.authorizationStatus == .limited {
+            return String(localized: "review.complete.subtitle.limited", defaultValue: "You've reviewed everything in your current selection. Add more items if you want to keep going.", table: "LocalizableReview")
+        }
+
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String(localized: "review.complete.subtitle", defaultValue: "You've reviewed all available photos.", table: "LocalizableReview")
+        case .videos:
+            return String(localized: "review.complete.subtitle.videos", defaultValue: "You've reviewed all available videos.", table: "LocalizableReview")
+        case .all:
+            return String(localized: "review.complete.subtitle.media", defaultValue: "You've reviewed all available photos and videos.", table: "LocalizableReview")
+        }
+    }
+
+    private var reviewedCountSummary: String {
+        let count = viewModel.persistedReviewedIDs.count
+
+        switch viewModel.currentMediaKind {
+        case .photos:
+            return String.localizedStringWithFormat(
+                String(localized: "review.stats", defaultValue: "%d photos reviewed", table: "LocalizableReview"),
+                count
+            )
+        case .videos:
+            return String.localizedStringWithFormat(
+                String(localized: "review.stats.videos", defaultValue: "%d videos reviewed", table: "LocalizableReview"),
+                count
+            )
+        case .all:
+            return String.localizedStringWithFormat(
+                String(localized: "review.stats.media", defaultValue: "%d items reviewed", table: "LocalizableReview"),
+                count
+            )
+        }
     }
 
     private var deleteListSummaryCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(
                 String.localizedStringWithFormat(
-                    String(localized: "review.queue.pendingSummary", defaultValue: "%lld photos are in your Delete List", table: "LocalizableReview"),
+                    String(localized: "review.queue.pendingSummary", defaultValue: "%lld items are in your Delete List", table: "LocalizableReview"),
                     viewModel.pendingDeletionCount
                 )
             )
             .font(.headline)
 
-            Text(String(localized: "review.queue.pendingSummary.detail", defaultValue: "These photos stay in Photos until you confirm deletion in iOS.", table: "LocalizableReview"))
+            Text(String(localized: "review.queue.pendingSummary.detail", defaultValue: "These items stay in your library until you confirm deletion in iOS.", table: "LocalizableReview"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -573,8 +713,8 @@ struct PhotoReviewView: View {
 
     @ViewBuilder
     private var achievementBanner: some View {
-        if gameificationService.showAchievementBanner,
-           let achievement = gameificationService.newlyUnlockedAchievement {
+        if gamificationService.showAchievementBanner,
+           let achievement = gamificationService.newlyUnlockedAchievement {
             VStack {
                 Spacer()
 
@@ -600,14 +740,14 @@ struct PhotoReviewView: View {
                 .padding()
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            .animation(.spring(), value: gameificationService.showAchievementBanner)
+            .animation(.spring(), value: gamificationService.showAchievementBanner)
         }
     }
 
     @ViewBuilder
     private var streakCelebration: some View {
-        if gameificationService.showStreakCelebration,
-           let milestone = gameificationService.streakMilestoneReached {
+        if gamificationService.showStreakCelebration,
+           let milestone = gamificationService.streakMilestoneReached {
             VStack {
                 Spacer()
 
@@ -631,7 +771,7 @@ struct PhotoReviewView: View {
 
                 Spacer()
             }
-            .animation(.spring(), value: gameificationService.showStreakCelebration)
+            .animation(.spring(), value: gamificationService.showStreakCelebration)
         }
     }
 
@@ -680,9 +820,6 @@ struct PhotoReviewView: View {
     private var deleteQueueTray: some View {
         DeleteQueueTray(
             queueCount: viewModel.pendingDeletionCount,
-            onUndo: {
-                viewModel.undoLastQueuedDeletion()
-            },
             onReviewQueue: {
                 viewModel.isShowingDeleteQueueSheet = true
             }
@@ -691,14 +828,13 @@ struct PhotoReviewView: View {
 
     @ViewBuilder
     private var bottomChrome: some View {
-        if viewModel.pendingDeletionCount > 0 {
+        if viewModel.pendingDeletionCount > 0 && !viewModel.noMorePhotos {
             VStack(spacing: 8) {
                 deleteQueueTray
             }
             .padding(.horizontal, 12)
             .padding(.top, 4)
             .padding(.bottom, 8)
-            .background(Color(.systemGroupedBackground).opacity(0.96))
         }
     }
 
@@ -714,7 +850,7 @@ struct PhotoReviewView: View {
                 VStack(alignment: .leading) {
                     Text(String(localized: "review.queue.deletedSuccess", defaultValue: "Deleted!", table: "LocalizableReview"))
                         .font(.headline)
-                    Text(String(localized: "review.queue.deletedSuccess.detail", defaultValue: "Photos removed from your library.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.deletedSuccess.detail", defaultValue: "Items removed from your library.", table: "LocalizableReview"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -750,7 +886,7 @@ struct PhotoReviewView: View {
                 VStack(alignment: .leading) {
                     Text(String(localized: "review.queue.cancelled", defaultValue: "Deletion Cancelled", table: "LocalizableReview"))
                         .font(.headline)
-                    Text(String(localized: "review.queue.cancelled.detail", defaultValue: "Your photos are still in your Delete List.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.cancelled.detail", defaultValue: "Your items are still in your Delete List.", table: "LocalizableReview"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -817,7 +953,7 @@ struct PhotoReviewView: View {
                 VStack(alignment: .leading) {
                     Text(String(localized: "review.queue.pruned.title", defaultValue: "Delete List Updated", table: "LocalizableReview"))
                         .font(.headline)
-                    Text(String(localized: "review.queue.pruned.detail", defaultValue: "Some queued photos were no longer available and were removed.", table: "LocalizableReview"))
+                    Text(String(localized: "review.queue.pruned.detail", defaultValue: "Some queued items were no longer available and were removed.", table: "LocalizableReview"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -839,13 +975,17 @@ struct PhotoReviewView: View {
 
 #Preview {
     let hapticsService = HapticsService()
+    let gamificationService = GamificationService()
 
     PhotoReviewView(
         photoLibraryService: PhotoLibraryService(),
-        gameificationService: GameificationService(),
+        gamificationService: gamificationService,
         stats: UserStats(),
-        analyticsService: AnalyticsService(),
-        aggregateMetricsService: AggregateMetricsService(),
+        reviewAccountingService: ReviewAccountingService(gamificationService: gamificationService),
+        privacyCollectionService: PrivacyCollectionService(
+            analyticsService: AnalyticsService(),
+            aggregateMetricsService: AggregateMetricsService()
+        ),
         hapticsService: hapticsService
     )
     .environmentObject(hapticsService)

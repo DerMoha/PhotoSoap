@@ -1,0 +1,4 @@
+PHOTOSOAP_METRICS_ENDPOINT_URL =
+PHOTOSOAP_METRICS_ANON_KEY =
+
+#include? "Secrets.xcconfig"

@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review - PhotoSoap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: white;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
+      }
+
+      .shallow {
+        background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      }
+
+      .diagram-grid {
+        background-image:
+          linear-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+
+      .seam-line {
+        border-style: dashed;
+        border-color: #64748b;
+      }
+
+      .leak-line {
+        border-color: #dc2626;
+        color: #dc2626;
+      }
+
+      .mass-interface {
+        background: repeating-linear-gradient(
+          45deg,
+          #fee2e2,
+          #fee2e2 6px,
+          #fecaca 6px,
+          #fecaca 12px
+        );
+      }
+
+      .mass-implementation {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      }
+
+      .card-anchor {
+        scroll-margin-top: 24px;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 antialiased">
+    <main class="mx-auto max-w-6xl px-5 py-10 sm:px-8 lg:py-14">
+      <header class="mb-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Architecture review</p>
+          <h1 class="mt-3 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">PhotoSoap deepening candidates</h1>
+          <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+            Domain vocabulary is inferred from the Swift modules because no repo <code class="rounded bg-white px-1.5 py-0.5 font-mono text-sm">CONTEXT.md</code> or ADR files were found. The review uses the architecture vocabulary: Module, Interface, Implementation, Depth, Seam, Adapter, Leverage, and Locality.
+          </p>
+        </div>
+
+        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Legend</p>
+          <div class="mt-4 grid gap-3 text-sm text-slate-700">
+            <div class="flex items-center gap-3"><span class="h-8 w-12 rounded-lg border border-slate-300 bg-white"></span><span>solid box = Module</span></div>
+            <div class="flex items-center gap-3"><span class="h-0 w-12 border-t-2 seam-line"></span><span>dashed line = Seam</span></div>
+            <div class="flex items-center gap-3"><span class="h-0 w-12 border-t-2 leak-line"></span><span>red line = leakage across Seam</span></div>
+            <div class="flex items-center gap-3"><span class="h-8 w-12 rounded-lg deep"></span><span>dark box = deep Module</span></div>
+          </div>
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+        <article id="photo-review-lifecycle" class="card-anchor overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-200 bg-slate-950 px-6 py-5 text-white sm:px-8">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="rounded-full bg-emerald-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-950">Strong</span>
+              <span class="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white/80">local-substitutable</span>
+            </div>
+            <h2 class="mt-4 text-2xl font-black tracking-tight">Deepen the photo review lifecycle</h2>
+          </div>
+
+          <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.95fr_1.05fr]">
+            <div class="space-y-6">
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Files</h3>
+                <ul class="mt-3 space-y-1 font-mono text-sm text-slate-700">
+                  <li>PhotoSoap/ViewModels/PhotoReviewViewModel.swift</li>
+                  <li>PhotoSoap/Views/PhotoReviewView.swift</li>
+                  <li>PhotoSoap/Views/Components/DeleteQueueSheet.swift</li>
+                  <li>PhotoSoap/Views/Components/DeleteQueueTray.swift</li>
+                  <li>PhotoSoap/Views/Components/DeleteBatchExplainerSheet.swift</li>
+                  <li>PhotoSoap/Utilities/UserDefaultsKeys.swift</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Problem</h3>
+                <p class="mt-2 leading-7 text-slate-700">The photo review Module is shallow: the Interface exposes delete queue state, persistence facts, rollback ordering, toast flags, haptics timing, and Photos recovery rules that belong inside one Implementation.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Solution</h3>
+                <p class="mt-2 leading-7 text-slate-700">Deepen the photo review lifecycle so queue, commit, rollback, restore, and prune behavior sit behind one Seam, while SwiftUI only observes review outcomes.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Benefits</h3>
+                <ul class="mt-3 grid gap-2 text-sm text-slate-700">
+                  <li><strong>Locality:</strong> queue bugs concentrate in one Module.</li>
+                  <li><strong>Leverage:</strong> one Interface covers queue, commit, rollback, restore, and prune.</li>
+                  <li><strong>Tests:</strong> deletion queue lifecycle can run without SwiftUI gesture state.</li>
+                  <li><strong>Deletion test:</strong> deleting the queue code today spreads complexity across review view, stats, Photos access, and persistence.</li>
+                </ul>
+              </section>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="diagram-grid rounded-2xl border border-slate-200 p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Before: shallow Interface</p>
+                <div class="space-y-3 text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  <div class="rounded-xl border border-orange-300 shallow p-3 text-center">PhotoReviewViewModel Module</div>
+                  <div class="grid grid-cols-2 gap-2 normal-case tracking-normal text-[0.72rem] font-medium text-slate-600">
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-2">pendingDeletionItems</div>
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-2">createdReviewOnQueue</div>
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-2">rollback ordering</div>
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-2">toast timers</div>
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-2">UserDefaults encoding</div>
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-2">Photos availability</div>
+                  </div>
+                  <div class="h-0 border-t-2 leak-line"></div>
+                  <div class="grid grid-cols-2 gap-2 normal-case tracking-normal text-[0.72rem] font-medium">
+                    <div class="rounded-lg border border-slate-200 bg-white p-2">PhotoReviewView knows queue shape</div>
+                    <div class="rounded-lg border border-slate-200 bg-white p-2">DeleteQueue views know item shape</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="diagram-grid rounded-2xl border border-slate-200 p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">After: deeper Module</p>
+                <div class="rounded-2xl deep p-4">
+                  <p class="text-xs font-bold uppercase tracking-wider text-white/70">Photo review lifecycle Module</p>
+                  <div class="mt-4 grid gap-2 text-[0.72rem] font-medium text-slate-200">
+                    <div class="rounded-lg bg-white/10 p-2">queue + restore</div>
+                    <div class="rounded-lg bg-white/10 p-2">commit + rollback</div>
+                    <div class="rounded-lg bg-white/10 p-2">prune unavailable photos</div>
+                    <div class="rounded-lg bg-white/10 p-2">persist delete queue</div>
+                  </div>
+                </div>
+                <div class="my-4 h-0 border-t-2 seam-line"></div>
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center text-xs font-semibold uppercase tracking-wider text-emerald-900">small Interface: review outcome state</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article id="photo-library-adapter" class="card-anchor overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-200 bg-white px-6 py-5 sm:px-8">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800">Strong</span>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600">platform Adapter</span>
+            </div>
+            <h2 class="mt-4 text-2xl font-black tracking-tight text-slate-950">Hide Photos behind a deeper Photo Library Adapter</h2>
+          </div>
+
+          <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div class="space-y-6">
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Files</h3>
+                <ul class="mt-3 space-y-1 font-mono text-sm text-slate-700">
+                  <li>PhotoSoap/Services/PhotoLibraryService.swift</li>
+                  <li>PhotoSoap/Models/Photo.swift</li>
+                  <li>PhotoSoap/Views/FilterSheet.swift</li>
+                  <li>PhotoSoap/Views/Components/PhotoPreviewSheet.swift</li>
+                  <li>PhotoSoap/Views/Components/PhotoCardDisplay.swift</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Problem</h3>
+                <p class="mt-2 leading-7 text-slate-700">The Photo Library Module has a broad Interface: authorization, albums, filters, thumbnails, video previews, deletion, UIKit settings, and raw Photos types leak across the Seam.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Solution</h3>
+                <p class="mt-2 leading-7 text-slate-700">Deepen the Photo Library Adapter so Photos framework details stay inside the Implementation and review modules see library facts, media previews, and deletion outcomes.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Benefits</h3>
+                <ul class="mt-3 grid gap-2 text-sm text-slate-700">
+                  <li><strong>Locality:</strong> Photos churn stays inside one Adapter.</li>
+                  <li><strong>Leverage:</strong> review, filter, preview, and stats callers stop learning Photos invariants.</li>
+                  <li><strong>Tests:</strong> sequencing, limited access, missing assets, and filter exhaustion become deterministic.</li>
+                  <li><strong>Deletion test:</strong> deleting Photos-specific code today breaks most app-facing modules because the Interface is Photos-shaped.</li>
+                </ul>
+              </section>
+            </div>
+
+            <div class="space-y-4">
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Before</p>
+                  <pre class="mermaid rounded-xl bg-white p-3 text-xs">
+flowchart TB
+  Review[Review Module] --> Library[Photo Library Module]
+  Filter[Filter Module] --> Library
+  Preview[Preview Module] --> Library
+  Card[Card Display Module] --> Photo[Photo Model]
+  Photo -. PHAsset leaks .-> Photos[Photos Framework]
+  Library -. PHFetchResult / PHAsset .-> Photos
+  Preview -. photo.asset .-> Photos
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#dc2626;
+  class Photos leak
+                  </pre>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">After</p>
+                  <pre class="mermaid rounded-xl bg-white p-3 text-xs">
+flowchart TB
+  Review[Review Module] --> Seam{{Photo Library Seam}}
+  Filter[Filter Module] --> Seam
+  Preview[Preview Module] --> Seam
+  Seam --> Deep[Deep Photo Library Adapter]
+  Deep --> Photos[Photos Framework]
+  Deep --> Cache[Preview Cache]
+  Deep --> Delete[Deletion Implementation]
+  classDef deep fill:#0f172a,stroke:#0f172a,color:#fff;
+  class Deep deep
+                  </pre>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Interface mass</p>
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <p class="text-xs font-semibold text-slate-500">Before: shallow</p>
+                    <div class="mt-2 overflow-hidden rounded-xl border border-slate-200">
+                      <div class="mass-interface p-3 text-xs font-bold uppercase tracking-wider text-red-900">wide Interface</div>
+                      <div class="mass-implementation p-5 text-xs font-bold uppercase tracking-wider text-blue-900">Photos Implementation</div>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold text-slate-500">After: deeper</p>
+                    <div class="mt-2 overflow-hidden rounded-xl border border-slate-200">
+                      <div class="bg-emerald-100 p-2 text-xs font-bold uppercase tracking-wider text-emerald-900">small Interface</div>
+                      <div class="deep p-8 text-xs font-bold uppercase tracking-wider">large hidden Implementation</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article id="review-accounting" class="card-anchor overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-200 bg-white px-6 py-5 sm:px-8">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800">Strong</span>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600">in-process</span>
+            </div>
+            <h2 class="mt-4 text-2xl font-black tracking-tight text-slate-950">Deepen review accounting</h2>
+          </div>
+
+          <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div class="space-y-6">
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Files</h3>
+                <ul class="mt-3 space-y-1 font-mono text-sm text-slate-700">
+                  <li>PhotoSoap/Services/GamificationService.swift</li>
+                  <li>PhotoSoap/Models/UserStats.swift</li>
+                  <li>PhotoSoap/Models/ReviewedPhoto.swift</li>
+                  <li>PhotoSoap/Models/Achievement.swift</li>
+                  <li>PhotoSoap/Models/DailyChallenge.swift</li>
+                  <li>PhotoSoap/ViewModels/PhotoReviewViewModel.swift</li>
+                  <li>PhotoSoapTests/SmokeTests.swift</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Problem</h3>
+                <p class="mt-2 leading-7 text-slate-700">Review accounting is shallow because callers must know the ordering: queued delete counts as reviewed now, delete count and storage freed happen later, and rollback must remove history plus achievement state.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Solution</h3>
+                <p class="mt-2 leading-7 text-slate-700">Move review accounting transitions behind one Seam so counters, challenges, achievements, review history, and rollback invariants live in one Implementation.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Benefits</h3>
+                <ul class="mt-3 grid gap-2 text-sm text-slate-700">
+                  <li><strong>Locality:</strong> accounting invariants change in one Module.</li>
+                  <li><strong>Leverage:</strong> callers stop sequencing low-level stats mutations.</li>
+                  <li><strong>Tests:</strong> behavior checks replace manual call choreography.</li>
+                  <li><strong>Deletion test:</strong> removing view model snapshots today allows inconsistent stats after failed deletion.</li>
+                </ul>
+              </section>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">Before: sequence leaks</p>
+                <div class="space-y-2 text-sm">
+                  <div class="rounded-xl border border-slate-200 bg-white p-3">1. mark photo reviewed</div>
+                  <div class="ml-4 rounded-xl border border-slate-200 bg-white p-3">2. process queued review</div>
+                  <div class="ml-8 rounded-xl border border-slate-200 bg-white p-3">3. maybe commit deletion</div>
+                  <div class="ml-12 rounded-xl border border-slate-200 bg-white p-3">4. maybe rollback review</div>
+                  <div class="mt-4 h-0 border-t-2 leak-line"></div>
+                  <div class="rounded-xl border border-red-200 bg-red-50 p-3 text-red-800">Caller owns ordering and error modes</div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">After: transition Module</p>
+                <div class="rounded-2xl deep p-4">
+                  <p class="text-xs font-bold uppercase tracking-wider text-white/70">review accounting Module</p>
+                  <div class="mt-4 grid grid-cols-2 gap-2 text-[0.72rem] text-slate-200">
+                    <div class="rounded-lg bg-white/10 p-2">UserStats</div>
+                    <div class="rounded-lg bg-white/10 p-2">ReviewedPhoto</div>
+                    <div class="rounded-lg bg-white/10 p-2">DailyChallenge</div>
+                    <div class="rounded-lg bg-white/10 p-2">Achievement</div>
+                    <div class="col-span-2 rounded-lg bg-white/10 p-2">rollback invariants</div>
+                  </div>
+                </div>
+                <div class="my-4 h-0 border-t-2 seam-line"></div>
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center text-xs font-semibold uppercase tracking-wider text-emerald-900">one test surface</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article id="privacy-collection" class="card-anchor overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-200 bg-white px-6 py-5 sm:px-8">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-800">Worth exploring</span>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600">local-substitutable</span>
+            </div>
+            <h2 class="mt-4 text-2xl font-black tracking-tight text-slate-950">Deepen privacy collection</h2>
+          </div>
+
+          <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.95fr_1.05fr]">
+            <div class="space-y-6">
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Files</h3>
+                <ul class="mt-3 space-y-1 font-mono text-sm text-slate-700">
+                  <li>PhotoSoap/Services/AnalyticsService.swift</li>
+                  <li>PhotoSoap/Services/AggregateMetricsService.swift</li>
+                  <li>PhotoSoap/Views/SettingsView.swift</li>
+                  <li>PhotoSoap/Views/ContentView.swift</li>
+                  <li>PhotoSoap/ViewModels/PhotoReviewViewModel.swift</li>
+                  <li>PhotoSoap/PrivacyInfo.xcprivacy</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Problem</h3>
+                <p class="mt-2 leading-7 text-slate-700">Privacy collection is shallow: two modules share one defaults key, settings toggles both, and review callers choose between event tracking and aggregate metrics.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Solution</h3>
+                <p class="mt-2 leading-7 text-slate-700">Deepen the privacy collection Module so opt-in state, event recording, aggregate buckets, install registration, and flush timing sit behind one policy Seam.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Benefits</h3>
+                <ul class="mt-3 grid gap-2 text-sm text-slate-700">
+                  <li><strong>Locality:</strong> privacy policy is not duplicated in settings, startup, and review.</li>
+                  <li><strong>Leverage:</strong> one opt-in decision controls all collection behavior.</li>
+                  <li><strong>Tests:</strong> disabled collection, pending buckets, and flush retry behavior share one Interface.</li>
+                  <li><strong>Deletion test:</strong> deleting either current module leaves preference logic and review call sites behind.</li>
+                </ul>
+              </section>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Before: split policy</p>
+                <div class="relative min-h-72 rounded-xl bg-white p-4">
+                  <div class="absolute left-4 top-6 rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold">Settings toggles both</div>
+                  <div class="absolute right-4 top-20 rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold">AnalyticsService</div>
+                  <div class="absolute right-4 bottom-20 rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold">AggregateMetricsService</div>
+                  <div class="absolute left-4 bottom-6 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-800">Review calls both</div>
+                  <svg class="absolute inset-0 h-full w-full" aria-hidden="true">
+                    <line x1="36%" y1="18%" x2="68%" y2="32%" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 5" />
+                    <line x1="36%" y1="18%" x2="68%" y2="70%" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 5" />
+                    <line x1="34%" y1="84%" x2="70%" y2="36%" stroke="#dc2626" stroke-width="2" />
+                    <line x1="34%" y1="84%" x2="70%" y2="70%" stroke="#dc2626" stroke-width="2" />
+                  </svg>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">After: one policy Seam</p>
+                <div class="rounded-2xl deep p-4">
+                  <p class="text-xs font-bold uppercase tracking-wider text-white/70">privacy collection Module</p>
+                  <div class="mt-4 grid gap-2 text-[0.72rem] text-slate-200">
+                    <div class="rounded-lg bg-white/10 p-2">opt-in state</div>
+                    <div class="rounded-lg bg-white/10 p-2">event recording</div>
+                    <div class="rounded-lg bg-white/10 p-2">aggregate buckets</div>
+                    <div class="rounded-lg bg-white/10 p-2">flush timing</div>
+                  </div>
+                </div>
+                <div class="my-4 h-0 border-t-2 seam-line"></div>
+                <div class="grid gap-2 text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  <div class="rounded-xl border border-slate-200 bg-white p-3">Settings</div>
+                  <div class="rounded-xl border border-slate-200 bg-white p-3">ContentView</div>
+                  <div class="rounded-xl border border-slate-200 bg-white p-3">PhotoReviewViewModel</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article id="startup-routing" class="card-anchor overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-200 bg-white px-6 py-5 sm:px-8">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-800">Worth exploring</span>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600">in-process</span>
+            </div>
+            <h2 class="mt-4 text-2xl font-black tracking-tight text-slate-950">Deepen app startup routing</h2>
+          </div>
+
+          <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.95fr_1.05fr]">
+            <div class="space-y-6">
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Files</h3>
+                <ul class="mt-3 space-y-1 font-mono text-sm text-slate-700">
+                  <li>PhotoSoap/Views/ContentView.swift</li>
+                  <li>PhotoSoap/PhotoSoapApp.swift</li>
+                  <li>PhotoSoap/Services/PhotoLibraryService.swift</li>
+                  <li>PhotoSoap/Views/StatsView.swift</li>
+                  <li>PhotoSoap/Views/PhotoReviewView.swift</li>
+                  <li>PhotoSoap/Utilities/UserDefaultsKeys.swift</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Problem</h3>
+                <p class="mt-2 leading-7 text-slate-700">ContentView is a shallow Module: the Interface is a SwiftUI view, but the Implementation decides quick start, permission routing, stats singleton setup, metrics flushing, tab tracking, recovery alerts, and scene phase behavior.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Solution</h3>
+                <p class="mt-2 leading-7 text-slate-700">Deepen startup routing so first launch, permission status, recovery mode, active stats, and app lifecycle effects resolve behind one Seam before the view renders.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Benefits</h3>
+                <ul class="mt-3 grid gap-2 text-sm text-slate-700">
+                  <li><strong>Locality:</strong> launch policy stops living inside a view body.</li>
+                  <li><strong>Leverage:</strong> one Interface describes startup states for every tab.</li>
+                  <li><strong>Tests:</strong> first launch, denied permission, limited access, and recovery mode become direct cases.</li>
+                  <li><strong>Deletion test:</strong> removing onboarding today requires surgery around permission refresh and metrics effects.</li>
+                </ul>
+              </section>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Before: many reasons to change</p>
+                <div class="space-y-2">
+                  <div class="rounded-xl border-l-4 border-orange-300 bg-white p-3 text-sm">quick start</div>
+                  <div class="rounded-xl border-l-4 border-orange-300 bg-white p-3 text-sm">permission routing</div>
+                  <div class="rounded-xl border-l-4 border-orange-300 bg-white p-3 text-sm">stats setup</div>
+                  <div class="rounded-xl border-l-4 border-orange-300 bg-white p-3 text-sm">metrics flushing</div>
+                  <div class="rounded-xl border-l-4 border-orange-300 bg-white p-3 text-sm">tab tracking</div>
+                  <div class="rounded-xl border-l-4 border-orange-300 bg-white p-3 text-sm">recovery alerts</div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">After: resolved startup state</p>
+                <div class="rounded-2xl deep p-4 text-sm">
+                  <p class="text-xs font-bold uppercase tracking-wider text-white/70">startup routing Module</p>
+                  <div class="mt-4 rounded-xl bg-white/10 p-3 text-slate-200">first launch</div>
+                  <div class="mt-2 rounded-xl bg-white/10 p-3 text-slate-200">permission state</div>
+                  <div class="mt-2 rounded-xl bg-white/10 p-3 text-slate-200">recovery state</div>
+                  <div class="mt-2 rounded-xl bg-white/10 p-3 text-slate-200">active stats</div>
+                </div>
+                <div class="my-4 h-0 border-t-2 seam-line"></div>
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center text-xs font-semibold uppercase tracking-wider text-emerald-900">view renders state</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article id="review-feedback" class="card-anchor overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-200 bg-white px-6 py-5 sm:px-8">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-700">Speculative</span>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600">in-process</span>
+            </div>
+            <h2 class="mt-4 text-2xl font-black tracking-tight text-slate-950">Deepen review feedback timing</h2>
+          </div>
+
+          <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.95fr_1.05fr]">
+            <div class="space-y-6">
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Files</h3>
+                <ul class="mt-3 space-y-1 font-mono text-sm text-slate-700">
+                  <li>PhotoSoap/ViewModels/PhotoReviewViewModel.swift</li>
+                  <li>PhotoSoap/Views/PhotoReviewView.swift</li>
+                  <li>PhotoSoap/Services/HapticsService.swift</li>
+                  <li>PhotoSoap/Views/Components/StreakBanner.swift</li>
+                  <li>PhotoSoap/Views/Components/ActionButtons.swift</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Problem</h3>
+                <p class="mt-2 leading-7 text-slate-700">Review feedback is shallow: many published flags, timers, haptics calls, celebration banners, warning toasts, and swipe-threshold effects sit beside domain review logic.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Solution</h3>
+                <p class="mt-2 leading-7 text-slate-700">Deepen feedback timing only if it keeps growing: concentrate review feedback decisions behind a Seam while leaving HapticsService as the concrete Adapter.</p>
+              </section>
+
+              <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Benefits</h3>
+                <ul class="mt-3 grid gap-2 text-sm text-slate-700">
+                  <li><strong>Locality:</strong> feedback timing bugs stop scattering across view state.</li>
+                  <li><strong>Leverage:</strong> one Module can drive haptics, toast, and banner outcomes.</li>
+                  <li><strong>Tests:</strong> threshold feedback and cancellation warning rules become observable without gesture rendering.</li>
+                  <li><strong>Deletion test:</strong> removing feedback code today leaves many flags and view branches behind, but core review still works.</li>
+                </ul>
+              </section>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Before: flag fan-out</p>
+                <div class="rounded-xl border border-orange-300 shallow p-4 text-center text-xs font-bold uppercase tracking-wider text-orange-900">PhotoReviewViewModel</div>
+                <div class="mt-4 grid grid-cols-2 gap-2 text-[0.72rem] text-slate-700">
+                  <div class="rounded-lg border border-slate-200 bg-white p-2">toast flags</div>
+                  <div class="rounded-lg border border-slate-200 bg-white p-2">banner flags</div>
+                  <div class="rounded-lg border border-slate-200 bg-white p-2">haptics calls</div>
+                  <div class="rounded-lg border border-slate-200 bg-white p-2">sleep timers</div>
+                  <div class="rounded-lg border border-slate-200 bg-white p-2">swipe threshold</div>
+                  <div class="rounded-lg border border-slate-200 bg-white p-2">cancel warning</div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">After: feedback Module</p>
+                <div class="rounded-2xl deep p-4">
+                  <p class="text-xs font-bold uppercase tracking-wider text-white/70">review feedback Module</p>
+                  <div class="mt-4 grid gap-2 text-[0.72rem] text-slate-200">
+                    <div class="rounded-lg bg-white/10 p-2">toast policy</div>
+                    <div class="rounded-lg bg-white/10 p-2">banner policy</div>
+                    <div class="rounded-lg bg-white/10 p-2">timing policy</div>
+                  </div>
+                </div>
+                <div class="my-4 h-0 border-t-2 seam-line"></div>
+                <div class="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-700">Haptics Adapter</div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="top-recommendation" class="mt-12 rounded-[2rem] border border-emerald-200 bg-emerald-50 p-8 shadow-sm">
+        <p class="text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">Top recommendation</p>
+        <h2 class="mt-3 text-3xl font-black tracking-tight text-emerald-950">Start with the photo review lifecycle.</h2>
+        <p class="mt-3 max-w-3xl leading-7 text-emerald-950/80">
+          It has the strongest Locality and Leverage payoff: delete queue rules, persistence, rollback, pruning, and UI-facing state currently form one shallow Interface, and the deletion test shows the complexity reappearing across several callers. Deepening this Module creates the best test surface before touching the Photos Adapter or review accounting shape.
+        </p>
+        <a href="#photo-review-lifecycle" class="mt-5 inline-flex rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700">Jump to candidate</a>
+      </section>
+    </main>
+  </body>
+</html>

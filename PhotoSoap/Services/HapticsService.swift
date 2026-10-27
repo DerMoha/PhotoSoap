@@ -1,6 +1,6 @@
-import Combine
 import Foundation
 import UIKit
+import Combine
 
 struct HapticsPerformer {
     let impact: (UIImpactFeedbackGenerator.FeedbackStyle) -> Void

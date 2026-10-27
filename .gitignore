@@ -31,4 +31,4 @@ fastlane/test_output/
 
 .idea/
 .vscode/
-PhotoSoap/Info.plist
+PhotoSoap/Configuration/Secrets.xcconfig

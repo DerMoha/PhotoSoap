@@ -3,7 +3,7 @@ import SwiftData
 import Combine
 
 @MainActor
-class GameificationService: ObservableObject {
+class GamificationService: ObservableObject {
     @Published var newlyUnlockedAchievement: Achievement?
     @Published var showAchievementBanner = false
     @Published var streakMilestoneReached: Int?
@@ -16,15 +16,16 @@ class GameificationService: ObservableObject {
         fileSize: Int64,
         stats: UserStats,
         challengeType: DailyChallengeType,
-        context: ModelContext
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
     ) {
-        stats.incrementReviewed()
+        stats.incrementReviewed(mediaType: mediaType)
 
         switch action {
         case .keep:
-            stats.incrementKept()
+            stats.incrementKept(mediaType: mediaType)
         case .delete:
-            stats.incrementDeleted(fileSize: fileSize)
+            stats.incrementDeleted(fileSize: fileSize, mediaType: mediaType)
         }
 
         stats.updateDailyChallengeProgress(for: challengeType)
@@ -36,9 +37,10 @@ class GameificationService: ObservableObject {
     func processQueuedDeletionReview(
         stats: UserStats,
         challengeType: DailyChallengeType,
-        context: ModelContext
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
     ) {
-        stats.incrementReviewed()
+        stats.incrementReviewed(mediaType: mediaType)
 
         if challengeType == .review {
             stats.updateDailyChallengeProgress(for: .review)
@@ -52,9 +54,10 @@ class GameificationService: ObservableObject {
         fileSize: Int64,
         stats: UserStats,
         challengeType: DailyChallengeType,
-        context: ModelContext
+        context: ModelContext,
+        mediaType: ReviewMediaType = .photo
     ) {
-        stats.incrementQueuedDeletionCommit(fileSize: fileSize)
+        stats.incrementQueuedDeletionCommit(fileSize: fileSize, mediaType: mediaType)
 
         if challengeType == .delete {
             stats.updateDailyChallengeProgress(for: .delete)
@@ -70,11 +73,14 @@ class GameificationService: ObservableObject {
         context: ModelContext
     ) throws {
         let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
-        for reviewedPhoto in try context.fetch(descriptor) {
+        let reviewedPhotos = try context.fetch(descriptor)
+        let mediaType = reviewedPhotos.first?.reviewMediaType ?? .photo
+
+        for reviewedPhoto in reviewedPhotos {
             context.delete(reviewedPhoto)
         }
 
-        stats.decrementQueuedReview()
+        stats.decrementQueuedReview(mediaType: mediaType)
         if challengeType == .review {
             stats.decrementDailyChallengeProgress(for: .review)
         }
@@ -88,10 +94,10 @@ class GameificationService: ObservableObject {
 
     // MARK: - Review History Management
 
-    func markPhotoReviewed(id: String, context: ModelContext) throws {
+    func markPhotoReviewed(id: String, context: ModelContext, mediaType: ReviewMediaType = .photo) throws {
         let descriptor = FetchDescriptor<ReviewedPhoto>(predicate: #Predicate { $0.id == id })
         if (try? context.fetchCount(descriptor)) == 0 {
-            let review = ReviewedPhoto(id: id)
+            let review = ReviewedPhoto(id: id, mediaType: mediaType)
             context.insert(review)
         }
     }
@@ -189,7 +195,7 @@ class GameificationService: ObservableObject {
         case "daily_devotee":
             return stats.dayStreak >= 14
         case "storage_saver":
-            return stats.storageFreed >= 5_368_709_120
+            return stats.storageFreed >= 5_000_000_000
         case "century_club":
             return stats.sessionReviewCount >= 500
         case "photo_pro":
@@ -253,7 +259,7 @@ class GameificationService: ObservableObject {
         case "daily_devotee":
             return min(1.0, Double(stats.dayStreak) / 14.0)
         case "storage_saver":
-            return min(1.0, Double(stats.storageFreed) / 5_368_709_120.0)
+            return min(1.0, Double(stats.storageFreed) / 5_000_000_000.0)
         case "century_club":
             return min(1.0, Double(stats.sessionReviewCount) / 500.0)
         case "photo_pro":
