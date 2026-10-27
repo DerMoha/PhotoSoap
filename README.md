@@ -2,6 +2,8 @@
 
 Photo and video cleanup for iPhone with fast swipe reviews, per-media stats, and streak-based progress.
 
+**[Join the TestFlight Beta](https://testflight.apple.com/join/gPcKDwjC)** — Try PhotoSoap on your iPhone and share your feedback.
+
 <p align="center">
   <img src="screenshots-generator/exports/01-hero-1320x2868.png" width="220" alt="Clean your camera roll with PhotoSoap" />
   <img src="screenshots-generator/exports/02-swipe-1320x2868.png" width="220" alt="Keep or queue photos and videos for deletion with a swipe" />
