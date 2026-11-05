@@ -2,6 +2,8 @@
 
 Photo and video cleanup for iPhone with fast swipe reviews, per-media stats, and streak-based progress.
 
+[Android](https://github.com/DerMoha/PhotoSoapAndroid) · [iOS](https://github.com/DerMoha/PhotoSoap)
+
 **[Join the TestFlight Beta](https://testflight.apple.com/join/gPcKDwjC)** — Try PhotoSoap on your iPhone and share your feedback.
 
 <p align="center">
